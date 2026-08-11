@@ -1,8 +1,9 @@
 # WordBreak
 
-A boggle-adjacent multiplayer word game. Trace a word to **claim** it and lock its
-letters; only a strictly **longer** word can **break** the claim. Survive the hold
-time and it **banks** — one point per letter, then the tiles **reseed**.
+A multiplayer word game. Select adjacent letters to make a word and you **claim**
+it, locking those letters; only a strictly **longer** word can **break** the claim,
+including one of your own. Survive the hold time and it **banks** — one point per
+letter — then the tiles **reseed**.
 
 Rules in full: [`public/tutorial.html`](public/tutorial.html) (served at `/tutorial.html`).
 
@@ -49,3 +50,11 @@ build with `VITE_WS_URL=wss://<app>.herokuapp.com/ws`.
 State is in memory on a single dyno: a restart or deploy ends every game. All access
 goes through the `Store` interface in `src/server/store.ts` so adding a real
 database later stays contained.
+
+## Words
+
+[ENABLE](https://github.com/dolph/dictionary) — a public-domain list of ~170,000
+everyday English words, no proper nouns and no abbreviations. We drop anything
+containing `q`, since there is no Q tile. `public/words.txt` is the filtered result
+(1.6MB raw, ~430KB gzipped); the client fetches it once so auto-claiming needs no
+round trip, and the server validates against the same file.

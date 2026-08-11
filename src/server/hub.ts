@@ -264,11 +264,8 @@ export class Hub {
     const word = R.wordOf(game, tileIds);
     if (!isWord(word)) return;
 
-    // The client auto-claims on every keystroke; ignore an exact repeat so a resend
-    // can't quietly restart someone's own hold timer.
-    const key = tileIds.join(',');
-    if (game.claims.some((c) => c.playerId === playerId && c.tileIds.join(',') === key)) return;
-
+    // A repeat of a claim you already hold is caught by validatePath above, since
+    // an identical path is not strictly longer than itself.
     const { claim, broken } = R.applyClaim(
       game,
       tileIds,
@@ -280,19 +277,17 @@ export class Hub {
     );
 
     const fx: Fx[] = [];
+    // Breaking is breaking, whoever held the claim — including you extending your
+    // own word. Same rule, same animation.
     for (const b of broken) {
       this.clearTimer(b.id);
-      // Extending your own word (DO -> DOG) replaces a claim but is not a break;
-      // it should not shake the tiles at the player who is building on them.
-      if (b.playerId !== playerId) {
-        fx.push({
-          k: 'broken',
-          playerId: b.playerId,
-          byPlayerId: playerId,
-          idx: b.tileIds.map((id) => R.tileIndex(game, id)).filter((i) => i >= 0),
-          word: b.word,
-        });
-      }
+      fx.push({
+        k: 'broken',
+        playerId: b.playerId,
+        byPlayerId: playerId,
+        idx: b.tileIds.map((id) => R.tileIndex(game, id)).filter((i) => i >= 0),
+        word: b.word,
+      });
     }
     fx.push({
       k: 'claimed',

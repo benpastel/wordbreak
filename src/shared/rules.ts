@@ -24,7 +24,7 @@ export function tileIndex(game: GameState, tileId: number): number {
   return game.grid.findIndex((t) => t.id === tileId);
 }
 
-/** Boggle adjacency: the 8 neighbours, by row-major index. */
+/** The 8 touching neighbours, by row-major index. Diagonals count. */
 export function areAdjacent(size: number, a: number, b: number): boolean {
   if (a === b) return false;
   const dr = Math.abs(Math.floor(a / size) - Math.floor(b / size));
@@ -52,19 +52,21 @@ export function wordOf(game: GameState, tileIds: number[]): string {
 /**
  * May `playerId` extend `selection` with `tileId`?
  *
- * The length rule is the whole game: to touch a tile inside someone else's claim,
- * the word you end up with must be strictly longer than that claim. Checking it
- * per-click is sufficient and stays sufficient, because a selection only grows —
- * which is also why two live claims can never share a tile.
+ * The length rule is the whole game: to touch a tile inside a claim, the word you
+ * end up with must be strictly longer than that claim. Checking it per-click is
+ * sufficient and stays sufficient, because a selection only grows — which is also
+ * why two live claims can never share a tile.
  *
- * Your own claims are exempt: you need to be able to re-select tiles you already
- * hold, both to extend (DO -> DOG) and to start a fresh word over them.
+ * The rule is symmetric: your own claims are no easier to break than anyone else's.
+ * Extending still works, because your trail already holds those tiles and so is
+ * already longer (DO -> DOG is 3 against 2). Coming back to a claim you hold with a
+ * *fresh* trail does not, exactly as it would not against an opponent.
  */
 export function canAppend(
   game: GameState,
   selection: number[],
   tileId: number,
-  playerId: string,
+  _playerId: string,
 ): boolean {
   if (selection.includes(tileId)) return false;
   const i = tileIndex(game, tileId);
@@ -76,9 +78,7 @@ export function canAppend(
   }
 
   const held = claimOfTile(game, tileId);
-  if (held && held.playerId !== playerId && selection.length + 1 <= held.tileIds.length) {
-    return false;
-  }
+  if (held && selection.length + 1 <= held.tileIds.length) return false;
   return true;
 }
 
@@ -94,7 +94,7 @@ export type PathError =
 export function validatePath(
   game: GameState,
   tileIds: number[],
-  playerId: string,
+  _playerId: string,
 ): PathError | null {
   if (tileIds.length === 0) return 'empty';
   if (new Set(tileIds).size !== tileIds.length) return 'duplicate';
@@ -107,7 +107,7 @@ export function validatePath(
   }
 
   for (const c of claimsTouching(game, tileIds)) {
-    if (c.playerId !== playerId && tileIds.length <= c.tileIds.length) return 'not-long-enough';
+    if (tileIds.length <= c.tileIds.length) return 'not-long-enough';
   }
   return null;
 }

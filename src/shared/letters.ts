@@ -1,7 +1,8 @@
-// Letter frequencies taken from the aggregate face distribution of the classic
-// 16 Boggle dice, which is tuned so a whole board stays playable. Q is dropped
-// entirely: a bare Q is nearly unusable, and a Qu tile that counts as two letters
-// would complicate every length comparison in the rules for one face in ~95.
+// Letter frequencies from a well-worn 16-dice letter-cube set, whose aggregate face
+// distribution is tuned so a whole board stays playable — noticeably better than raw
+// English letter frequency, which yields boards nobody can read a word out of.
+// Q is dropped entirely: a bare Q is nearly unusable, and a Qu tile counting as two
+// letters would complicate every length comparison in the rules for one face in ~95.
 
 const WEIGHTS: Record<string, number> = {
   A: 6, B: 2, C: 2, D: 3, E: 11, F: 2, G: 2, H: 5, I: 6,
@@ -27,9 +28,9 @@ export function randomLetter(): string {
   return pick(BAG);
 }
 
-/** Share of the board that should be vowels before we stop forcing them. Boggle
- *  dice self-balance because you roll the whole set at once; we replace tiles one
- *  at a time, so without a floor a board can drift into unplayable consonant mush. */
+/** Share of the board that should be vowels before we stop forcing them. A full roll
+ *  of dice self-balances because every letter lands at once; we replace tiles one at a
+ *  time, so without a floor a board can drift into unplayable consonant mush. */
 const MIN_VOWEL_RATIO = 0.28;
 const MAX_VOWEL_RATIO = 0.55;
 

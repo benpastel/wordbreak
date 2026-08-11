@@ -2,7 +2,7 @@
   "name": "wordbreak",
   "version": "0.1.0",
   "private": true,
-  "description": "A boggle-adjacent multiplayer word game where claims lock letters until a longer word breaks them.",
+  "description": "A multiplayer word game where claiming a word locks its letters until a strictly longer word breaks the claim.",
   "engines": {
     "node": ">=20"
   },

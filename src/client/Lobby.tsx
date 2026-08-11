@@ -24,7 +24,8 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
         <div>
           <h1>WordBreak</h1>
           <p className="tag">
-            Claim a word to lock its letters. Only a longer word can break the claim.{' '}
+            Select adjacent letters to make a word and it’s yours. Only a strictly longer
+            word can break the claim — including one of your own.{' '}
             <a href="tutorial.html" target="_blank" rel="noreferrer">
               how to play
             </a>
