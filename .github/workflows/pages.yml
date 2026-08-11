@@ -1,0 +1,75 @@
+# Publishes the static client to GitHub Pages, which serves it at
+# https://benpastel.com/wordbreak/ (project sites inherit the custom domain from
+# the benpastel.github.io user site — this repo needs no CNAME of its own).
+#
+# The game server is NOT here; it runs on Heroku and this client opens a websocket
+# to it. That cross-origin split is the only thing this file has to get right, and
+# it is the VITE_WS_URL below.
+#
+# Heroku keeps deploying itself from the same push, so `git push origin main` ends
+# up updating both halves.
+
+name: Deploy client to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two Pages deploys race; the newest push wins.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # ─────────────────────────────────────────────────────────────────────
+      # The one line to keep in step with Heroku. Must be the wss:// origin of
+      # the Heroku app, with the /ws path.
+      #   e.g. wss://benji-wordbreak-1a2b3c4d5e6f.herokuapp.com/ws
+      # ─────────────────────────────────────────────────────────────────────
+      VITE_WS_URL: wss://REPLACE-WITH-HEROKU-APP.herokuapp.com/ws
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the websocket URL has been set
+        run: |
+          if [[ "$VITE_WS_URL" == *REPLACE-WITH-HEROKU-APP* ]]; then
+            echo "::error file=.github/workflows/pages.yml::VITE_WS_URL is still the placeholder. Set it to your Heroku app's wss:// URL, or the published page will load but never connect."
+            exit 1
+          fi
+          echo "Building against $VITE_WS_URL"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Client only — the server half is Heroku's job.
+      - run: npm run build:client
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/client
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

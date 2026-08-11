@@ -24,18 +24,45 @@ one player, and you can join mid-game.
 npm run build && npm start   # http://localhost:8080
 ```
 
-## Deploy to Heroku
+## Deploying
 
-```sh
-heroku create
-git push heroku main
-```
+Two halves, both triggered by `git push origin main`:
 
-`heroku-postbuild` runs the build; the Express server hosts `dist/client` and the
-websocket on the same origin, so there is no CORS and no build-time server URL.
+| half | where | what serves it |
+| --- | --- | --- |
+| static client | `https://benpastel.com/wordbreak/` | GitHub Pages, via `.github/workflows/pages.yml` |
+| game server | `https://<app>.herokuapp.com` | Heroku, via `Procfile` + `heroku-postbuild` |
 
-To split the static half onto GitHub Pages later, deploy `dist/client` there and
-build with `VITE_WS_URL=wss://<app>.herokuapp.com/ws`.
+The client opens a websocket to the Heroku origin. That cross-origin URL is the only
+thing the two halves must agree on, and it lives in one place: `VITE_WS_URL` at the
+top of the Pages workflow. The build fails loudly if it is still the placeholder,
+rather than publishing a page that loads but never connects.
+
+`benpastel.com` is the custom domain on the `benpastel.github.io` user site, and
+project sites inherit it — so this repo needs no `CNAME` of its own.
+
+### Heroku
+
+Dashboard → new app → Deploy tab → connect this GitHub repo → enable automatic
+deploys from `main`. No CLI and no config: the buildpack reads `engines`, runs
+`heroku-postbuild`, and starts the `Procfile` process.
+
+Keep it at **exactly one web dyno** — all state is in memory, so a second dyno is a
+second, invisible lobby. Every deploy and every dyno cycle ends the games in progress.
+
+### GitHub Pages
+
+Repo Settings → Pages → Source: **GitHub Actions**. The workflow builds only the
+client (`npm run build:client`) and uploads `dist/client`.
+
+Vite is configured with `base: './'`, so the bundle is path-relative and works under
+`/wordbreak/` with no path baked in.
+
+### Running the whole thing from Heroku instead
+
+The server also hosts `dist/client` itself, so `npm run build && npm start` gives you
+both halves on one origin with no `VITE_WS_URL` at all — that is what local
+production testing uses, and it stays a working fallback.
 
 ## Layout
 
