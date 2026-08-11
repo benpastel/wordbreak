@@ -1,0 +1,293 @@
+/* ============================================================
+   WordBreak — "warm paper & ink"
+
+   Two orthogonal visual channels, because claiming and selecting
+   are mechanically orthogonal:
+
+     COLOUR = whose claim this is, and how close to banking
+              (hue ring + rising hue fill)
+     INK    = whether this tile is in MY current trail
+              (a debossed disc; selection never needs to say
+               *whose*, so it never competes with the colour)
+
+   Deliberately light-only: the aesthetic is a physical Boggle
+   board, so there is no dark variant.
+   ============================================================ */
+
+@property --p {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+:root {
+  --ground: oklch(0.94 0.008 85);
+  --tray: oklch(0.902 0.012 85);
+  --tile-face: oklch(0.985 0.004 85);
+  --ink: oklch(0.22 0.01 60);
+  --ink-soft: oklch(0.52 0.008 70);
+  --ink-mute: oklch(0.7 0.008 70);
+  --hairline: oklch(0.86 0.01 85);
+  --selink: oklch(0.55 0.01 70);
+
+  --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+  --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: light;
+}
+
+/* Dealt in this order so small tables get the most separated hues first.
+   Fill lightness varies slightly per hue — yellow genuinely reads lighter
+   than blue — which buys extra separation for free. */
+.c0 { --hue: 250; --cf: 0.085; --lf: 0.87;  --ci: 0.16; }
+.c1 { --hue: 25;  --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+.c2 { --hue: 148; --cf: 0.12;  --lf: 0.845; --ci: 0.14; }
+.c3 { --hue: 300; --cf: 0.095; --lf: 0.875; --ci: 0.17; }
+.c4 { --hue: 95;  --cf: 0.14;  --lf: 0.895; --ci: 0.13; }
+.c5 { --hue: 195; --cf: 0.095; --lf: 0.86;  --ci: 0.12; }
+.c6 { --hue: 342; --cf: 0.105; --lf: 0.865; --ci: 0.17; }
+.c7 { --hue: 55;  --cf: 0.13;  --lf: 0.87;  --ci: 0.145; }
+.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7 {
+  --pf: oklch(var(--lf) var(--cf) var(--hue));
+  --pc: oklch(0.55 var(--ci) var(--hue));
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app { min-height: 100%; display: flex; flex-direction: column; }
+
+h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+h2 {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 14px;
+}
+h2 em { font-style: normal; font-weight: 400; text-transform: none; letter-spacing: 0; }
+a { color: var(--ink-soft); text-underline-offset: 2px; }
+a:hover { color: var(--ink); }
+kbd {
+  font: 700 0.82em system-ui; padding: 1px 5px; border-radius: 4px;
+  background: var(--tray); color: var(--ink-soft);
+}
+code { font: 600 0.82em ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ------------------------------------------------------------ controls */
+button { font: inherit; cursor: pointer; border: 0; border-radius: 999px; }
+button:disabled { cursor: default; opacity: 0.4; }
+
+.primary {
+  background: var(--ink); color: var(--ground);
+  font-weight: 700; padding: 9px 20px; font-size: 0.9rem;
+}
+.primary.big { padding: 13px 28px; font-size: 1rem; }
+.primary.on { background: oklch(0.55 0.12 148); }
+
+.ghost {
+  background: var(--tile-face); color: var(--ink-soft);
+  font-weight: 600; padding: 8px 16px; font-size: 0.85rem; box-shadow: var(--shadow-1);
+}
+.ghost:hover:not(:disabled) { color: var(--ink); }
+
+input {
+  font: inherit; font-weight: 700; color: var(--ink);
+  background: var(--tile-face); border: 0; border-radius: 999px;
+  padding: 8px 16px; box-shadow: var(--shadow-1); outline: none; width: 10ch;
+}
+input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
+
+.segmented { display: flex; flex-wrap: wrap; gap: 6px; }
+.segmented button {
+  background: var(--tile-face); color: var(--ink-soft);
+  font-size: 0.82rem; font-weight: 700; padding: 6px 13px; box-shadow: var(--shadow-1);
+}
+.segmented button.on { background: var(--ink); color: var(--ground); box-shadow: none; }
+
+.dot { width: 11px; height: 11px; border-radius: 50%; background: var(--pc); display: inline-block; }
+
+/* ------------------------------------------------------------ splash */
+.splash { margin: auto; text-align: center; padding: 40px; }
+.splash p { color: var(--ink-soft); }
+
+/* ------------------------------------------------------------ lobby */
+.lobby { width: min(760px, 100%); margin: 0 auto; padding: 40px 24px 80px; }
+.lobbyhead {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 24px; flex-wrap: wrap; margin-bottom: 40px;
+}
+.tag { color: var(--ink-soft); font-size: 0.9rem; margin: 6px 0 0; max-width: 46ch; }
+.namefield { display: flex; align-items: center; gap: 10px; }
+.namefield span { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+
+.tablehead {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 10px; border-bottom: 1px solid var(--hairline); margin-bottom: 16px;
+}
+.tablehead h2 { margin: 0; }
+.empty { color: var(--ink-soft); font-size: 0.9rem; }
+
+.tablelist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.tablerow {
+  width: 100%; display: flex; align-items: center; gap: 14px; text-align: left;
+  background: var(--tile-face); border-radius: 12px; padding: 13px 18px;
+  box-shadow: var(--shadow-1), var(--shadow-2); color: var(--ink);
+}
+.tablerow:hover { box-shadow: var(--shadow-1), 0 4px 12px oklch(0.3 0.02 70 / 0.14); }
+.tname { font-weight: 700; flex: 1; }
+.dots { display: flex; gap: 4px; }
+.meta { font-size: 0.78rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.phase {
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; background: var(--tray); color: var(--ink-soft);
+}
+.phase.playing { background: var(--ink); color: var(--ground); }
+
+/* ------------------------------------------------------------ table room */
+.room { width: min(620px, 100%); margin: 0 auto; padding: 36px 24px 80px; }
+.roomhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+.card {
+  background: var(--tile-face); border-radius: 14px; padding: 20px 22px;
+  box-shadow: var(--shadow-1), var(--shadow-2); margin-bottom: 16px;
+}
+.seats { list-style: none; padding: 0; margin: 0 0 4px; display: flex; flex-direction: column; gap: 9px; }
+.seat { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.seat .nm { color: var(--pc); }
+.seat.gone { opacity: 0.45; }
+.badge, .tick {
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 999px; background: var(--tray); color: var(--ink-soft);
+}
+.tick { background: oklch(0.9 0.06 148); color: oklch(0.45 0.12 148); }
+
+.colorpick { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline); }
+.colorpick > span { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+.swatches { display: flex; gap: 7px; }
+.sw { width: 24px; height: 24px; border-radius: 50%; background: var(--pf); box-shadow: inset 0 0 0 2px var(--pc); }
+.sw.on { box-shadow: inset 0 0 0 3px var(--pc), 0 0 0 3px var(--ink); }
+
+.setting { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+.setting label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); width: 82px; }
+.fineprint { font-size: 0.8rem; color: var(--ink-soft); margin: 10px 0 0; }
+.fineprint.center { text-align: center; }
+
+.linkrow { display: flex; align-items: center; gap: 12px; }
+.linkrow code {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: var(--tray); padding: 8px 13px; border-radius: 999px; color: var(--ink-soft);
+}
+.startrow { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 24px; }
+
+/* ------------------------------------------------------------ game */
+.play { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 16px 16px 24px; gap: 14px; }
+.playtop { width: min(900px, 100%); display: flex; justify-content: space-between; align-items: center; }
+.tablename { font-weight: 800; letter-spacing: -0.01em; }
+.boardwrap { display: flex; flex-direction: column; align-items: center; }
+.playfoot { font-size: 0.78rem; color: var(--ink-soft); margin: 0; text-align: center; }
+
+.board {
+  position: relative; display: grid; touch-action: none; user-select: none;
+  --cell: clamp(30px, calc(62vmin / var(--n)), 92px);
+  --gap: calc(var(--cell) * 0.1);
+  grid-template-columns: repeat(var(--n), var(--cell));
+  gap: var(--gap); padding: var(--gap); border-radius: 14px; background: var(--tray);
+  box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13), inset 0 0 0 1px oklch(0.3 0.02 70 / 0.05);
+}
+
+.trail { position: absolute; inset: var(--gap); pointer-events: none; overflow: visible; }
+.trail polyline {
+  fill: none; stroke-width: 0.05; stroke-linecap: round; stroke-linejoin: round; opacity: 0.4;
+}
+.trail polyline.sel {
+  stroke: var(--selink); stroke-width: 0.062; opacity: 0.75;
+  stroke-dasharray: 0.17 0.13; animation: ants 1.1s linear infinite;
+}
+@keyframes ants { to { stroke-dashoffset: -0.6; } }
+
+.tile {
+  position: relative; aspect-ratio: 1; border-radius: 13%;
+  display: grid; place-items: center;
+  font-size: calc(var(--cell) * 0.46); font-weight: 800; letter-spacing: 0.01em;
+  color: var(--ink); background: var(--tile-face); cursor: pointer;
+  --ring: inset 0 0 0 0 transparent;
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
+}
+.tile > span { position: relative; z-index: 1; pointer-events: none; }
+
+/* CHANNEL 1 — colour: whose claim, and how close to banking. */
+.tile.claimed {
+  --ring: inset 0 0 0 3px var(--pc);
+  background:
+    linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    var(--tile-face);
+}
+
+/* CHANNEL 2 — ink: is this tile in my trail. Debossed, so it reads as pressed
+   into the tile rather than painted over it, and never hides the fill. */
+.tile.sel::before {
+  content: ''; position: absolute; z-index: 0; inset: 17%; border-radius: 50%;
+  background: oklch(0.885 0.008 75);
+  box-shadow: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 oklch(1 0 0 / 0.7);
+}
+
+.tile.reseed { animation: reseed 640ms ease-out; }
+@keyframes reseed {
+  0%, 52% { opacity: 0; transform: rotateY(90deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+.tile.broke { animation: broke 400ms ease-out; }
+@keyframes broke {
+  0% { transform: translateX(0); }
+  18% { transform: translateX(-4px); }
+  38% { transform: translateX(4px); }
+  58% { transform: translateX(-3px); }
+  78% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+.flyer {
+  position: fixed; z-index: 50; pointer-events: none;
+  border-radius: 13%; display: grid; place-items: center;
+  font-weight: 800; color: var(--ink); background: var(--pf);
+  box-shadow: inset 0 0 0 3px var(--pc), 0 3px 10px oklch(0.3 0.02 70 / 0.2);
+}
+
+.readout {
+  display: flex; align-items: center; justify-content: flex-end; gap: 14px;
+  align-self: stretch; margin-top: 14px; min-height: 30px;
+}
+.readout .word { font-weight: 800; font-size: 1.1rem; letter-spacing: 0.26em; }
+.readout .hint { font-size: 0.8rem; color: var(--ink-mute); }
+.readout .x { background: none; color: var(--ink-soft); font-size: 0.95rem; font-weight: 700; padding: 0 4px; }
+
+.scores { display: flex; flex-wrap: wrap; gap: 26px; justify-content: center; margin-top: 6px; }
+.player { display: flex; align-items: baseline; gap: 8px; }
+.player .name { font-weight: 700; color: var(--pc); }
+.player .pts { font-weight: 800; font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums; }
+.player.isme .name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.player.gone { opacity: 0.4; }
+
+/* ------------------------------------------------------------ overlays */
+.netbar {
+  position: fixed; top: 0; left: 0; right: 0; text-align: center;
+  background: oklch(0.75 0.14 55); color: oklch(0.25 0.05 55);
+  font-size: 0.78rem; font-weight: 700; padding: 5px; z-index: 60;
+}
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--ground); font-size: 0.85rem; font-weight: 600;
+  padding: 9px 18px; border-radius: 999px; z-index: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trail polyline.sel { animation: none; }
+  .tile.reseed, .tile.broke { animation: none; }
+}

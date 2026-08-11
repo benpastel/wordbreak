@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordBreak — board mockup</title>
+<style>
+/* ============================================================
+   WordBreak — "warm paper & ink"
+
+   Two orthogonal visual channels, because claiming and selecting
+   are mechanically orthogonal:
+
+     COLOUR = whose claim this is, and how close to banking
+              (hue ring + rising hue fill)
+     INK    = whether this tile is in MY current trail
+              (monochrome — selection never needs to say *whose*,
+               so it never competes with the colour channel)
+   ============================================================ */
+
+@property --p { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+
+:root {
+  --ground:    oklch(0.940 0.008 85);
+  --tray:      oklch(0.902 0.012 85);
+  --tile-face: oklch(0.985 0.004 85);
+  --ink:       oklch(0.220 0.010 60);
+  --ink-soft:  oklch(0.520 0.008 70);
+  --hairline:  oklch(0.860 0.010 85);
+
+  --shadow-1: 0 1px 1px oklch(0.30 0.02 70 / .10);
+  --shadow-2: 0 2px 5px oklch(0.30 0.02 70 / .10);
+
+  --cell: clamp(46px, 8.5vw, 80px);
+  --gap:  calc(var(--cell) * 0.10);
+
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---- player palette: dealt so small tables get the widest hues ---- */
+.p1 { --hue: 250; --cf: 0.085; --lf: 0.870; --ci: 0.160; }  /* blue       */
+.p2 { --hue:  25; --cf: 0.105; --lf: 0.855; --ci: 0.165; }  /* vermillion */
+.p3 { --hue: 148; --cf: 0.120; --lf: 0.845; --ci: 0.140; }  /* green      */
+.p4 { --hue: 300; --cf: 0.095; --lf: 0.875; --ci: 0.170; }  /* violet     */
+.p5 { --hue:  95; --cf: 0.140; --lf: 0.895; --ci: 0.130; }  /* gold       */
+.p6 { --hue: 195; --cf: 0.095; --lf: 0.860; --ci: 0.120; }  /* teal       */
+.p7 { --hue: 342; --cf: 0.105; --lf: 0.865; --ci: 0.170; }  /* magenta    */
+.p8 { --hue:  55; --cf: 0.130; --lf: 0.870; --ci: 0.145; }  /* orange     */
+.p1,.p2,.p3,.p4,.p5,.p6,.p7,.p8 {
+  --pf: oklch(var(--lf) var(--cf) var(--hue));
+  --pc: oklch(0.55    var(--ci) var(--hue));
+}
+
+/* ---- page chrome ---- */
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 40px 24px 96px;
+  background: var(--ground); color: var(--ink); line-height: 1.5;
+}
+.wrap { max-width: 1000px; margin: 0 auto; }
+h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 4px; }
+h2 {
+  font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline);
+}
+.lede { color: var(--ink-soft); margin: 0 0 40px; max-width: 64ch; font-size: .93rem; }
+section { margin-bottom: 56px; }
+.note { color: var(--ink-soft); font-size: .85rem; max-width: 64ch; margin: 16px 0 0; }
+code { font: 600 .85em ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-soft); }
+kbd { font: 700 .82em system-ui; padding: 1px 5px; border-radius: 4px; background: var(--tray); color: var(--ink-soft); }
+
+/* ============================ BOARD ============================ */
+.stack { display: inline-flex; flex-direction: column; }
+.board {
+  position: relative; display: inline-grid; gap: var(--gap);
+  padding: var(--gap); border-radius: 14px; background: var(--tray);
+  box-shadow: inset 0 1px 3px oklch(0.30 0.02 70 / .13),
+              inset 0 0 0 1px oklch(0.30 0.02 70 / .05);
+}
+.board.n5 { grid-template-columns: repeat(5, var(--cell)); }
+.board.n3 { grid-template-columns: repeat(3, var(--cell)); }
+
+.trail { position: absolute; inset: var(--gap); pointer-events: none; overflow: visible; }
+.trail polyline { fill: none; stroke-width: .05; stroke-linecap: round; stroke-linejoin: round; opacity: .40; }
+.trail polyline.sel {
+  stroke: var(--selink, var(--ink)); stroke-width: .062; opacity: .75;
+  stroke-dasharray: .17 .13; animation: ants 1.1s linear infinite;
+}
+@keyframes ants { to { stroke-dashoffset: -.6; } }
+
+/* ============================ TILE ============================= */
+.tile {
+  position: relative; aspect-ratio: 1; border-radius: 13%;
+  display: grid; place-items: center;
+  font-size: calc(var(--cell) * 0.46); font-weight: 800; letter-spacing: .01em;
+  color: var(--ink); background: var(--tile-face);
+  --ring: inset 0 0 0 0 transparent;
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
+}
+.tile > span { position: relative; z-index: 1; }
+
+/* ---- CHANNEL 1 · colour: whose claim, how close to banking ---- */
+.tile.claimed {
+  --ring: inset 0 0 0 3px var(--pc);
+  background:
+    linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    var(--tile-face);
+}
+
+/* ---- CHANNEL 2 · ink: is this tile in my trail ---- */
+.tile.sel::before {
+  content: ""; position: absolute; z-index: 0;
+  inset: 17%; border-radius: 50%;
+}
+
+/* ---- disc variations ------------------------------------------------
+   v0 hard ink          · original, starkest
+   v1 softened ink      · same idea, ink pulled up to 0.38
+   v2 grey disc         · letter stays black
+   v3 outline ring      · thin ink circle, fill fully visible
+   v4 debossed          · pale disc pressed into the tile
+   v5 mid-grey          · halfway house, white letter
+   v6 soft halo         · no hard edge at all
+   --------------------------------------------------------------------- */
+.v0 { --selink: oklch(0.22 0.010 60); }
+.v0 .sel::before { background: oklch(0.22 0.010 60); }
+.v0 .sel > span  { color: var(--tile-face); }
+
+.v1 { --selink: oklch(0.38 0.012 60); }
+.v1 .sel::before { background: oklch(0.38 0.012 60); }
+.v1 .sel > span  { color: var(--tile-face); }
+
+.v2 { --selink: oklch(0.62 0.010 70); }
+.v2 .sel::before { background: oklch(0.855 0.006 70); }
+.v2 .sel > span  { color: var(--ink); }
+
+.v3 { --selink: oklch(0.45 0.010 60); }
+.v3 .sel::before { background: none; box-shadow: inset 0 0 0 2.5px oklch(0.45 0.010 60); }
+.v3 .sel > span  { color: var(--ink); }
+
+.v4 { --selink: oklch(0.55 0.010 70); }
+.v4 .sel::before {
+  background: oklch(0.885 0.008 75);
+  box-shadow: inset 0 1.5px 3px oklch(0.30 0.02 70 / .26), inset 0 -1px 0 oklch(1 0 0 / .7);
+}
+.v4 .sel > span  { color: var(--ink); }
+
+.v5 { --selink: oklch(0.50 0.012 60); }
+.v5 .sel::before { background: oklch(0.575 0.012 60); }
+.v5 .sel > span  { color: var(--tile-face); }
+
+.v6 { --selink: oklch(0.55 0.010 70); }
+.v6 .sel::before {
+  inset: 8%;
+  background: radial-gradient(closest-side, oklch(0.30 0.02 70 / .34), oklch(0.30 0.02 70 / 0));
+}
+.v6 .sel > span  { color: var(--ink); }
+
+/* ================= live hold → bank → reseed ================= */
+.demo .tile.claimed { animation: hold 5.2s linear infinite; }
+@keyframes hold {
+  0%     { --p: 0%;   filter: saturate(1) brightness(1);     transform: none; opacity: 1; }
+  70%    { --p: 100%; filter: saturate(1) brightness(1);     transform: none; opacity: 1;
+           animation-timing-function: cubic-bezier(.2,.9,.3,1); }
+  73%    { --p: 100%; filter: saturate(2.5) brightness(.93); transform: scale(1.09); opacity: 1;
+           animation-timing-function: ease-out; }
+  77%    { --p: 100%; filter: saturate(1) brightness(1);     transform: scale(1); opacity: 1; }
+  87%    { --p: 100%; filter: saturate(1) brightness(1);     transform: scale(.78) translateY(-30px); opacity: 0; }
+  87.01% { --p: 0%;   filter: saturate(1) brightness(1);     transform: rotateY(90deg); opacity: 0; }
+  100%   { --p: 0%;   filter: saturate(1) brightness(1);     transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo .tile.claimed { animation: none; --p: 62%; }
+  .trail polyline.sel { animation: none; }
+}
+
+/* ================= selection readout ================= */
+.readout {
+  align-self: flex-end; display: flex; align-items: baseline; gap: 14px;
+  margin-top: 14px; padding-right: 2px;
+}
+.readout .word { font-weight: 800; font-size: 1.1rem; letter-spacing: .26em; color: var(--ink); }
+.readout .x { color: var(--ink-soft); font-size: .95rem; font-weight: 700; cursor: pointer; }
+
+/* ================= score bar ================= */
+.scores { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 28px; }
+.player { display: flex; align-items: baseline; gap: 8px; }
+.player .name { font-weight: 700; color: var(--pc); }
+.player .pts  { font-weight: 800; font-size: 1.15rem; color: var(--pc); font-variant-numeric: tabular-nums; }
+
+/* ================= variation picker ================= */
+.picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.picker label {
+  font-size: .78rem; font-weight: 600; color: var(--ink-soft);
+  padding: 6px 13px; border-radius: 999px; background: var(--tile-face);
+  box-shadow: var(--shadow-1); cursor: pointer; user-select: none;
+}
+.picker input { position: absolute; opacity: 0; pointer-events: none; }
+.picker label:has(input:checked) { background: var(--ink); color: var(--ground); box-shadow: none; }
+
+/* ================= variation matrix ================= */
+.matrix { display: grid; grid-template-columns: 128px repeat(5, auto); gap: 12px 14px; align-items: center; --cell: 54px; }
+.matrix .colhd {
+  font-size: .65rem; color: var(--ink-soft); line-height: 1.3; text-align: center;
+  align-self: end; padding-bottom: 2px;
+}
+.matrix .colhd b { display: block; color: var(--ink); font-weight: 700; }
+.matrix .rowhd { font-size: .8rem; font-weight: 700; color: var(--ink); }
+.matrix .rowhd em { display: block; font-style: normal; font-weight: 400; color: var(--ink-soft); font-size: .72rem; }
+.matrix .cellbox { display: grid; place-items: center; padding: 7px; border-radius: 10px; background: var(--tray); }
+.matrix .tile { width: var(--cell); }
+
+/* ================= swatches ================= */
+.swatches { display: flex; flex-wrap: wrap; gap: 26px; --cell: 62px; }
+.swatch { text-align: center; width: 62px; }
+.swatch .cap { font-size: .68rem; color: var(--ink-soft); margin-top: 9px; line-height: 1.35; }
+
+.palette { display: flex; flex-wrap: wrap; gap: 18px; --cell: 54px; }
+.pal { text-align: center; }
+.pal .nm { font-size: .7rem; font-weight: 700; color: var(--pc); margin-top: 7px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>WordBreak</h1>
+  <p class="lede">
+    Board mockup in “warm paper &amp; ink”. Two independent channels:
+    <b>colour</b> says whose claim a tile is under and how close it is to banking;
+    <b>ink</b> says whether it’s in your current trail.
+  </p>
+
+  <!-- ==================== MID-GAME BOARD ==================== -->
+  <section>
+    <h2>Mid-game · 5×5 · three live claims</h2>
+
+    <div class="board n5">
+      <svg class="trail" viewBox="0 0 5.4 5.4" preserveAspectRatio="none">
+        <polyline class="p1" points="0.5,0.5 1.6,0.5 1.6,1.6 0.5,1.6 1.6,2.7 0.5,3.8" stroke="var(--pc)"/>
+        <polyline class="p2" points="2.7,2.7 3.8,2.7 2.7,3.8 3.8,3.8"                  stroke="var(--pc)"/>
+        <polyline class="p3" points="4.9,2.7 3.8,1.6 3.8,0.5"                          stroke="var(--pc)"/>
+      </svg>
+
+      <div class="tile p1 claimed" style="--p:92%"><span>S</span></div>
+      <div class="tile p1 claimed" style="--p:92%"><span>T</span></div>
+      <div class="tile"><span>E</span></div>
+      <div class="tile p3 claimed" style="--p:18%"><span>P</span></div>
+      <div class="tile"><span>L</span></div>
+
+      <div class="tile p1 claimed" style="--p:92%"><span>A</span></div>
+      <div class="tile p1 claimed" style="--p:92%"><span>R</span></div>
+      <div class="tile"><span>T</span></div>
+      <div class="tile p3 claimed" style="--p:18%"><span>O</span></div>
+      <div class="tile"><span>N</span></div>
+
+      <div class="tile"><span>D</span></div>
+      <div class="tile p1 claimed" style="--p:92%"><span>I</span></div>
+      <div class="tile p2 claimed" style="--p:55%"><span>C</span></div>
+      <div class="tile p2 claimed" style="--p:55%"><span>A</span></div>
+      <div class="tile p3 claimed" style="--p:18%"><span>M</span></div>
+
+      <div class="tile p1 claimed" style="--p:92%"><span>N</span></div>
+      <div class="tile"><span>R</span></div>
+      <div class="tile p2 claimed" style="--p:55%"><span>K</span></div>
+      <div class="tile p2 claimed" style="--p:55%"><span>E</span></div>
+      <div class="tile"><span>S</span></div>
+
+      <div class="tile"><span>A</span></div>
+      <div class="tile"><span>T</span></div>
+      <div class="tile"><span>E</span></div>
+      <div class="tile"><span>D</span></div>
+      <div class="tile"><span>H</span></div>
+    </div>
+
+    <div class="scores">
+      <div class="player p1"><span class="name">ana</span>   <span class="pts">34</span></div>
+      <div class="player p2"><span class="name">benji</span> <span class="pts">41</span></div>
+      <div class="player p3"><span class="name">sam</span>   <span class="pts">28</span></div>
+      <div class="player p4"><span class="name">kit</span>   <span class="pts">19</span></div>
+    </div>
+
+    <p class="note">
+      ana holds <b>STRAIN</b> (6) at 92% — about to bank. benji holds <b>CAKE</b> (4) at 55%,
+      sam just took <b>MOP</b> (3).
+    </p>
+  </section>
+
+  <!-- ==================== LIVE DEMO ==================== -->
+  <section>
+    <h2>Hold → bank → reseed</h2>
+    <div class="board n3 demo" style="--cell: 68px;">
+      <div class="tile p4 claimed"><span>D</span></div>
+      <div class="tile p4 claimed"><span>A</span></div>
+      <div class="tile p4 claimed"><span>B</span></div>
+    </div>
+    <p class="note">
+      Fill rises at a constant rate so it reads as a clock, then flashes the moment it tops out.
+      Tiles detach toward the score bar and fresh letters flip in.
+    </p>
+  </section>
+
+  <!-- ==================== SELECTION ==================== -->
+  <section>
+    <h2>Your trail in progress · click through the variations</h2>
+
+    <div class="picker" id="picker">
+      <label><input type="radio" name="v" value="v0"> v0 · hard ink</label>
+      <label><input type="radio" name="v" value="v1" checked> v1 · softened ink</label>
+      <label><input type="radio" name="v" value="v2"> v2 · grey disc</label>
+      <label><input type="radio" name="v" value="v3"> v3 · outline ring</label>
+      <label><input type="radio" name="v" value="v4"> v4 · debossed</label>
+      <label><input type="radio" name="v" value="v5"> v5 · mid-grey</label>
+      <label><input type="radio" name="v" value="v6"> v6 · soft halo</label>
+    </div>
+
+    <div class="stack">
+      <div class="board n5 v1" id="selBoard">
+        <svg class="trail" viewBox="0 0 5.4 5.4" preserveAspectRatio="none">
+          <polyline class="p1" points="0.5,0.5 1.6,0.5 1.6,1.6 0.5,1.6 1.6,2.7 0.5,3.8" stroke="var(--pc)"/>
+          <polyline class="p2" points="2.7,2.7 3.8,2.7 2.7,3.8 3.8,3.8"                  stroke="var(--pc)"/>
+          <polyline class="p3" points="4.9,2.7 3.8,1.6 3.8,0.5"                          stroke="var(--pc)"/>
+          <polyline class="sel" points="1.6,3.8 0.5,4.9 1.6,4.9 2.7,4.9 3.8,4.9 4.9,4.9"/>
+        </svg>
+
+        <div class="tile p1 claimed" style="--p:92%"><span>S</span></div>
+        <div class="tile p1 claimed" style="--p:92%"><span>T</span></div>
+        <div class="tile"><span>E</span></div>
+        <div class="tile p3 claimed" style="--p:18%"><span>P</span></div>
+        <div class="tile"><span>L</span></div>
+
+        <div class="tile p1 claimed" style="--p:92%"><span>A</span></div>
+        <div class="tile p1 claimed" style="--p:92%"><span>R</span></div>
+        <div class="tile"><span>T</span></div>
+        <div class="tile p3 claimed" style="--p:18%"><span>O</span></div>
+        <div class="tile"><span>N</span></div>
+
+        <div class="tile"><span>D</span></div>
+        <div class="tile p1 claimed" style="--p:92%"><span>I</span></div>
+        <div class="tile p2 claimed" style="--p:55%"><span>C</span></div>
+        <div class="tile p2 claimed" style="--p:55%"><span>A</span></div>
+        <div class="tile p3 claimed" style="--p:18%"><span>M</span></div>
+
+        <div class="tile p1 claimed" style="--p:92%"><span>N</span></div>
+        <div class="tile p4 claimed sel" style="--p:9%"><span>R</span></div>
+        <div class="tile p2 claimed" style="--p:55%"><span>K</span></div>
+        <div class="tile p2 claimed" style="--p:55%"><span>E</span></div>
+        <div class="tile"><span>S</span></div>
+
+        <div class="tile p4 claimed sel" style="--p:9%"><span>A</span></div>
+        <div class="tile p4 claimed sel" style="--p:9%"><span>T</span></div>
+        <div class="tile p4 claimed sel" style="--p:9%"><span>E</span></div>
+        <div class="tile p4 claimed sel" style="--p:9%"><span>D</span></div>
+        <div class="tile sel"><span>H</span></div>
+      </div>
+
+      <div class="readout">
+        <span class="word">RATEDH</span>
+        <span class="x">✕</span>
+      </div>
+    </div>
+
+    <p class="note">
+      Your <b>DOR</b> case. <b>RATED</b> auto-claimed, so those five tiles carry a violet ring
+      and a fill that has just restarted. The <b>H</b> is selected but claims nothing yet — ink
+      disc, no colour at all. <kbd>backspace</kbd> drops H and leaves RATED standing;
+      <kbd>esc</kbd> or <b>✕</b> ends the trail without touching the claim.
+    </p>
+  </section>
+
+  <!-- ==================== VARIATION MATRIX ==================== -->
+  <section>
+    <h2>Disc variations × claim states</h2>
+
+    <div class="matrix">
+      <div></div>
+      <div class="colhd"><b>—</b>free</div>
+      <div class="colhd"><b>selected</b>no claim</div>
+      <div class="colhd"><b>my claim</b>55%</div>
+      <div class="colhd"><b>my claim</b>96%</div>
+      <div class="colhd"><b>their claim</b>70%</div>
+
+      <div class="rowhd">v0 · hard ink<em>starkest</em></div>
+      <div class="cellbox"><div class="tile"><span>E</span></div></div>
+      <div class="cellbox v0"><div class="tile sel"><span>E</span></div></div>
+      <div class="cellbox v0"><div class="tile p4 claimed sel" style="--p:55%"><span>E</span></div></div>
+      <div class="cellbox v0"><div class="tile p4 claimed sel" style="--p:96%"><span>E</span></div></div>
+      <div class="cellbox v0"><div class="tile p2 claimed sel" style="--p:70%"><span>E</span></div></div>
+
+      <div class="rowhd">v1 · softened ink<em>same idea, lifted</em></div>
+      <div class="cellbox"><div class="tile"><span>E</span></div></div>
+      <div class="cellbox v1"><div class="tile sel"><span>E</span></div></div>
+      <div class="cellbox v1"><div class="tile p4 claimed sel" style="--p:55%"><span>E</span></div></div>
+      <div class="cellbox v1"><div class="tile p4 claimed sel" style="--p:96%"><span>E</span></div></div>
+      <div class="cellbox v1"><div class="tile p2 claimed sel" style="--p:70%"><span>E</span></div></div>
+
+      <div class="rowhd">v2 · grey disc<em>letter stays black</em></div>
+      <div class="cellbox"><div class="tile"><span>E</span></div></div>
+      <div class="cellbox v2"><div class="tile sel"><span>E</span></div></div>
+      <div class="cellbox v2"><div class="tile p4 claimed sel" style="--p:55%"><span>E</span></div></div>
+      <div class="cellbox v2"><div class="tile p4 claimed sel" style="--p:96%"><span>E</span></div></div>
+      <div class="cellbox v2"><div class="tile p2 claimed sel" style="--p:70%"><span>E</span></div></div>
+
+      <div class="rowhd">v3 · outline ring<em>fill fully visible</em></div>
+      <div class="cellbox"><div class="tile"><span>E</span></div></div>
+      <div class="cellbox v3"><div class="tile sel"><span>E</span></div></div>
+      <div class="cellbox v3"><div class="tile p4 claimed sel" style="--p:55%"><span>E</span></div></div>
+      <div class="cellbox v3"><div class="tile p4 claimed sel" style="--p:96%"><span>E</span></div></div>
+      <div class="cellbox v3"><div class="tile p2 claimed sel" style="--p:70%"><span>E</span></div></div>
+
+      <div class="rowhd">v4 · debossed<em>pressed into the tile</em></div>
+      <div class="cellbox"><div class="tile"><span>E</span></div></div>
+      <div class="cellbox v4"><div class="tile sel"><span>E</span></div></div>
+      <div class="cellbox v4"><div class="tile p4 claimed sel" style="--p:55%"><span>E</span></div></div>
+      <div class="cellbox v4"><div class="tile p4 claimed sel" style="--p:96%"><span>E</span></div></div>
+      <div class="cellbox v4"><div class="tile p2 claimed sel" style="--p:70%"><span>E</span></div></div>
+
+      <div class="rowhd">v5 · mid-grey<em>white letter, halfway</em></div>
+      <div class="cellbox"><div class="tile"><span>E</span></div></div>
+      <div class="cellbox v5"><div class="tile sel"><span>E</span></div></div>
+      <div class="cellbox v5"><div class="tile p4 claimed sel" style="--p:55%"><span>E</span></div></div>
+      <div class="cellbox v5"><div class="tile p4 claimed sel" style="--p:96%"><span>E</span></div></div>
+      <div class="cellbox v5"><div class="tile p2 claimed sel" style="--p:70%"><span>E</span></div></div>
+
+      <div class="rowhd">v6 · soft halo<em>no hard edge</em></div>
+      <div class="cellbox"><div class="tile"><span>E</span></div></div>
+      <div class="cellbox v6"><div class="tile sel"><span>E</span></div></div>
+      <div class="cellbox v6"><div class="tile p4 claimed sel" style="--p:55%"><span>E</span></div></div>
+      <div class="cellbox v6"><div class="tile p4 claimed sel" style="--p:96%"><span>E</span></div></div>
+      <div class="cellbox v6"><div class="tile p2 claimed sel" style="--p:70%"><span>E</span></div></div>
+    </div>
+
+    <p class="note">
+      The <b>my claim 96%</b> column is the stress test — that’s where an opaque disc buries the
+      countdown you’re actively watching. The <b>their claim 70%</b> column checks that a break
+      in progress still reads as theirs.
+    </p>
+  </section>
+
+  <!-- ==================== FILL STAGES ==================== -->
+  <section>
+    <h2>Claim fill · the countdown</h2>
+    <div class="swatches">
+      <div class="swatch"><div class="tile p7 claimed" style="--p:12%"><span>E</span></div><div class="cap">just claimed</div></div>
+      <div class="swatch"><div class="tile p7 claimed" style="--p:40%"><span>E</span></div><div class="cap">holding</div></div>
+      <div class="swatch"><div class="tile p7 claimed" style="--p:68%"><span>E</span></div><div class="cap">holding</div></div>
+      <div class="swatch"><div class="tile p7 claimed" style="--p:96%"><span>E</span></div><div class="cap">about to bank</div></div>
+    </div>
+  </section>
+
+  <!-- ==================== PALETTE ==================== -->
+  <section>
+    <h2>Player palette · dealt in this order</h2>
+    <div class="palette">
+      <div class="pal p1"><div class="tile p1 claimed" style="--p:100%"><span>A</span></div><div class="nm">1</div></div>
+      <div class="pal p2"><div class="tile p2 claimed" style="--p:100%"><span>B</span></div><div class="nm">2</div></div>
+      <div class="pal p3"><div class="tile p3 claimed" style="--p:100%"><span>C</span></div><div class="nm">3</div></div>
+      <div class="pal p4"><div class="tile p4 claimed" style="--p:100%"><span>D</span></div><div class="nm">4</div></div>
+      <div class="pal p5"><div class="tile p5 claimed" style="--p:100%"><span>E</span></div><div class="nm">5</div></div>
+      <div class="pal p6"><div class="tile p6 claimed" style="--p:100%"><span>F</span></div><div class="nm">6</div></div>
+      <div class="pal p7"><div class="tile p7 claimed" style="--p:100%"><span>G</span></div><div class="nm">7</div></div>
+      <div class="pal p8"><div class="tile p8 claimed" style="--p:100%"><span>H</span></div><div class="nm">8</div></div>
+    </div>
+    <p class="note">
+      Colours are dealt blue → vermillion → green → violet first, so a 3- or 4-player table gets
+      the most separated hues. Fills sit at <code>oklch(0.845–0.895 C H)</code> and rings at
+      <code>oklch(0.55 C H)</code>; black letters stay ~8–10:1 legible even at 100% fill.
+    </p>
+  </section>
+
+</div>
+
+<script>
+  const board = document.getElementById('selBoard');
+  document.getElementById('picker').addEventListener('change', e => {
+    board.classList.remove('v0','v1','v2','v3','v4','v5','v6');
+    board.classList.add(e.target.value);
+  });
+</script>
+</body>
+</html>

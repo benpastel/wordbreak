@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WordBreak — how to play</title>
+<style>
+/* Standalone on purpose: this page is the living rules document, and it should
+   keep working even if the app bundle changes underneath it. The tokens are the
+   same ones src/client/styles.css uses — keep them in step. */
+@property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+
+:root {
+  --ground: oklch(0.940 0.008 85);
+  --tray:   oklch(0.902 0.012 85);
+  --tile-face: oklch(0.985 0.004 85);
+  --ink:      oklch(0.220 0.010 60);
+  --ink-soft: oklch(0.520 0.008 70);
+  --hairline: oklch(0.860 0.010 85);
+  --shadow-1: 0 1px 1px oklch(0.30 0.02 70 / .10);
+  --shadow-2: 0 2px 5px oklch(0.30 0.02 70 / .10);
+  --cell: 56px;
+  --gap: calc(var(--cell) * 0.10);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+.c0 { --hue: 250; --cf: 0.085; --lf: 0.870; --ci: 0.160; }
+.c1 { --hue:  25; --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+.c2 { --hue: 148; --cf: 0.120; --lf: 0.845; --ci: 0.140; }
+.c3 { --hue: 300; --cf: 0.095; --lf: 0.875; --ci: 0.170; }
+.c0,.c1,.c2,.c3 { --pf: oklch(var(--lf) var(--cf) var(--hue)); --pc: oklch(0.55 var(--ci) var(--hue)); }
+
+* { box-sizing: border-box; }
+body { margin: 0; padding: 44px 24px 100px; background: var(--ground); color: var(--ink); line-height: 1.62; }
+.wrap { max-width: 720px; margin: 0 auto; }
+h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; }
+h2 {
+  font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 48px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline);
+}
+p { margin: 0 0 16px; }
+.lede { color: var(--ink-soft); font-size: 1rem; margin-bottom: 8px; }
+.back { font-size: .85rem; }
+a { color: var(--ink-soft); text-underline-offset: 2px; }
+a:hover { color: var(--ink); }
+b { font-weight: 700; }
+ul { padding-left: 20px; margin: 0 0 16px; }
+li { margin-bottom: 7px; }
+.cap { font-size: .8rem; color: var(--ink-soft); margin-top: 10px; }
+kbd { font: 700 .82em system-ui; padding: 1px 6px; border-radius: 4px; background: var(--tray); color: var(--ink-soft); }
+
+.strip {
+  display: inline-flex; gap: var(--gap); padding: var(--gap);
+  border-radius: 12px; background: var(--tray);
+  box-shadow: inset 0 1px 3px oklch(0.30 0.02 70 / .13);
+}
+.sp { width: 20px; }
+.tile {
+  position: relative; width: var(--cell); aspect-ratio: 1; border-radius: 13%;
+  display: grid; place-items: center;
+  font-size: calc(var(--cell) * .46); font-weight: 800;
+  color: var(--ink); background: var(--tile-face);
+  --ring: inset 0 0 0 0 transparent;
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
+}
+.tile > span { position: relative; z-index: 1; }
+.tile.claimed {
+  --ring: inset 0 0 0 3px var(--pc);
+  background: linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%), var(--tile-face);
+}
+.tile.sel::before {
+  content: ''; position: absolute; z-index: 0; inset: 17%; border-radius: 50%;
+  background: oklch(0.885 0.008 75);
+  box-shadow: inset 0 1.5px 3px oklch(0.30 0.02 70 / .26), inset 0 -1px 0 oklch(1 0 0 / .7);
+}
+.demo .tile.claimed { animation: hold 5.2s linear infinite; }
+@keyframes hold {
+  0%     { --p: 0%;   filter: saturate(1) brightness(1);     transform: none; opacity: 1; }
+  70%    { --p: 100%; filter: saturate(1) brightness(1);     transform: none; opacity: 1;
+           animation-timing-function: cubic-bezier(.2,.9,.3,1); }
+  73%    { --p: 100%; filter: saturate(2.5) brightness(.93); transform: scale(1.09); opacity: 1;
+           animation-timing-function: ease-out; }
+  77%    { --p: 100%; filter: saturate(1) brightness(1);     transform: scale(1); opacity: 1; }
+  87%    { --p: 100%; filter: saturate(1) brightness(1);     transform: scale(.78) translateY(-30px); opacity: 0; }
+  87.01% { --p: 0%;   filter: saturate(1) brightness(1);     transform: rotateY(90deg); opacity: 0; }
+  100%   { --p: 0%;   filter: saturate(1) brightness(1);     transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .demo .tile.claimed { animation: none; --p: 62%; } }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; margin-bottom: 16px; }
+th, td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+th { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
+td b { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>WordBreak</h1>
+  <p class="lede">Boggle, except finding a word doesn’t end it — it starts a fight over it.</p>
+  <p class="back"><a href="./">← back to the lobby</a></p>
+
+  <h2>The loop</h2>
+  <p>
+    Trace a word through adjacent letters. The moment your trail spells a word you
+    <b>claim</b> it, and those letters are locked to you. Survive the <b>hold time</b> and the
+    claim <b>banks</b>: one point per letter, the tiles vanish, and fresh letters
+    <b>reseed</b> in their place.
+  </p>
+  <p>
+    But a claim is only as strong as it is long. Anyone — including you — can
+    <b>break</b> it with a longer word through the same letters.
+  </p>
+
+  <h2>Claiming</h2>
+  <p>
+    Click letters in sequence, or press and drag across them. Any two tiles touching
+    orthogonally or diagonally are adjacent, and no tile can be used twice in one word.
+    There is no three-letter minimum: <b>DO</b> is a perfectly good claim.
+  </p>
+  <p>
+    Your trail stays live after it claims, so you can keep reaching. Trace
+    <b>D&#8202;→&#8202;O</b> and you hold DO; add <b>G</b> and you hold DOG; add <b>S</b> and you
+    hold DOGS. Each step replaces the last — and <em>restarts the hold clock</em>. A DOG that is
+    one second from banking is often worth more than a fresh DOGS.
+  </p>
+  <div class="strip">
+    <div class="tile c3 claimed sel" style="--p:14%"><span>R</span></div>
+    <div class="tile c3 claimed sel" style="--p:14%"><span>A</span></div>
+    <div class="tile c3 claimed sel" style="--p:14%"><span>T</span></div>
+    <div class="tile c3 claimed sel" style="--p:14%"><span>E</span></div>
+    <div class="tile sel"><span>H</span></div>
+  </div>
+  <p class="cap">
+    Two channels, always readable separately. <b>Colour</b> — the ring and the rising fill —
+    is whose claim a tile is under and how close it is to banking. <b>Ink</b> — the pressed
+    disc — is simply whether the tile is in <em>your</em> current trail. Here RATE is claimed
+    and the H is only selected, because RATEH isn’t a word yet.
+  </p>
+
+  <h2>Breaking</h2>
+  <p>
+    To use a letter inside someone else’s claim, the word you end up with must be
+    <b>strictly longer</b> than that claim. Four letters beats three. Four does not beat four.
+  </p>
+  <p>
+    Breaking is all-or-nothing: touch one tile of a claim and the whole claim dies, because a
+    claim is a word, not a pile of letters. The player you broke gets nothing — their hold
+    time is simply lost.
+  </p>
+  <div class="strip">
+    <div class="tile c1 claimed" style="--p:62%"><span>C</span></div>
+    <div class="tile c1 claimed" style="--p:62%"><span>A</span></div>
+    <div class="tile c1 claimed" style="--p:62%"><span>K</span></div>
+    <div class="tile c1 claimed" style="--p:62%"><span>E</span></div>
+    <div class="sp"></div>
+    <div class="tile"><span>S</span></div>
+  </div>
+  <p class="cap">
+    CAKE is four letters and 62% of the way to banking. CAKES would take it — five beats four.
+    CAKE, from another player, would not.
+  </p>
+
+  <h2>Banking</h2>
+  <p>
+    Hold a claim for the full hold time and it converts. You score one point per letter, the
+    tiles fly to your name, and new letters flip in.
+  </p>
+  <div class="strip demo">
+    <div class="tile c0 claimed"><span>D</span></div>
+    <div class="tile c0 claimed"><span>A</span></div>
+    <div class="tile c0 claimed"><span>B</span></div>
+  </div>
+  <p class="cap">The fill is the clock. When it reaches the top, the claim is yours for good.</p>
+
+  <h2>What this means in practice</h2>
+  <ul>
+    <li>
+      <b>Long words are safe but slow to pay.</b> A seven-letter claim is nearly unbreakable —
+      an opponent needs eight through the same letters.
+    </li>
+    <li>
+      <b>Short claims are almost free to take.</b> Two-letter words lock very little, so use
+      them to hold ground, not to score.
+    </li>
+    <li>
+      <b>Contested claims never bank.</b> Points come from words nobody bothers to beat, so
+      the quiet corner of the board is often worth more than the crowded one.
+    </li>
+    <li>
+      <b>Extending is a real decision.</b> More letters, but a fresh clock and a louder signal
+      to everyone watching that you’re building there.
+    </li>
+  </ul>
+
+  <h2>Controls</h2>
+  <table>
+    <tr><th>action</th><th>how</th></tr>
+    <tr><td><b>select</b></td><td>click letters in sequence, or press and drag across them</td></tr>
+    <tr><td><b>undo a letter</b></td><td><kbd>backspace</kbd> — shortens the trail, leaves your claim standing</td></tr>
+    <tr><td><b>clear the trail</b></td><td><kbd>esc</kbd> or the <b>✕</b> beside the word — your claims keep counting down</td></tr>
+    <tr><td><b>start elsewhere</b></td><td>just click a new tile; the old trail is dropped</td></tr>
+  </table>
+
+  <h2>Glossary</h2>
+  <table>
+    <tr><th>term</th><th>meaning</th></tr>
+    <tr><td><b>claim</b></td><td>a word you have locked; its tiles are yours until it banks or breaks</td></tr>
+    <tr><td><b>break</b></td><td>taking a tile out of a claim with a strictly longer word</td></tr>
+    <tr><td><b>bank</b></td><td>a claim surviving its hold time and converting to points</td></tr>
+    <tr><td><b>hold time</b></td><td>how long a claim must survive, set per table in the lobby</td></tr>
+    <tr><td><b>reseed</b></td><td>fresh letters flipping into cells a banked claim vacated</td></tr>
+    <tr><td><b>trail</b></td><td>the sequence of tiles you currently have selected</td></tr>
+  </table>
+
+  <h2>House rules of this prototype</h2>
+  <ul>
+    <li>One round, no end condition — play until you’ve had enough.</li>
+    <li>Words come from ENABLE, minus anything containing <b>q</b> (there is no Q tile).</li>
+    <li>Letters are drawn on Boggle’s own frequencies, with a floor on vowels so the board can’t dry out.</li>
+    <li>Everything lives in memory on one server, so a deploy or restart ends the game.</li>
+  </ul>
+
+  <p class="back" style="margin-top:40px"><a href="./">← back to the lobby</a></p>
+</div>
+</body>
+</html>
