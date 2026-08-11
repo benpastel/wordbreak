@@ -60,7 +60,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
     }
     const word = R.wordOf(game, selection);
     if (word.length !== selection.length || !isWord(word)) return;
-    if (R.validatePath(game, selection, meId) !== null) return;
+    if (R.validatePath(game, selection) !== null) return;
     const key = selection.join(',');
     if (key === lastSent.current) return;
     lastSent.current = key;
@@ -95,14 +95,13 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
   const tryAppend = useCallback(
     (tileId: number) => {
       setSelection((sel) => {
-        if (R.canAppend(game, sel, tileId, meId)) return [...sel, tileId];
+        if (R.canAppend(game, sel, tileId)) return [...sel, tileId];
         if (sel.length && sel[sel.length - 1] === tileId) return sel;
-        // Clicking somewhere unreachable starts a fresh trail there, if that is legal.
-        if (R.canAppend(game, [], tileId, meId)) return [tileId];
-        return sel;
+        // Clicking somewhere unreachable starts a fresh trail there instead.
+        return [tileId];
       });
     },
-    [game, meId],
+    [game],
   );
 
   useEffect(() => {

@@ -50,36 +50,23 @@ export function wordOf(game: GameState, tileIds: number[]): string {
 }
 
 /**
- * May `playerId` extend `selection` with `tileId`?
+ * May `selection` be extended with `tileId`?
  *
- * The length rule is the whole game: to touch a tile inside a claim, the word you
- * end up with must be strictly longer than that claim. Checking it per-click is
- * sufficient and stays sufficient, because a selection only grows — which is also
- * why two live claims can never share a tile.
+ * Path rules only: adjacency, and no letter twice. Deliberately says nothing about
+ * claims — any letter on the board can always be selected, because at the moment you
+ * click you do not yet know how long the word will be. Gating the click would make it
+ * impossible to start a long word that happens to pass through a short claim.
  *
- * The rule is symmetric: your own claims are no easier to break than anyone else's.
- * Extending still works, because your trail already holds those tiles and so is
- * already longer (DO -> DOG is 3 against 2). Coming back to a claim you hold with a
- * *fresh* trail does not, exactly as it would not against an opponent.
+ * The length rule lives in `validatePath`, on the claim.
  */
-export function canAppend(
-  game: GameState,
-  selection: number[],
-  tileId: number,
-  _playerId: string,
-): boolean {
+export function canAppend(game: GameState, selection: number[], tileId: number): boolean {
   if (selection.includes(tileId)) return false;
   const i = tileIndex(game, tileId);
   if (i < 0) return false;
 
-  if (selection.length > 0) {
-    const j = tileIndex(game, selection[selection.length - 1]);
-    if (j < 0 || !areAdjacent(game.size, i, j)) return false;
-  }
-
-  const held = claimOfTile(game, tileId);
-  if (held && selection.length + 1 <= held.tileIds.length) return false;
-  return true;
+  if (selection.length === 0) return true;
+  const j = tileIndex(game, selection[selection.length - 1]);
+  return j >= 0 && areAdjacent(game.size, i, j);
 }
 
 export type PathError =
@@ -89,13 +76,19 @@ export type PathError =
   | 'not-adjacent'
   | 'not-long-enough';
 
-/** Full re-validation of a whole path. The server never trusts the client's
- *  incremental checks — a path can also go stale between send and receive. */
-export function validatePath(
-  game: GameState,
-  tileIds: number[],
-  _playerId: string,
-): PathError | null {
+/**
+ * The gate on actually taking a word. This is where the length rule lives: the word
+ * you end up with must be strictly longer than every claim it touches, which is what
+ * keeps live claims disjoint — any word reaching into one destroys it outright.
+ *
+ * Symmetric by design: your own claims are no easier to break than anyone else's.
+ * Extending still works because the trail already holds those letters and so is
+ * already longer (DO -> DOG is 3 against 2).
+ *
+ * Also the server's re-validation of a claim: it never trusts the client, and a path
+ * can go stale between send and receive.
+ */
+export function validatePath(game: GameState, tileIds: number[]): PathError | null {
   if (tileIds.length === 0) return 'empty';
   if (new Set(tileIds).size !== tileIds.length) return 'duplicate';
 

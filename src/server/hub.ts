@@ -250,7 +250,7 @@ export class Hub {
     if (!t || t.phase !== 'playing' || !t.game) return;
     const game = t.game;
 
-    const err = R.validatePath(game, tileIds, playerId);
+    const err = R.validatePath(game, tileIds);
     if (err) {
       // 'not-long-enough' and 'unknown-tile' are the normal races — someone banked
       // or broke under us between send and receive. Not worth a visible error.
