@@ -31,22 +31,29 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # ─────────────────────────────────────────────────────────────────────
-      # The one line to keep in step with Heroku. Must be the wss:// origin of
-      # the Heroku app, with the /ws path.
-      #   e.g. wss://benji-wordbreak-1a2b3c4d5e6f.herokuapp.com/ws
+      # The one line to keep in step with Heroku: the wss:// origin of the
+      # Heroku app, with the /ws path. If the app is ever renamed or recreated,
+      # its hostname changes and this must change with it.
       # ─────────────────────────────────────────────────────────────────────
-      VITE_WS_URL: wss://REPLACE-WITH-HEROKU-APP.herokuapp.com/ws
+      VITE_WS_URL: wss://wordbreak-f40cfb9ef5de.herokuapp.com/ws
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check the websocket URL has been set
+      - name: Check the server is reachable at that URL
         run: |
           if [[ "$VITE_WS_URL" == *REPLACE-WITH-HEROKU-APP* ]]; then
-            echo "::error file=.github/workflows/pages.yml::VITE_WS_URL is still the placeholder. Set it to your Heroku app's wss:// URL, or the published page will load but never connect."
+            echo "::error file=.github/workflows/pages.yml::VITE_WS_URL is still the placeholder. Set it to the Heroku app's wss:// URL, or the published page will load but never connect."
             exit 1
           fi
+          # Publishing a client that points at a dead server is the failure mode
+          # worth catching here, so check the origin actually answers first.
+          health="$(echo "$VITE_WS_URL" | sed -e 's|^wss://|https://|' -e 's|/ws$|/healthz|')"
           echo "Building against $VITE_WS_URL"
+          if ! curl -fsS --max-time 60 "$health"; then
+            echo "::error file=.github/workflows/pages.yml::$health did not respond. Check the Heroku app is up before publishing a client that points at it."
+            exit 1
+          fi
 
       - uses: actions/setup-node@v4
         with:
