@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Claim, Fx, GameState, TableView } from '../shared/types';
 import * as R from '../shared/rules';
+import * as S from '../shared/selection';
 import { isWord } from './dict';
 import { playBankFx } from './fx';
 import { serverTime } from './net';
@@ -25,6 +26,8 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
   const [reseeding, setReseeding] = useState<Set<number>>(new Set());
   const [breaking, setBreaking] = useState<Set<number>>(new Set());
   const dragging = useRef(false);
+  /** The tile the current press landed on, until the pointer leaves it. */
+  const downTile = useRef<number | null>(null);
 
   const colorOf = useCallback(
     (pid: string) => table.players.find((p) => p.id === pid)?.color ?? 0,
@@ -100,14 +103,23 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fx.seq]);
 
-  const tryAppend = useCallback(
+  const onTileDown = useCallback(
     (tileId: number) => {
-      setSelection((sel) => {
-        if (R.canAppend(game, sel, tileId)) return [...sel, tileId];
-        if (sel.length && sel[sel.length - 1] === tileId) return sel;
-        // Clicking somewhere unreachable starts a fresh trail there instead.
-        return [tileId];
-      });
+      downTile.current = tileId;
+      setSelection((sel) => S.pressTile(game, sel, tileId));
+    },
+    [game],
+  );
+
+  const onTileDrag = useCallback(
+    (tileId: number) => {
+      // A pointermove fires over the tile you just pressed. Without this guard, the
+      // press that removed the head letter would immediately put it back.
+      if (downTile.current !== null) {
+        if (downTile.current === tileId) return;
+        downTile.current = null;
+      }
+      setSelection((sel) => S.dragTile(game, sel, tileId));
     },
     [game],
   );
@@ -115,6 +127,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
   useEffect(() => {
     const up = () => {
       dragging.current = false;
+      downTile.current = null;
     };
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setSelection([]);
@@ -156,7 +169,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
               ?.closest<HTMLElement>('[data-idx]');
             if (!hit) return;
             const tile = game.grid[Number(hit.dataset.idx)];
-            if (tile) tryAppend(tile.id);
+            if (tile) onTileDrag(tile.id);
           }}
         >
           <svg className="trail" viewBox={`0 0 ${vb} ${vb}`} aria-hidden="true">
@@ -198,7 +211,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
               breaking={breaking.has(i)}
               onDown={() => {
                 dragging.current = true;
-                tryAppend(tile.id);
+                onTileDown(tile.id);
               }}
             />
           ))}
