@@ -6,8 +6,8 @@
 //   bank   — a claim's hold time elapses: it converts to points, its tiles vanish.
 //   reseed — fresh letters flip into the vacated cells.
 
-export const MIN_GRID = 3;
-export const MAX_GRID = 7;
+export const MIN_GRID = 4;
+export const MAX_GRID = 6;
 export const MAX_PLAYERS = 8;
 export const COLOR_COUNT = 8;
 

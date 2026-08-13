@@ -4,6 +4,7 @@
 // swapping the in-memory store for a database a contained change later.
 
 import { drawLetter } from './letters';
+import { MAX_GRID, MAX_HOLD_MS, MIN_GRID, MIN_HOLD_MS } from './types';
 import type { Claim, GameState, Tile } from './types';
 
 export type AllocId = () => number;
@@ -159,9 +160,11 @@ export function bankClaim(game: GameState, claim: Claim, allocId: AllocId): Bank
   return { points: claim.tileIds.length, idx, letters };
 }
 
-export function clampSettings(gridSize: number, holdMs: number, min: number, max: number) {
+/** The server's floor and ceiling on what a client may ask for. Bounds come from the
+ *  shared constants so the lobby cannot offer a size this would reject, or vice versa. */
+export function clampSettings(gridSize: number, holdMs: number) {
   return {
-    gridSize: Math.max(3, Math.min(7, Math.round(gridSize))),
-    holdMs: Math.max(min, Math.min(max, Math.round(holdMs))),
+    gridSize: Math.max(MIN_GRID, Math.min(MAX_GRID, Math.round(gridSize))),
+    holdMs: Math.max(MIN_HOLD_MS, Math.min(MAX_HOLD_MS, Math.round(holdMs))),
   };
 }

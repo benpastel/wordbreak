@@ -2,14 +2,7 @@
 // timer. Clients send intents; the hub validates against current state and pushes
 // a fresh snapshot plus a few animation hints.
 
-import {
-  COLOR_COUNT,
-  DEFAULT_GRID,
-  DEFAULT_HOLD_MS,
-  MAX_HOLD_MS,
-  MAX_PLAYERS,
-  MIN_HOLD_MS,
-} from '../shared/types';
+import { COLOR_COUNT, DEFAULT_GRID, DEFAULT_HOLD_MS, MAX_PLAYERS } from '../shared/types';
 import type { Fx, Player, ServerMsg, Settings, TableSummary, TableView } from '../shared/types';
 import * as R from '../shared/rules';
 import { isWord } from './dictionary';
@@ -190,8 +183,6 @@ export class Hub {
     const next = R.clampSettings(
       patch.gridSize ?? t.settings.gridSize,
       patch.holdMs ?? t.settings.holdMs,
-      MIN_HOLD_MS,
-      MAX_HOLD_MS,
     );
     t.settings = next;
     this.store.putTable(t);
