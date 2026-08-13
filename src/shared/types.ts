@@ -13,7 +13,7 @@ export const COLOR_COUNT = 8;
 
 export const MIN_HOLD_MS = 3_000;
 export const MAX_HOLD_MS = 60_000;
-export const DEFAULT_HOLD_MS = 12_000;
+export const DEFAULT_HOLD_MS = 30_000;
 export const DEFAULT_GRID = 5;
 
 /** A cell of the board. `id` is stable and never reused, so the client can tell

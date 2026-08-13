@@ -8,11 +8,10 @@ interface Props {
   onSettings: (s: Partial<Settings>) => void;
   onColor: (c: number) => void;
   onReady: (r: boolean) => void;
-  onStart: () => void;
   onLeave: () => void;
 }
 
-const HOLD_CHOICES = [6, 8, 10, 12, 16, 20, 30];
+const HOLD_CHOICES = [20, 30, 40, 60];
 
 export default function TableRoom({
   table,
@@ -20,7 +19,6 @@ export default function TableRoom({
   onSettings,
   onColor,
   onReady,
-  onStart,
   onLeave,
 }: Props) {
   const [copied, setCopied] = useState(false);
@@ -113,10 +111,6 @@ export default function TableRoom({
             ))}
           </div>
         </div>
-        <p className="fineprint">
-          How long a claim must survive before it banks. Longer means more time for
-          someone to beat your word.
-        </p>
       </section>
 
       <section className="card">
@@ -131,17 +125,9 @@ export default function TableRoom({
 
       <div className="startrow">
         <button className={`primary big${me?.ready ? ' on' : ''}`} onClick={() => onReady(!me?.ready)}>
-          {me?.ready ? "ready — waiting for others" : "I'm ready"}
+          {me?.ready ? 'ready — waiting for others' : "I'm ready"}
         </button>
-        {isHost && (
-          <button className="ghost" onClick={onStart}>
-            start now
-          </button>
-        )}
       </div>
-      <p className="fineprint center">
-        Starts on its own once everyone here is ready. <a href="tutorial.html" target="_blank" rel="noreferrer">how to play</a>
-      </p>
     </div>
   );
 }

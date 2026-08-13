@@ -116,7 +116,6 @@ export default function App() {
       settings: (s: Partial<Settings>) => send({ t: 'setSettings', settings: s }),
       color: (c: number) => send({ t: 'setColor', color: c }),
       ready: (r: boolean) => send({ t: 'setReady', ready: r }),
-      start: () => send({ t: 'start' }),
       claim: (tileIds: number[]) => send({ t: 'claim', tileIds }),
     }),
     [send],
@@ -139,7 +138,6 @@ export default function App() {
         onSettings={actions.settings}
         onColor={actions.color}
         onReady={actions.ready}
-        onStart={actions.start}
         onLeave={actions.leave}
       />
     );

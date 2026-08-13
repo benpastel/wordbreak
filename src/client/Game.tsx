@@ -138,17 +138,9 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
   const selSet = useMemo(() => new Set(selection), [selection]);
   const vb = viewBoxOf(game.size);
   const idxOf = (id: number) => game.grid.findIndex((t) => t.id === id);
-  const me = table.players.find((p) => p.id === meId);
 
   return (
     <div className="play">
-      <div className="playtop">
-        <span className="tablename">{table.name}</span>
-        <button className="ghost" onClick={onLeave}>
-          leave table
-        </button>
-      </div>
-
       <div className="boardwrap">
         <div
           className="board"
@@ -213,7 +205,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
         </div>
 
         <div className="readout">
-          {selection.length > 0 ? (
+          {selection.length > 0 && (
             <>
               <span className={`word${spellsWord ? ' real' : ''}`}>{word.toUpperCase()}</span>
               {needs !== null && <span className="needs">needs {needs}+</span>}
@@ -224,8 +216,6 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
                 ✕
               </button>
             </>
-          ) : (
-            <span className="hint">click or drag adjacent letters, then claim</span>
           )}
         </div>
       </div>
@@ -243,13 +233,9 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
         ))}
       </div>
 
-      {me && (
-        <p className="playfoot">
-          hold {Math.round(table.settings.holdMs / 1000)}s · <kbd>enter</kbd> claim ·{' '}
-          <kbd>backspace</kbd> undo · <kbd>esc</kbd> clear ·{' '}
-          <a href="tutorial.html" target="_blank" rel="noreferrer">how to play</a>
-        </p>
-      )}
+      <button className="leave" onClick={onLeave}>
+        leave table
+      </button>
     </div>
   );
 }
