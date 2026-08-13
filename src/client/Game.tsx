@@ -154,11 +154,10 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
 
   return (
     <div className="play">
-      <div className="boardwrap">
+      <div className="boardwrap" style={{ '--n': game.size } as React.CSSProperties}>
         <div
           className="board"
           ref={boardRef}
-          style={{ '--n': game.size } as React.CSSProperties}
           onPointerMove={(e) => {
             // Hit-test rather than relying on pointerenter per tile: touch implicitly
             // captures the pointer to the tile you pressed, so enter events never fire

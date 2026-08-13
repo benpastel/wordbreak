@@ -11,7 +11,7 @@ interface Props {
   onLeave: () => void;
 }
 
-const HOLD_CHOICES = [20, 30, 40, 60];
+const HOLD_CHOICES = [10, 20, 30, 40, 60];
 
 export default function TableRoom({
   table,

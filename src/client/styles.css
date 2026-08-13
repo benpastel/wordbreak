@@ -188,19 +188,24 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px 16px 56px; gap: 14px;
 }
-.boardwrap { display: flex; flex-direction: column; align-items: center; }
+/* Cell sizing lives here, not on .board, so the readout below can match the
+   board's letter size off the same variable. */
+.boardwrap {
+  display: flex; flex-direction: column; align-items: center;
+  --cell: clamp(30px, calc(62vmin / var(--n)), 92px);
+  --gap: calc(var(--cell) * 0.1);
+}
 /* Out of the way of the board, which is centred, so the corner stays clear. */
 .leave {
-  position: fixed; left: 14px; bottom: 12px;
-  background: none; color: var(--ink-mute);
-  font-size: 0.74rem; font-weight: 600; padding: 6px 8px;
+  position: fixed; left: 16px; bottom: 14px;
+  background: var(--tile-face); color: var(--ink-soft);
+  font-size: 0.82rem; font-weight: 600; padding: 8px 15px;
+  box-shadow: var(--shadow-1);
 }
-.leave:hover { color: var(--ink-soft); }
+.leave:hover { color: var(--ink); }
 
 .board {
   position: relative; display: grid; touch-action: none; user-select: none;
-  --cell: clamp(30px, calc(62vmin / var(--n)), 92px);
-  --gap: calc(var(--cell) * 0.1);
   grid-template-columns: repeat(var(--n), var(--cell));
   gap: var(--gap); padding: var(--gap); border-radius: 14px; background: var(--tray);
   box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13), inset 0 0 0 1px oklch(0.3 0.02 70 / 0.05);
@@ -267,11 +272,12 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 
 .readout {
   display: flex; align-items: center; justify-content: flex-end; gap: 16px;
-  align-self: stretch; margin-top: 16px; min-height: 44px;
+  align-self: stretch; margin-top: 16px; flex-wrap: wrap;
+  min-height: calc(var(--cell) * 0.62);
 }
 .readout .word {
-  font-weight: 800; font-size: 1.7rem; letter-spacing: 0.2em; color: var(--ink-mute);
-  line-height: 1;
+  font-weight: 800; font-size: calc(var(--cell) * 0.46); letter-spacing: 0.06em;
+  color: var(--ink-mute); line-height: 1;
 }
 .readout .word.real { color: var(--ink); }
 .readout .needs { font-size: 0.74rem; font-weight: 700; color: var(--ink-mute); }
