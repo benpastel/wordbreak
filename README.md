@@ -83,5 +83,5 @@ database later stays contained.
 [ENABLE](https://github.com/dolph/dictionary) — a public-domain list of ~170,000
 everyday English words, no proper nouns and no abbreviations. We drop anything
 containing `q`, since there is no Q tile. `public/words.txt` is the filtered result
-(1.6MB raw, ~430KB gzipped); the client fetches it once so auto-claiming needs no
-round trip, and the server validates against the same file.
+(1.6MB raw, ~430KB gzipped); the client fetches it once so the claim button can light
+up with no round trip, and the server validates against the same file.

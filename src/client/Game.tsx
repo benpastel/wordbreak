@@ -25,7 +25,6 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
   const [reseeding, setReseeding] = useState<Set<number>>(new Set());
   const [breaking, setBreaking] = useState<Set<number>>(new Set());
   const dragging = useRef(false);
-  const lastSent = useRef<string>('');
 
   const colorOf = useCallback(
     (pid: string) => table.players.find((p) => p.id === pid)?.color ?? 0,
@@ -51,21 +50,30 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
     });
   }, [game.grid]);
 
-  // Auto-claim: the moment the trail spells a word, take it. The trail stays live so
-  // you can keep reaching for a longer one.
-  useEffect(() => {
-    if (selection.length === 0) {
-      lastSent.current = '';
-      return;
-    }
-    const word = R.wordOf(game, selection);
-    if (word.length !== selection.length || !isWord(word)) return;
-    if (R.validatePath(game, selection) !== null) return;
-    const key = selection.join(',');
-    if (key === lastSent.current) return;
-    lastSent.current = key;
+  // Claiming is explicit. Building a trail commits to nothing, so you can look at a
+  // word before taking it — and nothing you touch is telegraphed to the table until
+  // you do.
+  const word = R.wordOf(game, selection);
+  const pathError = selection.length ? R.validatePath(game, selection) : 'empty';
+  const spellsWord = selection.length > 0 && isWord(word);
+  const canClaim = spellsWord && pathError === null;
+
+  // When a real word is blocked, it is always the length rule — a disabled button
+  // with no explanation is worse than saying how far you have to reach.
+  const needs =
+    spellsWord && pathError === 'not-long-enough'
+      ? Math.max(...R.claimsTouching(game, selection).map((c) => c.tileIds.length)) + 1
+      : null;
+
+  const commit = useCallback(() => {
+    if (!canClaim) return;
     onClaim(selection);
-  }, [selection, game, meId, onClaim]);
+    setSelection([]);
+  }, [canClaim, onClaim, selection]);
+
+  // The key handler is bound once, so it reaches the live commit through a ref.
+  const commitRef = useRef(commit);
+  commitRef.current = commit;
 
   // Animation hints from the server.
   useEffect(() => {
@@ -110,6 +118,10 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
     };
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setSelection([]);
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitRef.current();
+      }
       if (e.key === 'Backspace') {
         e.preventDefault();
         setSelection((s) => s.slice(0, -1));
@@ -126,7 +138,6 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
   const selSet = useMemo(() => new Set(selection), [selection]);
   const vb = viewBoxOf(game.size);
   const idxOf = (id: number) => game.grid.findIndex((t) => t.id === id);
-  const word = R.wordOf(game, selection).toUpperCase();
   const me = table.players.find((p) => p.id === meId);
 
   return (
@@ -204,13 +215,17 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
         <div className="readout">
           {selection.length > 0 ? (
             <>
-              <span className="word">{word}</span>
+              <span className={`word${spellsWord ? ' real' : ''}`}>{word.toUpperCase()}</span>
+              {needs !== null && <span className="needs">needs {needs}+</span>}
+              <button className="claim" disabled={!canClaim} onClick={commit}>
+                claim <kbd>⏎</kbd>
+              </button>
               <button className="x" onClick={() => setSelection([])} title="clear (esc)">
                 ✕
               </button>
             </>
           ) : (
-            <span className="hint">click or drag adjacent letters</span>
+            <span className="hint">click or drag adjacent letters, then claim</span>
           )}
         </div>
       </div>
@@ -230,8 +245,9 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
 
       {me && (
         <p className="playfoot">
-          hold {Math.round(table.settings.holdMs / 1000)}s · <kbd>backspace</kbd> undo ·{' '}
-          <kbd>esc</kbd> clear · <a href="tutorial.html" target="_blank" rel="noreferrer">how to play</a>
+          hold {Math.round(table.settings.holdMs / 1000)}s · <kbd>enter</kbd> claim ·{' '}
+          <kbd>backspace</kbd> undo · <kbd>esc</kbd> clear ·{' '}
+          <a href="tutorial.html" target="_blank" rel="noreferrer">how to play</a>
         </p>
       )}
     </div>

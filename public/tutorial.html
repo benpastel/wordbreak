@@ -98,20 +98,21 @@ td:first-child { white-space: nowrap; font-weight: 700; width: 30%; }
   <h2>1 · Claim</h2>
   <p>
     Trace a word through touching letters — any direction, diagonals count, no letter twice.
-    The moment your trail spells a word you <b>claim</b> it and those letters lock. There’s no
-    minimum length; <b>DO</b> is a real claim.
+    Selecting commits to nothing; hit <kbd>enter</kbd> (or the claim button) to take it, and
+    those letters lock and your selection clears. There’s no minimum length; <b>DO</b> is a
+    real claim.
   </p>
   <div class="strip">
-    <div class="tile c3 claimed sel" style="--p:14%"><span>R</span></div>
-    <div class="tile c3 claimed sel" style="--p:14%"><span>A</span></div>
-    <div class="tile c3 claimed sel" style="--p:14%"><span>T</span></div>
-    <div class="tile c3 claimed sel" style="--p:14%"><span>E</span></div>
-    <div class="tile sel"><span>H</span></div>
+    <div class="tile sel"><span>R</span></div>
+    <div class="tile sel"><span>A</span></div>
+    <div class="tile sel"><span>T</span></div>
+    <div class="tile sel"><span>E</span></div>
+    <div class="tile c3 claimed" style="--p:34%"><span>D</span></div>
   </div>
   <p class="cap">
     <b>Colour</b> is whose claim a letter is under and how full its timer is.
-    The <b>pressed disc</b> is just your current trail. Here RATE is claimed and the H is only
-    selected, because RATEH isn’t a word.
+    The <b>pressed disc</b> is just your current selection — it means nothing to anyone else
+    until you claim. Nobody can see what you’re tracing.
   </p>
 
   <h2>2 · Break</h2>
@@ -121,9 +122,9 @@ td:first-child { white-space: nowrap; font-weight: 700; width: 30%; }
     whole claim dies — the owner gets nothing.
   </p>
   <p>
-    This applies to your own claims exactly as it does to anyone else’s. Extending works because
-    your trail already holds those letters, so it’s already longer: <b>DO</b> → <b>DOG</b> → <b>DOGS</b>,
-    each one breaking the last and restarting the timer.
+    This applies to your own claims exactly as it does to anyone else’s. To grow a claim, trace
+    the longer word over it and claim again: <b>DO</b> → <b>DOG</b> → <b>DOGS</b>, each one
+    breaking the last and restarting its timer.
   </p>
   <div class="strip">
     <div class="tile c1 claimed" style="--p:62%"><span>C</span></div>
@@ -150,8 +151,9 @@ td:first-child { white-space: nowrap; font-weight: 700; width: 30%; }
   <h2>Controls</h2>
   <table>
     <tr><td>select</td><td>click letters in sequence, or press and drag across them</td></tr>
-    <tr><td>undo a letter</td><td><kbd>backspace</kbd> — shortens the trail, leaves your claim standing</td></tr>
-    <tr><td>clear the trail</td><td><kbd>esc</kbd> or the <b>✕</b> — your claims keep counting down</td></tr>
+    <tr><td>claim it</td><td><kbd>enter</kbd>, or the claim button — greyed out until the word is takeable</td></tr>
+    <tr><td>undo a letter</td><td><kbd>backspace</kbd></td></tr>
+    <tr><td>clear the trail</td><td><kbd>esc</kbd> or the <b>✕</b> — your existing claims keep counting down</td></tr>
   </table>
   <p class="cap">
     Words come from <a href="https://github.com/dolph/dictionary" target="_blank" rel="noreferrer">ENABLE</a>,

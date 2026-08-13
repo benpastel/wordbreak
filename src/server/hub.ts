@@ -252,9 +252,13 @@ export class Hub {
 
     const err = R.validatePath(game, tileIds);
     if (err) {
-      // 'not-long-enough' and 'unknown-tile' are the normal races — someone banked
-      // or broke under us between send and receive. Not worth a visible error.
-      if (err !== 'unknown-tile' && err !== 'not-long-enough') {
+      // The client pre-validates, so reaching here means the board moved between
+      // pressing claim and arriving. Worth saying so now that claiming is a
+      // deliberate act — except for tiles that banked out from under the path,
+      // which is self-evident on screen.
+      if (err === 'not-long-enough') {
+        this.send(playerId, { t: 'error', message: 'Someone got there first.' });
+      } else if (err !== 'unknown-tile') {
         this.send(playerId, { t: 'error', message: `Invalid word path (${err}).` });
       }
       this.pushFor(playerId);

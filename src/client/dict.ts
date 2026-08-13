@@ -1,6 +1,6 @@
 // The same word list the server validates against, fetched once and held locally so
-// that auto-claiming does not need a round trip on every letter. The server is still
-// the authority — this only decides when it is worth asking.
+// the claim button can light up the instant a trail spells something, with no round
+// trip. The server is still the authority — this only decides when it is worth asking.
 
 let words: Set<string> | null = null;
 let loading: Promise<void> | null = null;
