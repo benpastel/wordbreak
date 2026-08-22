@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import type { TableSummary } from '../shared/types';
+import NameField from './NameField';
 
 interface Props {
   name: string;
@@ -10,14 +10,6 @@ interface Props {
 }
 
 export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Props) {
-  const [draft, setDraft] = useState(name);
-
-  const commitName = () => {
-    const n = draft.trim();
-    if (n && n !== name) onSetName(n);
-    else setDraft(name);
-  };
-
   return (
     <div className="lobby">
       <header className="lobbyhead">
@@ -29,16 +21,7 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
             </a>
           </p>
         </div>
-        <label className="namefield">
-          <span>you are</span>
-          <input
-            value={draft}
-            maxLength={16}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commitName}
-            onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-          />
-        </label>
+        <NameField name={name} onSetName={onSetName} big />
       </header>
 
       <div className="tablehead">

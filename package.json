@@ -15,7 +15,8 @@
     "build:server": "tsc -p tsconfig.server.json",
     "start": "node dist/server/index.js",
     "heroku-postbuild": "npm run build",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
+    "test": "npm run build:server && node test/rules.test.mjs && node test/selection.test.mjs && node test/protocol.test.mjs"
   },
   "dependencies": {
     "compression": "^1.7.5",

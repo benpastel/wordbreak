@@ -21,7 +21,7 @@ function rid(n: number): string {
 }
 
 function cleanName(raw: string, fallback: string): string {
-  const n = raw.replace(/\s+/g, ' ').trim().slice(0, 16);
+  const n = raw.replace(/\s+/g, ' ').trim().slice(0, 20);
   return n.length ? n : fallback;
 }
 

@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
 import type { Settings, TableView } from '../shared/types';
+import NameField from './NameField';
 
 interface Props {
   table: TableView;
   meId: string;
+  onSetName: (n: string) => void;
   onSettings: (s: Partial<Settings>) => void;
   onColor: (c: number) => void;
   onReady: (r: boolean) => void;
@@ -16,6 +18,7 @@ const HOLD_CHOICES = [10, 20, 30, 40, 60];
 export default function TableRoom({
   table,
   meId,
+  onSetName,
   onSettings,
   onColor,
   onReady,
@@ -60,18 +63,21 @@ export default function TableRoom({
         </ul>
 
         {me && (
-          <div className="colorpick">
-            <span>your colour</span>
-            <div className="swatches">
-              {Array.from({ length: COLOR_COUNT }, (_, c) => (
-                <button
-                  key={c}
-                  className={`sw c${c}${me.color === c ? ' on' : ''}`}
-                  disabled={taken.has(c)}
-                  onClick={() => onColor(c)}
-                  title={taken.has(c) ? 'taken' : `colour ${c + 1}`}
-                />
-              ))}
+          <div className="youare">
+            <NameField name={me.name} onSetName={onSetName} label="your name" />
+            <div className="colorpick">
+              <span>your colour</span>
+              <div className="swatches">
+                {Array.from({ length: COLOR_COUNT }, (_, c) => (
+                  <button
+                    key={c}
+                    className={`sw c${c}${me.color === c ? ' on' : ''}`}
+                    disabled={taken.has(c)}
+                    onClick={() => onColor(c)}
+                    title={taken.has(c) ? 'taken' : `colour ${c + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         )}

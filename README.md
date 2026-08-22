@@ -18,6 +18,18 @@ Open http://localhost:5173. Vite serves the client and proxies `/ws` to the game
 server on :8080. Open a second window to play against yourself — a table works with
 one player, and you can join mid-game.
 
+## Tests
+
+```sh
+npm test
+```
+
+Three plain-node suites, no framework. `test/rules.test.mjs` and
+`test/selection.test.mjs` exercise the pure logic in `src/shared`;
+`test/protocol.test.mjs` boots a real server on a spare port and drives the real
+websocket protocol with two clients through a claim, a break, a bank and a
+reconnect.
+
 ## Build and serve like production
 
 ```sh

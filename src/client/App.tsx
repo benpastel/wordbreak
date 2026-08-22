@@ -10,9 +10,19 @@ import Game from './Game';
 const ID_KEY = 'wordbreak.playerId';
 const NAME_KEY = 'wordbreak.name';
 
-const ADJECTIVES = ['quick', 'plain', 'brisk', 'lucky', 'quiet', 'sharp', 'brave', 'clever'];
+// A placeholder with a bit of personality, but still obviously a placeholder — the
+// point is that you replace it. Kept short so eight of them fit across a score bar.
+const ADJECTIVES = [
+  'quick', 'plain', 'brisk', 'lucky', 'quiet', 'sharp', 'brave', 'clever',
+  'sly', 'bold', 'calm', 'keen', 'idle', 'rash', 'wry', 'grim',
+];
+const ANIMALS = [
+  'otter', 'badger', 'heron', 'lynx', 'magpie', 'tapir', 'ferret', 'marten',
+  'osprey', 'shrew', 'vole', 'wren', 'stoat', 'ibex', 'crane', 'raven',
+];
+const pick = <T,>(xs: T[]): T => xs[Math.floor(Math.random() * xs.length)];
 function defaultName(): string {
-  return ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+  return `${pick(ADJECTIVES)} ${pick(ANIMALS)}`;
 }
 
 function hashTable(): string | null {
@@ -135,6 +145,7 @@ export default function App() {
       <TableRoom
         table={table}
         meId={meId}
+        onSetName={actions.setName}
         onSettings={actions.settings}
         onColor={actions.color}
         onReady={actions.ready}
