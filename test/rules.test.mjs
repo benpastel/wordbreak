@@ -1,6 +1,6 @@
 // The pure rules: what may be selected, and what may be claimed.
 import { createRequire } from 'node:module';
-import { section, check, done } from './harness.mjs';
+import { section, check, equal, done } from './harness.mjs';
 const R = createRequire(import.meta.url)('../dist/shared/rules.js');
 
 //   1 2 3      C A T
@@ -37,6 +37,30 @@ check('longer over your own claim accepted', R.validatePath(game, [1, 2, 3, 6]) 
 check('longer over an opponent claim accepted', R.validatePath(theirs, [1, 2, 3, 6]) === null);
 check('a word touching no claim accepted', R.validatePath(game, [4, 5]) === null);
 check('a broken path is a path error, not a length one', R.validatePath(game, [1, 6]) === 'not-adjacent');
+
+section('live word lists: longest on top, shortest truncated away');
+{
+  const c = (id, playerId, len, banksAt, word) =>
+    ({ id, playerId, tileIds: Array.from({ length: len }, (_, i) => i + 1), word, claimedAt: 0, banksAt });
+  const grouped = R.claimsByPlayer([
+    c('1', 'a', 3, 500, 'cat'),
+    c('2', 'b', 5, 900, 'crane'),
+    c('3', 'a', 6, 100, 'badger'),
+    c('4', 'a', 3, 200, 'dog'),
+    c('5', 'a', 4, 700, 'lynx'),
+  ]);
+  check('claims are grouped by owner', grouped.size === 2 && grouped.get('a').length === 4);
+  equal('longest first for each player',
+    grouped.get('a').map((x) => x.word), ['badger', 'lynx', 'dog', 'cat']);
+  check('equal lengths put the one nearest banking above',
+    grouped.get('a')[2].word === 'dog' && grouped.get('a')[3].word === 'cat');
+  equal('a player with one claim still gets a list', grouped.get('b').map((x) => x.word), ['crane']);
+  check('no claims means no entry', R.claimsByPlayer([]).size === 0);
+
+  // truncation drops from the bottom, which is where the shortest words are
+  const shown = grouped.get('a').slice(0, 2).map((x) => x.word);
+  equal('truncating keeps the longest', shown, ['badger', 'lynx']);
+}
 
 section('settings are clamped to the offered range');
 for (const [asked, want] of [[3, 4], [4, 4], [5, 5], [6, 6], [7, 6], [99, 6]]) {

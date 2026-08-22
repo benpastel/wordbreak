@@ -162,6 +162,24 @@ export function bankClaim(game: GameState, claim: Claim, allocId: AllocId): Bank
   return { points: claim.tileIds.length, idx, letters };
 }
 
+/**
+ * Live claims grouped by owner and ordered for display: longest first, and within a
+ * length the one nearest banking on top. So the head of each list is the biggest and
+ * most imminent, and truncating from the bottom only ever drops the least consequential.
+ */
+export function claimsByPlayer(claims: Claim[]): Map<string, Claim[]> {
+  const byPlayer = new Map<string, Claim[]>();
+  for (const c of claims) {
+    const arr = byPlayer.get(c.playerId);
+    if (arr) arr.push(c);
+    else byPlayer.set(c.playerId, [c]);
+  }
+  for (const arr of byPlayer.values()) {
+    arr.sort((x, y) => y.tileIds.length - x.tileIds.length || x.banksAt - y.banksAt);
+  }
+  return byPlayer;
+}
+
 /** The server's floor and ceiling on what a client may ask for. Bounds come from the
  *  shared constants so the lobby cannot offer a size this would reject, or vice versa. */
 export function clampSettings(gridSize: number, holdMs: number, gameMs: number) {

@@ -38,6 +38,8 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
     [table.players],
   );
 
+  const claimsByPlayer = useMemo(() => R.claimsByPlayer(game.claims), [game.claims]);
+
   const claimByTile = useMemo(() => {
     const m = new Map<number, Claim>();
     for (const c of game.claims) for (const id of c.tileIds) m.set(id, c);
@@ -138,6 +140,17 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
     },
     [game, over],
   );
+
+  // The lists sit below the board, so cap them by what the window can spare rather
+  // than by a fixed number that is wrong on half of all screens.
+  const [maxWords, setMaxWords] = useState(6);
+  useEffect(() => {
+    const measure = () =>
+      setMaxWords(Math.max(2, Math.min(14, Math.floor((window.innerHeight * 0.2) / 19))));
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
   useEffect(() => {
     const up = () => {
@@ -258,9 +271,12 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
             }${over && p.ready ? ' setgo' : ''}`}
             data-player={p.id}
           >
-            <span className="name">{p.name}</span>
-            <span className="pts">{p.score}</span>
-            <Trophies trophies={p.trophies} />
+            <div className="playerhead">
+              <span className="name">{p.name}</span>
+              <span className="pts">{p.score}</span>
+              <Trophies trophies={p.trophies} />
+            </div>
+            <ClaimList claims={claimsByPlayer.get(p.id) ?? []} max={maxWords} />
           </div>
         ))}
       </div>
@@ -336,6 +352,26 @@ function TileView({ idx, letter, claim, color, selected, reseeding, breaking, on
     >
       <span>{letter}</span>
     </div>
+  );
+}
+
+/** The words this player is currently holding. Truncates from the bottom, so what
+ *  drops off is always the shortest and least consequential. */
+function ClaimList({ claims, max }: { claims: Claim[]; max: number }) {
+  if (claims.length === 0) return null;
+  const shown = claims.slice(0, max);
+  const hidden = claims.length - shown.length;
+  return (
+    <ul className="claims">
+      {shown.map((c) => (
+        <li key={c.id}>{c.word}</li>
+      ))}
+      {hidden > 0 && (
+        <li className="more" title={`${hidden} shorter ${hidden === 1 ? 'word' : 'words'}`}>
+          …
+        </li>
+      )}
+    </ul>
   );
 }
 
