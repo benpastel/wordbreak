@@ -83,6 +83,19 @@ kbd { font: 700 .82em system-ui; padding: 1px 6px; border-radius: 4px; backgroun
   100%   { --p: 0%;   filter: saturate(1) brightness(1);     transform: none; opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .demo .tile.claimed { animation: none; --p: 62%; } }
+.pieces { gap: 14px; padding: 14px 18px; align-items: center; }
+.trophy i {
+  display: block; width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, var(--t-hi), var(--t-lo) 74%);
+  box-shadow: inset 0 -1px 2px oklch(0.25 0.03 70 / .35), inset 0 1px 2px oklch(1 0 0 / .55),
+              0 1px 2px oklch(0.3 0.02 70 / .3);
+}
+.trophy.gold   { --t-hi: oklch(0.93 0.10 95);  --t-lo: oklch(0.70 0.14 78); }
+.trophy.silver { --t-hi: oklch(0.95 0.008 250);--t-lo: oklch(0.70 0.02 250); }
+.trophy.bronze { --t-hi: oklch(0.83 0.08 62);  --t-lo: oklch(0.55 0.10 45); }
+b.m.g { color: oklch(0.62 0.13 80); }
+b.m.s { color: oklch(0.58 0.02 250); }
+b.m.b { color: oklch(0.52 0.10 48); }
 table { border-collapse: collapse; width: 100%; font-size: .9rem; }
 td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; }
 td:first-child { white-space: nowrap; font-weight: 700; width: 30%; }
@@ -150,6 +163,23 @@ td:first-child { white-space: nowrap; font-weight: 700; width: 30%; }
     <div class="tile c0 claimed"><span>B</span></div>
   </div>
   <p class="cap">The fill is the clock. Contested claims never bank, so quiet corners of the board pay best.</p>
+
+  <h2>4 · Match</h2>
+  <p>
+    A match runs on a clock. When it stops, the top three take a
+    <b class="m g">gold</b>, <b class="m s">silver</b> or <b class="m b">bronze</b> piece —
+    ties place together, and scoring nothing wins nothing. Claims still counting down when
+    the clock stops are simply lost.
+  </p>
+  <p>
+    Everyone hits ready and the next match starts: fresh board, scores back to zero. The
+    trophies are the only thing that carries over.
+  </p>
+  <div class="strip pieces">
+    <span class="trophy gold"><i></i></span>
+    <span class="trophy silver"><i></i></span>
+    <span class="trophy bronze"><i></i></span>
+  </div>
 
   <h2>Controls</h2>
   <table>

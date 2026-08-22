@@ -46,7 +46,8 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
                 </span>
                 <span className="meta">
                   {t.playerCount}/8 · {t.settings.gridSize}×{t.settings.gridSize} ·{' '}
-                  {Math.round(t.settings.holdMs / 1000)}s
+                  {Math.round(t.settings.gameMs / 60_000)}m ·{' '}
+                  {Math.round(t.settings.holdMs / 1000)}s hold
                 </span>
                 <span className={`phase ${t.phase}`}>{t.phase === 'playing' ? 'playing' : 'open'}</span>
               </button>

@@ -4,8 +4,10 @@
 // swapping the in-memory store for a database a contained change later.
 
 import { drawLetter } from './letters';
-import { MAX_GRID, MAX_HOLD_MS, MIN_GRID, MIN_HOLD_MS } from './types';
-import type { Claim, GameState, Tile } from './types';
+import {
+  MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MEDALS, MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS,
+} from './types';
+import type { Claim, GameState, Medal, Tile } from './types';
 
 export type AllocId = () => number;
 
@@ -17,8 +19,8 @@ export function makeGrid(size: number, allocId: AllocId): Tile[] {
   return grid;
 }
 
-export function newGame(size: number, allocId: AllocId): GameState {
-  return { size, grid: makeGrid(size, allocId), claims: [] };
+export function newGame(size: number, allocId: AllocId, endsAt: number): GameState {
+  return { size, grid: makeGrid(size, allocId), claims: [], endsAt };
 }
 
 export function tileIndex(game: GameState, tileId: number): number {
@@ -162,9 +164,25 @@ export function bankClaim(game: GameState, claim: Claim, allocId: AllocId): Bank
 
 /** The server's floor and ceiling on what a client may ask for. Bounds come from the
  *  shared constants so the lobby cannot offer a size this would reject, or vice versa. */
-export function clampSettings(gridSize: number, holdMs: number) {
+export function clampSettings(gridSize: number, holdMs: number, gameMs: number) {
   return {
     gridSize: Math.max(MIN_GRID, Math.min(MAX_GRID, Math.round(gridSize))),
     holdMs: Math.max(MIN_HOLD_MS, Math.min(MAX_HOLD_MS, Math.round(holdMs))),
+    gameMs: Math.max(MIN_GAME_MS, Math.min(MAX_GAME_MS, Math.round(gameMs))),
   };
+}
+
+/**
+ * Who finished in the top three, by standard competition ranking: a tie for first
+ * gives two golds and no silver. Scoring nothing wins nothing, so a quiet match can
+ * end with no medals at all.
+ */
+export function medalsFor(players: { id: string; score: number }[]): Record<string, Medal> {
+  const out: Record<string, Medal> = {};
+  for (const p of players) {
+    if (p.score <= 0) continue;
+    const ahead = players.filter((q) => q.score > p.score).length;
+    if (ahead < MEDALS.length) out[p.id] = MEDALS[ahead];
+  }
+  return out;
 }

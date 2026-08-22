@@ -4,7 +4,9 @@ import * as R from '../shared/rules';
 import * as S from '../shared/selection';
 import { isWord } from './dict';
 import { playBankFx } from './fx';
+import { burst } from './burst';
 import { serverTime } from './net';
+import Trophies from './Trophies';
 
 const GAP_RATIO = 0.1; // must match --gap in styles.css
 
@@ -16,11 +18,13 @@ interface Props {
   meId: string;
   fx: { seq: number; items: Fx[] };
   onClaim: (tileIds: number[]) => void;
+  onReady: (r: boolean) => void;
   onLeave: () => void;
 }
 
-export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
+export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Props) {
   const game = table.game!;
+  const over = table.phase === 'ended';
   const boardRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<number[]>([]);
   const [reseeding, setReseeding] = useState<Set<number>>(new Set());
@@ -59,7 +63,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
   const word = R.wordOf(game, selection);
   const pathError = selection.length ? R.validatePath(game, selection) : 'empty';
   const spellsWord = selection.length > 0 && isWord(word);
-  const canClaim = spellsWord && pathError === null;
+  const canClaim = spellsWord && pathError === null && !over;
 
   // When a real word is blocked, it is always the length rule — a disabled button
   // with no explanation is worse than saying how far you have to reach.
@@ -85,7 +89,16 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
     const reseed = new Set<number>();
     const broke = new Set<number>();
     for (const f of fx.items) {
-      if (f.k === 'banked') {
+      if (f.k === 'ended') {
+        setSelection([]);
+        const mine = f.medals[meId];
+        if (mine) {
+          // After the render that put the trophy there, so it flies from the right spot.
+          requestAnimationFrame(() =>
+            burst(mine, document.querySelector<HTMLElement>(`[data-player="${meId}"]`)),
+          );
+        }
+      } else if (f.k === 'banked') {
         if (board) playBankFx(board, f, colorOf(f.playerId));
         for (const i of f.idx) reseed.add(i);
       } else if (f.k === 'broken') {
@@ -105,14 +118,16 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
 
   const onTileDown = useCallback(
     (tileId: number) => {
+      if (over) return;
       downTile.current = tileId;
       setSelection((sel) => S.pressTile(game, sel, tileId));
     },
-    [game],
+    [game, over],
   );
 
   const onTileDrag = useCallback(
     (tileId: number) => {
+      if (over) return;
       // A pointermove fires over the tile you just pressed. Without this guard, the
       // press that removed the head letter would immediately put it back.
       if (downTile.current !== null) {
@@ -121,7 +136,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
       }
       setSelection((sel) => S.dragTile(game, sel, tileId));
     },
-    [game],
+    [game, over],
   );
 
   useEffect(() => {
@@ -154,9 +169,10 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
 
   return (
     <div className="play">
+      <Clock endsAt={game.endsAt} over={over} />
       <div className="boardwrap" style={{ '--n': game.size } as React.CSSProperties}>
         <div
-          className="board"
+          className={`board${over ? ' over' : ''}`}
           ref={boardRef}
           onPointerMove={(e) => {
             // Hit-test rather than relying on pointerenter per tile: touch implicitly
@@ -217,7 +233,8 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
         </div>
 
         <div className="readout">
-          {selection.length > 0 && (
+          {over && <MatchOver table={table} meId={meId} onReady={onReady} />}
+          {!over && selection.length > 0 && (
             <>
               <span className={`word${spellsWord ? ' real' : ''}`}>{word.toUpperCase()}</span>
               {needs !== null && <span className="needs">needs {needs}+</span>}
@@ -236,11 +253,14 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
         {table.players.map((p) => (
           <div
             key={p.id}
-            className={`player c${p.color}${p.id === meId ? ' isme' : ''}${p.connected ? '' : ' gone'}`}
+            className={`player c${p.color}${p.id === meId ? ' isme' : ''}${
+              p.connected ? '' : ' gone'
+            }${over && p.ready ? ' setgo' : ''}`}
             data-player={p.id}
           >
             <span className="name">{p.name}</span>
             <span className="pts">{p.score}</span>
+            <Trophies trophies={p.trophies} />
           </div>
         ))}
       </div>
@@ -315,6 +335,52 @@ function TileView({ idx, letter, claim, color, selected, reseeding, breaking, on
       }}
     >
       <span>{letter}</span>
+    </div>
+  );
+}
+
+/** Counts down locally from the server's own timestamp, so it needs no traffic and
+ *  stays honest across a reconnect. */
+function Clock({ endsAt, over }: { endsAt: number; over: boolean }) {
+  const [left, setLeft] = useState(() => Math.max(0, endsAt - serverTime()));
+  useEffect(() => {
+    if (over) return;
+    const tick = () => setLeft(Math.max(0, endsAt - serverTime()));
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [endsAt, over]);
+
+  if (over) return <div className="clock done">time</div>;
+  const total = Math.ceil(left / 1000);
+  const mm = Math.floor(total / 60);
+  const ss = total % 60;
+  return (
+    <div className={`clock${left <= 30_000 ? ' low' : ''}`}>
+      {mm}:{String(ss).padStart(2, '0')}
+    </div>
+  );
+}
+
+function MatchOver({
+  table,
+  meId,
+  onReady,
+}: {
+  table: TableView;
+  meId: string;
+  onReady: (r: boolean) => void;
+}) {
+  const me = table.players.find((p) => p.id === meId);
+  const waiting = table.players.filter((p) => p.connected && !p.ready).length;
+  return (
+    <div className="matchover">
+      <span className="readystate">
+        {waiting === 0 ? 'starting…' : `${waiting} still deciding`}
+      </span>
+      <button className={`primary${me?.ready ? ' on' : ''}`} onClick={() => onReady(!me?.ready)}>
+        {me?.ready ? 'ready — waiting' : 'ready for the next game'}
+      </button>
     </div>
   );
 }

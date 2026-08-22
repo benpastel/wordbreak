@@ -16,6 +16,15 @@ export const MAX_HOLD_MS = 60_000;
 export const DEFAULT_HOLD_MS = 30_000;
 export const DEFAULT_GRID = 5;
 
+export const MIN_GAME_MS = 30_000;
+export const MAX_GAME_MS = 1_800_000;
+export const DEFAULT_GAME_MS = 300_000;
+
+export type Medal = 'gold' | 'silver' | 'bronze';
+export const MEDALS: Medal[] = ['gold', 'silver', 'bronze'];
+/** Won across every match at this table; scores reset each match, these do not. */
+export type Trophies = Record<Medal, number>;
+
 /** A cell of the board. `id` is stable and never reused, so the client can tell
  *  "same tile, new state" from "this cell was reseeded". */
 export interface Tile {
@@ -38,6 +47,7 @@ export interface Player {
   name: string;
   color: number; // 0..COLOR_COUNT-1
   score: number;
+  trophies: Trophies;
   connected: boolean;
   ready: boolean;
 }
@@ -45,6 +55,8 @@ export interface Player {
 export interface Settings {
   gridSize: number;
   holdMs: number;
+  /** How long a match runs before the clock stops it. */
+  gameMs: number;
 }
 
 export interface GameState {
@@ -52,9 +64,10 @@ export interface GameState {
   /** Row-major, length size*size. */
   grid: Tile[];
   claims: Claim[];
+  endsAt: number; // server epoch ms
 }
 
-export type Phase = 'lobby' | 'playing';
+export type Phase = 'lobby' | 'playing' | 'ended';
 
 export interface TableView {
   id: string;
@@ -87,7 +100,10 @@ export type Fx =
       letters: string[]; // the letters as they were, for the fly-to-score clones
       word: string;
       points: number;
-    };
+    }
+  /** The clock ran out. Carries the medals awarded so the client can celebrate the
+   *  moment it happened, rather than re-firing every time a snapshot arrives. */
+  | { k: 'ended'; medals: Record<string, Medal> };
 
 export type ClientMsg =
   | { t: 'hello'; playerId: string | null; name: string }

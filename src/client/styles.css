@@ -316,6 +316,51 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 .player.isme .name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
 .player.gone { opacity: 0.4; }
 
+/* ----------------------------------------------------- match clock & result */
+.clock {
+  font-size: 0.9rem; font-weight: 800; letter-spacing: 0.06em;
+  color: var(--ink-mute); font-variant-numeric: tabular-nums;
+}
+.clock.low { color: oklch(0.58 0.17 28); }
+.clock.done {
+  color: var(--ink-soft); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.74rem;
+}
+
+.matchover { display: flex; align-items: center; gap: 14px; }
+.matchover .readystate { font-size: 0.78rem; color: var(--ink-mute); }
+
+/* The board goes quiet once the clock stops, so the score bar is what you read. */
+.board.over { opacity: 0.72; }
+.board.over .tile { cursor: default; }
+
+/* --------------------------------------------------------------- trophies
+   Playing pieces rather than icons: a domed disc with a lit top edge and a
+   shadow under it, so they read as objects sitting on the table next to a name. */
+.trophies { display: inline-flex; align-items: center; gap: 7px; margin-left: 2px; }
+.trophy { display: inline-flex; align-items: center; gap: 2px; }
+.trophy i {
+  width: 13px; height: 13px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, var(--t-hi), var(--t-lo) 74%);
+  box-shadow:
+    inset 0 -1px 1px oklch(0.25 0.03 70 / 0.35),
+    inset 0 1px 1px oklch(1 0 0 / 0.55),
+    0 1px 1.5px oklch(0.3 0.02 70 / 0.3);
+}
+.trophy b {
+  font-size: 0.66rem; font-weight: 800; color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.trophy.gold   { --t-hi: oklch(0.93 0.10 95); --t-lo: oklch(0.70 0.14 78); }
+.trophy.silver { --t-hi: oklch(0.95 0.008 250); --t-lo: oklch(0.70 0.02 250); }
+.trophy.bronze { --t-hi: oklch(0.83 0.08 62); --t-lo: oklch(0.55 0.10 45); }
+
+/* Between matches, the score bar doubles as the ready list. */
+.player.setgo .name::after {
+  content: '✓'; margin-left: 6px; font-size: 0.8em; color: oklch(0.55 0.13 148);
+}
+
+.confetti { position: fixed; z-index: 70; pointer-events: none; will-change: transform, opacity; }
+
 /* ------------------------------------------------------------ overlays */
 .netbar {
   position: fixed; top: 0; left: 0; right: 0; text-align: center;

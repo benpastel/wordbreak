@@ -14,6 +14,7 @@ interface Props {
 }
 
 const HOLD_CHOICES = [10, 20, 30, 40, 60];
+const GAME_CHOICES = [2, 3, 5, 10, 15];
 
 export default function TableRoom({
   table,
@@ -97,6 +98,22 @@ export default function TableRoom({
                 onClick={() => onSettings({ gridSize: n })}
               >
                 {n}×{n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="setting">
+          <label>match</label>
+          <div className="segmented">
+            {GAME_CHOICES.map((m) => (
+              <button
+                key={m}
+                className={table.settings.gameMs === m * 60_000 ? 'on' : ''}
+                disabled={!isHost}
+                onClick={() => onSettings({ gameMs: m * 60_000 })}
+              >
+                {m}m
               </button>
             ))}
           </div>

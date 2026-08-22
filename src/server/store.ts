@@ -3,13 +3,14 @@
 // this interface so that adding a real store later is a contained change rather than
 // a rewrite: the rules in src/shared stay pure, and the hub only ever talks to a Store.
 
-import type { GameState, Phase, Settings } from '../shared/types';
+import type { GameState, Phase, Settings, Trophies } from '../shared/types';
 
 export interface PlayerRecord {
   id: string;
   name: string;
   color: number;
   score: number;
+  trophies: Trophies;
   connected: boolean;
   ready: boolean;
   tableId: string | null;

@@ -45,6 +45,27 @@ for (const [asked, want] of [[3, 4], [4, 4], [5, 5], [6, 6], [7, 6], [99, 6]]) {
 check('hold time clamps low', R.clampSettings(5, 1).holdMs >= 3000);
 check('hold time clamps high', R.clampSettings(5, 1e9).holdMs <= 60000);
 
+section('medals: standard competition ranking, and nothing for nothing');
+{
+  const m = (xs) => R.medalsFor(xs);
+  const g = m([{ id: 'a', score: 9 }, { id: 'b', score: 5 }, { id: 'c', score: 1 }]);
+  check('clear top three', g.a === 'gold' && g.b === 'silver' && g.c === 'bronze');
+
+  const tie = m([{ id: 'a', score: 9 }, { id: 'b', score: 9 }, { id: 'c', score: 4 }]);
+  check('a tie for first gives two golds', tie.a === 'gold' && tie.b === 'gold');
+  check('...and skips silver', tie.c === 'bronze');
+
+  const fourth = m([
+    { id: 'a', score: 9 }, { id: 'b', score: 5 },
+    { id: 'c', score: 5 }, { id: 'd', score: 3 },
+  ]);
+  check('a tie for second gives two silvers', fourth.b === 'silver' && fourth.c === 'silver');
+  check('...and nobody takes bronze', fourth.d === undefined);
+
+  check('scoring nothing wins nothing', Object.keys(m([{ id: 'a', score: 0 }])).length === 0);
+  check('a lone scorer still takes gold', m([{ id: 'a', score: 2 }]).a === 'gold');
+}
+
 section('claiming and banking');
 {
   const g = JSON.parse(JSON.stringify(game));

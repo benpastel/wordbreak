@@ -8,6 +8,7 @@ import { section, check, done } from './harness.mjs';
 
 const require = createRequire(import.meta.url);
 const WebSocket = require('ws');
+const R = require('../dist/shared/rules.js');
 
 const PORT = 8100 + Math.floor(Math.random() * 800);
 const WS = `ws://localhost:${PORT}/ws`;
@@ -115,9 +116,10 @@ process.on('exit', stop);
   await sleep(120);
 
   section('settings and start');
-  a.send({ t: 'setSettings', settings: { gridSize: 5, holdMs: 4000 } });
+  a.send({ t: 'setSettings', settings: { gridSize: 5, holdMs: 4000, gameMs: 30_000 } });
   await sleep(120);
   check('host can change settings', a.table.settings.gridSize === 5 && a.table.settings.holdMs === 4000);
+  check('match length was accepted', a.table.settings.gameMs === 30_000);
   b.send({ t: 'setSettings', settings: { gridSize: 6 } });
   await sleep(120);
   check('non-host cannot change settings', a.table.settings.gridSize === 5);
@@ -129,6 +131,7 @@ process.on('exit', stop);
   await sleep(200);
   check('all ready auto-starts', a.table.phase === 'playing');
   check('board is 5x5', a.game?.grid.length === 25);
+  check('the match clock is set', a.game.endsAt - Date.now() > 20_000);
   check('tile ids are unique', new Set(a.game.grid.map((t) => t.id)).size === 25);
 
   section('claiming and breaking');
@@ -194,6 +197,64 @@ process.on('exit', stop);
     `${JSON.stringify(board)} -> ${JSON.stringify(now)}`);
   check('the scoreboard was not empty, so that check meant something',
     Object.values(board).some((v) => v > 0), JSON.stringify(board));
+
+  section('the clock running out');
+  {
+    a2.send({ t: 'setSettings', settings: { gameMs: 600_000 } });
+    await sleep(120);
+    check('settings cannot be changed mid-match', a2.table.settings.gameMs === 30_000);
+    a2.send({ t: 'setReady', ready: true });
+    await sleep(120);
+    check('ready is ignored mid-match', a2.table.players.every((p) => !p.ready));
+
+    // Give the trailing player something too, so the standings are not a walkover.
+    const w = findWord(a2.game, { minLen: 3, maxLen: 5 });
+    if (w) { a2.send({ t: 'claim', tileIds: w }); await sleep(4500); }
+
+    const finalScores = a2.table.players.map((p) => ({ id: p.id, score: p.score }));
+    const expected = R.medalsFor(finalScores);
+
+    const waitMs = Math.max(0, a2.game.endsAt - Date.now()) + 1500;
+    console.log(`  ..    waiting ${(waitMs / 1000).toFixed(1)}s for the clock`);
+    await sleep(waitMs);
+
+    check('the match ended on its own', a2.table.phase === 'ended', a2.table.phase);
+    const ended = [...a2.fx].reverse().find((f) => f.k === 'ended');
+    check('an end was announced', !!ended);
+    check('medals match standard competition ranking',
+      JSON.stringify(ended?.medals) === JSON.stringify(expected),
+      `server ${JSON.stringify(ended?.medals)} vs rules ${JSON.stringify(expected)}`);
+    check('someone actually placed', Object.keys(expected).length > 0,
+      JSON.stringify(finalScores));
+
+    check('final scores are still on the board',
+      a2.table.players.every((p) => p.score === finalScores.find((f) => f.id === p.id).score));
+    check('each medal became exactly one trophy',
+      a2.table.players.every((p) => {
+        const m = expected[p.id];
+        const total = p.trophies.gold + p.trophies.silver + p.trophies.bronze;
+        return m ? p.trophies[m] === 1 && total === 1 : total === 0;
+      }),
+      JSON.stringify(a2.table.players.map((p) => [p.name, p.trophies])));
+    check('claims still holding did not bank after time', a2.game.claims.length === 0);
+    check('everyone is un-readied for the next one', a2.table.players.every((p) => !p.ready));
+
+    section('rematch keeps trophies and resets scores');
+    const kept = Object.fromEntries(
+      a2.table.players.map((p) => [p.id, JSON.stringify(p.trophies)]),
+    );
+    a2.send({ t: 'setReady', ready: true });
+    b.send({ t: 'setReady', ready: true });
+    await sleep(400);
+    check('a new match started', a2.table.phase === 'playing', a2.table.phase);
+    check('scores are back to zero', a2.table.players.every((p) => p.score === 0),
+      JSON.stringify(a2.table.players.map((p) => p.score)));
+    check('trophies carried over',
+      a2.table.players.every((p) => JSON.stringify(p.trophies) === kept[p.id]),
+      JSON.stringify(kept));
+    check('the board is fresh and empty of claims', a2.game.claims.length === 0);
+    check('a new clock is running', a2.game.endsAt - Date.now() > 20_000);
+  }
 
   section('leaving');
   b.send({ t: 'leaveTable' });

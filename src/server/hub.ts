@@ -2,8 +2,12 @@
 // timer. Clients send intents; the hub validates against current state and pushes
 // a fresh snapshot plus a few animation hints.
 
-import { COLOR_COUNT, DEFAULT_GRID, DEFAULT_HOLD_MS, MAX_PLAYERS } from '../shared/types';
-import type { Fx, Player, ServerMsg, Settings, TableSummary, TableView } from '../shared/types';
+import {
+  COLOR_COUNT, DEFAULT_GAME_MS, DEFAULT_GRID, DEFAULT_HOLD_MS, MAX_PLAYERS,
+} from '../shared/types';
+import type {
+  Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
+} from '../shared/types';
 import * as R from '../shared/rules';
 import { isWord } from './dictionary';
 import { MemoryStore } from './store';
@@ -20,6 +24,8 @@ function rid(n: number): string {
   return s;
 }
 
+const noTrophies = (): Trophies => ({ gold: 0, silver: 0, bronze: 0 });
+
 function cleanName(raw: string, fallback: string): string {
   const n = raw.replace(/\s+/g, ' ').trim().slice(0, 20);
   return n.length ? n : fallback;
@@ -30,6 +36,8 @@ export class Hub {
   /** claimId -> pending bank. Cleared the moment a claim is broken, so a broken
    *  claim can never bank late. */
   private timers = new Map<string, NodeJS.Timeout>();
+  /** tableId -> the match clock. */
+  private endTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(private send: Send) {
     setInterval(() => this.reap(), 30_000).unref();
@@ -51,6 +59,7 @@ export class Hub {
         name: cleanName(name, 'player'),
         color: 0,
         score: 0,
+        trophies: noTrophies(),
         connected: true,
         ready: false,
         tableId: null,
@@ -101,7 +110,7 @@ export class Hub {
       name: cleanName(name, `${p.name}'s table`),
       hostId: playerId,
       phase: 'lobby',
-      settings: { gridSize: DEFAULT_GRID, holdMs: DEFAULT_HOLD_MS },
+      settings: { gridSize: DEFAULT_GRID, holdMs: DEFAULT_HOLD_MS, gameMs: DEFAULT_GAME_MS },
       playerIds: [],
       game: null,
       nextTileId: 1,
@@ -134,6 +143,7 @@ export class Hub {
 
     p.tableId = tableId;
     p.score = 0;
+    p.trophies = noTrophies();
     p.ready = false;
     p.color = this.freeColor(t);
     this.store.putPlayer(p);
@@ -183,6 +193,7 @@ export class Hub {
     const next = R.clampSettings(
       patch.gridSize ?? t.settings.gridSize,
       patch.holdMs ?? t.settings.holdMs,
+      patch.gameMs ?? t.settings.gameMs,
     );
     t.settings = next;
     this.store.putTable(t);
@@ -206,7 +217,7 @@ export class Hub {
   setReady(playerId: string, ready: boolean): void {
     const t = this.tableOf(playerId);
     const p = this.store.getPlayer(playerId);
-    if (!t || !p || t.phase !== 'lobby') return;
+    if (!t || !p || t.phase === 'playing') return;
     p.ready = ready;
     this.store.putPlayer(p);
     this.pushTable(t.id, []);
@@ -216,11 +227,17 @@ export class Hub {
     if (present.length > 0 && present.every((x) => x.ready)) this.start(t.hostId);
   }
 
+  /** Starts the first match, and every rematch: a fresh board and fresh scores, but
+   *  trophies carry over — they are the only thing that accumulates at a table. */
   start(playerId: string): void {
     const t = this.tableOf(playerId);
-    if (!t || t.phase !== 'lobby' || t.playerIds.length === 0) return;
+    if (!t || t.phase === 'playing' || t.playerIds.length === 0) return;
     t.phase = 'playing';
-    t.game = R.newGame(t.settings.gridSize, () => t.nextTileId++);
+    t.game = R.newGame(
+      t.settings.gridSize,
+      () => t.nextTileId++,
+      Date.now() + t.settings.gameMs,
+    );
     for (const id of t.playerIds) {
       const p = this.store.getPlayer(id);
       if (p) {
@@ -229,8 +246,54 @@ export class Hub {
         this.store.putPlayer(p);
       }
     }
+    this.scheduleEnd(t.id, t.game.endsAt);
     this.store.putTable(t);
     this.pushTable(t.id, []);
+    this.pushLobby();
+  }
+
+  private scheduleEnd(tableId: string, endsAt: number): void {
+    this.clearEndTimer(tableId);
+    this.endTimers.set(
+      tableId,
+      setTimeout(() => this.endGame(tableId), Math.max(0, endsAt - Date.now())),
+    );
+  }
+
+  private clearEndTimer(tableId: string): void {
+    const timer = this.endTimers.get(tableId);
+    if (timer) clearTimeout(timer);
+    this.endTimers.delete(tableId);
+  }
+
+  /** Time's up. Claims still holding are simply lost — they did not survive their
+   *  hold time, so by the ordinary rule they do not bank. */
+  private endGame(tableId: string): void {
+    this.endTimers.delete(tableId);
+    const t = this.store.getTable(tableId);
+    if (!t || t.phase !== 'playing' || !t.game) return;
+
+    for (const c of t.game.claims) this.clearTimer(c.id);
+    t.game.claims = [];
+    t.phase = 'ended';
+
+    const standing = t.playerIds
+      .map((id) => this.store.getPlayer(id))
+      .filter((p): p is PlayerRecord => !!p)
+      .map((p) => ({ id: p.id, score: p.score }));
+    const medals = R.medalsFor(standing);
+
+    for (const id of t.playerIds) {
+      const p = this.store.getPlayer(id);
+      if (!p) continue;
+      const medal = medals[id];
+      if (medal) p.trophies = { ...p.trophies, [medal]: p.trophies[medal] + 1 };
+      p.ready = false;
+      this.store.putPlayer(p);
+    }
+
+    this.store.putTable(t);
+    this.pushTable(t.id, [{ k: 'ended', medals }]);
     this.pushLobby();
   }
 
@@ -342,6 +405,7 @@ export class Hub {
 
   private destroyTable(t: TableRecord): void {
     for (const c of t.game?.claims ?? []) this.clearTimer(c.id);
+    this.clearEndTimer(t.id);
     this.store.deleteTable(t.id);
   }
 
@@ -353,6 +417,7 @@ export class Hub {
       name: p.name,
       color: p.color,
       score: p.score,
+      trophies: p.trophies,
       connected: p.connected,
       ready: p.ready,
     };

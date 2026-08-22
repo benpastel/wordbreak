@@ -136,7 +136,14 @@ export default function App() {
     body = <Splash text={status === 'closed' ? 'reconnecting…' : 'connecting…'} />;
   } else if (table && table.phase === 'playing' && table.game) {
     body = dict ? (
-      <Game table={table} meId={meId} fx={fx} onClaim={actions.claim} onLeave={actions.leave} />
+      <Game
+        table={table}
+        meId={meId}
+        fx={fx}
+        onClaim={actions.claim}
+        onReady={actions.ready}
+        onLeave={actions.leave}
+      />
     ) : (
       <Splash text="loading dictionary…" />
     );
