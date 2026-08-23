@@ -203,27 +203,21 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 
 /* ------------------------------------------------------------ game */
 /* ---------------------------------------------------------------- play layout
-   Two regions that never resize each other. The board's size comes only from the
-   viewport, so claims appearing under a name can never nudge it — the word lists
-   scroll inside their own region instead.
+   A single column: header, board, readout, scoreboard. The board sits above
+   everything that grows, so claims appearing under a name extend the page
+   downward and can never move the board itself.
 
-   Narrow: board pinned to the bottom at full width, where thumbs are, with the
-   readout directly above it and the scoreboard filling whatever is left.
-   Wide: scoreboard becomes a fixed column beside a board sized off the height. */
+   Board size comes only from the viewport and the grid size — there is no
+   content-derived term anywhere in it. */
 .play {
-  height: 100vh; height: 100dvh;
+  flex: 1;
   display: flex; flex-direction: column; align-items: center;
-  gap: 8px; padding: 8px 7px 10px; overflow: hidden;
+  gap: 10px; padding: 10px 8px 48px;
 }
 
-.side {
-  width: 100%; max-width: 620px;
-  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-  display: flex; flex-direction: column; gap: 8px;
-}
 .playtop {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; flex: none;
+  width: min(100%, 620px);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .leave {
   background: var(--tile-face); color: var(--ink-soft);
@@ -240,22 +234,9 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   --cell: calc(var(--board) / (1.1 * var(--n) + 0.1));
   --gap: calc(var(--cell) * 0.1);
 }
-/* On a phone the board owns the bottom of the screen, so the readout sits above it. */
-.readout { order: -1; }
 
 @media (min-aspect-ratio: 1/1) and (min-width: 700px) {
-  .play {
-    flex-direction: row; align-items: center; justify-content: center;
-    gap: 44px; padding: 20px 28px;
-  }
-  .side {
-    width: min(250px, 30vw); max-width: none; flex: none;
-    max-height: 84vh; align-self: center;
-  }
-  .boardwrap {
-    --board: min(calc(100vh - 170px), calc(100vw - 380px), 660px);
-  }
-  .readout { order: 0; }
+  .boardwrap { --board: min(calc(100vh - 270px), calc(100vw - 40px), 620px); }
 }
 
 .board {
@@ -327,11 +308,10 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 .readout {
   display: flex; align-items: center; justify-content: flex-end; gap: 14px;
   align-self: stretch; flex-wrap: wrap;
-  /* Fixed height whether or not there is a word, so the board never shifts. */
+  /* Reserved whether or not there is a word, so the scoreboard never jumps. */
   min-height: calc(var(--cell) * 0.7);
-  margin: 0 0 6px;
+  margin: 12px 0 0;
 }
-@media (min-aspect-ratio: 1/1) and (min-width: 700px) { .readout { margin: 14px 0 0; } }
 .readout .word {
   font-weight: 800; font-size: calc(var(--cell) * 0.46); letter-spacing: 0.06em;
   color: var(--ink-mute); line-height: 1;
@@ -348,14 +328,12 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 .readout .claim:disabled kbd { background: oklch(0.3 0.02 70 / 0.07); }
 .readout .x { background: none; color: var(--ink-soft); font-size: 0.95rem; font-weight: 700; padding: 0 4px; }
 
-/* Auto-fitting columns so 1 to 8 players all lay out sensibly without a media
-   query of their own; the wide layout collapses it to a single column. */
+/* Beneath the board, players side by side with their words hanging below each.
+   Growth is downward only, which is why the board above never moves. */
 .scores {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 14px 20px; align-content: start; flex: 1; min-height: 0;
-}
-@media (min-aspect-ratio: 1/1) and (min-width: 700px) {
-  .scores { grid-template-columns: 1fr; gap: 18px; }
+  display: flex; flex-wrap: wrap; gap: 16px 30px;
+  justify-content: center; align-items: flex-start;
+  width: min(100%, 760px); margin-top: 4px;
 }
 .player { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
 .playerhead { display: flex; align-items: baseline; gap: 8px; }
@@ -378,6 +356,10 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   color: var(--ink-mute); font-variant-numeric: tabular-nums;
 }
 .clock.low { color: oklch(0.58 0.17 28); }
+.clock.target {
+  color: var(--ink-soft); font-size: 0.76rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
 .clock.done {
   color: var(--ink-soft); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.74rem;
 }

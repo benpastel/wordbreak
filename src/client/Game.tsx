@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Claim, Fx, GameState, TableView } from '../shared/types';
+import type { Claim, Fx, GameState, Settings, TableView } from '../shared/types';
 import * as R from '../shared/rules';
 import * as S from '../shared/selection';
 import { isWord } from './dict';
@@ -141,21 +141,16 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
     [game, over],
   );
 
-  // Cap the lists by the room the scoreboard region actually has. Wide layouts give
-  // it a tall column of its own; narrow ones share a shrinking strip above the board
-  // between every player at once.
-  const [maxWords, setMaxWords] = useState(5);
+  // The lists hang below the board, so cap them by roughly what is left under it
+  // rather than by a fixed number that is wrong on half of all screens.
+  const [maxWords, setMaxWords] = useState(6);
   useEffect(() => {
-    const measure = () => {
-      const wide = window.innerWidth >= 700 && window.innerWidth >= window.innerHeight;
-      const room = wide ? window.innerHeight * 0.72 : window.innerHeight * 0.3;
-      const perPlayer = wide ? room / Math.max(1, table.players.length) : room / 2;
-      setMaxWords(Math.max(2, Math.min(14, Math.floor((perPlayer - 26) / 19))));
-    };
+    const measure = () =>
+      setMaxWords(Math.max(3, Math.min(14, Math.floor((window.innerHeight * 0.26) / 19))));
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [table.players.length]);
+  }, []);
 
   useEffect(() => {
     const up = () => {
@@ -187,31 +182,11 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
 
   return (
     <div className="play">
-      <div className="side">
-        <div className="playtop">
-          <Clock endsAt={game.endsAt} over={over} />
-          <button className="leave" onClick={onLeave}>
-            leave
-          </button>
-        </div>
-        <div className="scores">
-          {table.players.map((p) => (
-            <div
-              key={p.id}
-              className={`player c${p.color}${p.id === meId ? ' isme' : ''}${
-                p.connected ? '' : ' gone'
-              }${over && p.ready ? ' setgo' : ''}`}
-              data-player={p.id}
-            >
-              <div className="playerhead">
-                <span className="name">{p.name}</span>
-                <span className="pts">{p.score}</span>
-                <Trophies trophies={p.trophies} />
-              </div>
-              <ClaimList claims={claimsByPlayer.get(p.id) ?? []} max={maxWords} />
-            </div>
-          ))}
-        </div>
+      <div className="playtop">
+        <MatchStatus settings={table.settings} endsAt={game.endsAt} over={over} />
+        <button className="leave" onClick={onLeave}>
+          leave
+        </button>
       </div>
 
       <div className="boardwrap" style={{ '--n': game.size } as React.CSSProperties}>
@@ -293,7 +268,24 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
         </div>
       </div>
 
-
+      <div className="scores">
+        {table.players.map((p) => (
+          <div
+            key={p.id}
+            className={`player c${p.color}${p.id === meId ? ' isme' : ''}${
+              p.connected ? '' : ' gone'
+            }${over && p.ready ? ' setgo' : ''}`}
+            data-player={p.id}
+          >
+            <div className="playerhead">
+              <span className="name">{p.name}</span>
+              <span className="pts">{p.score}</span>
+              <Trophies trophies={p.trophies} />
+            </div>
+            <ClaimList claims={claimsByPlayer.get(p.id) ?? []} max={maxWords} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -385,25 +377,39 @@ function ClaimList({ claims, max }: { claims: Claim[]; max: number }) {
   );
 }
 
-/** Counts down locally from the server's own timestamp, so it needs no traffic and
- *  stays honest across a reconnect. */
-function Clock({ endsAt, over }: { endsAt: number; over: boolean }) {
-  const [left, setLeft] = useState(() => Math.max(0, endsAt - serverTime()));
+/**
+ * What is going to end this match. A clock counts down locally from the server's own
+ * timestamp, so it needs no traffic and stays honest across a reconnect; the other
+ * two modes have nothing to tick, just a condition worth stating.
+ */
+function MatchStatus({
+  settings,
+  endsAt,
+  over,
+}: {
+  settings: Settings;
+  endsAt: number | null;
+  over: boolean;
+}) {
+  const [left, setLeft] = useState(() => (endsAt === null ? 0 : Math.max(0, endsAt - serverTime())));
   useEffect(() => {
-    if (over) return;
+    if (over || endsAt === null) return;
     const tick = () => setLeft(Math.max(0, endsAt - serverTime()));
     tick();
     const id = setInterval(tick, 250);
     return () => clearInterval(id);
   }, [endsAt, over]);
 
-  if (over) return <div className="clock done">time</div>;
+  if (over) return <div className="clock done">match over</div>;
+  if (settings.endMode === 'points') {
+    return <div className="clock target">first to {settings.targetScore}</div>;
+  }
+  if (endsAt === null) return <div className="clock target">no limit</div>;
+
   const total = Math.ceil(left / 1000);
-  const mm = Math.floor(total / 60);
-  const ss = total % 60;
   return (
     <div className={`clock${left <= 30_000 ? ' low' : ''}`}>
-      {mm}:{String(ss).padStart(2, '0')}
+      {Math.floor(total / 60)}:{String(total % 60).padStart(2, '0')}
     </div>
   );
 }

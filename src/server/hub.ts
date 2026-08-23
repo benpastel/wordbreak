@@ -3,7 +3,8 @@
 // a fresh snapshot plus a few animation hints.
 
 import {
-  COLOR_COUNT, DEFAULT_GAME_MS, DEFAULT_GRID, DEFAULT_HOLD_MS, MAX_PLAYERS,
+  COLOR_COUNT, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID, DEFAULT_HOLD_MS,
+  DEFAULT_TARGET, MAX_PLAYERS,
 } from '../shared/types';
 import type {
   Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
@@ -110,7 +111,13 @@ export class Hub {
       name: cleanName(name, `${p.name}'s table`),
       hostId: playerId,
       phase: 'lobby',
-      settings: { gridSize: DEFAULT_GRID, holdMs: DEFAULT_HOLD_MS, gameMs: DEFAULT_GAME_MS },
+      settings: {
+        gridSize: DEFAULT_GRID,
+        holdMs: DEFAULT_HOLD_MS,
+        endMode: DEFAULT_END_MODE,
+        gameMs: DEFAULT_GAME_MS,
+        targetScore: DEFAULT_TARGET,
+      },
       playerIds: [],
       game: null,
       nextTileId: 1,
@@ -189,13 +196,10 @@ export class Hub {
 
   setSettings(playerId: string, patch: Partial<Settings>): void {
     const t = this.tableOf(playerId);
-    if (!t || t.hostId !== playerId || t.phase !== 'lobby') return;
-    const next = R.clampSettings(
-      patch.gridSize ?? t.settings.gridSize,
-      patch.holdMs ?? t.settings.holdMs,
-      patch.gameMs ?? t.settings.gameMs,
-    );
-    t.settings = next;
+    // Allowed between matches too, not just before the first one — that is when a
+    // table actually decides the next game should be shorter, or played to points.
+    if (!t || t.hostId !== playerId || t.phase === 'playing') return;
+    t.settings = R.clampSettings({ ...t.settings, ...patch });
     this.store.putTable(t);
     this.pushTable(t.id, []);
     this.pushLobby();
@@ -233,10 +237,11 @@ export class Hub {
     const t = this.tableOf(playerId);
     if (!t || t.phase === 'playing' || t.playerIds.length === 0) return;
     t.phase = 'playing';
+    // Only a timed match carries a deadline; the other two end on a score or not at all.
     t.game = R.newGame(
       t.settings.gridSize,
       () => t.nextTileId++,
-      Date.now() + t.settings.gameMs,
+      t.settings.endMode === 'time' ? Date.now() + t.settings.gameMs : null,
     );
     for (const id of t.playerIds) {
       const p = this.store.getPlayer(id);
@@ -246,7 +251,8 @@ export class Hub {
         this.store.putPlayer(p);
       }
     }
-    this.scheduleEnd(t.id, t.game.endsAt);
+    if (t.game.endsAt !== null) this.scheduleEnd(t.id, t.game.endsAt);
+    else this.clearEndTimer(t.id);
     this.store.putTable(t);
     this.pushTable(t.id, []);
     this.pushLobby();
@@ -266,8 +272,8 @@ export class Hub {
     this.endTimers.delete(tableId);
   }
 
-  /** Time's up. Claims still holding are simply lost — they did not survive their
-   *  hold time, so by the ordinary rule they do not bank. */
+  /** The match is over, however it got there. Claims still holding are simply lost —
+   *  they did not survive their hold time, so by the ordinary rule they do not bank. */
   private endGame(tableId: string): void {
     this.endTimers.delete(tableId);
     const t = this.store.getTable(tableId);
@@ -382,6 +388,10 @@ export class Hub {
     this.pushTable(t.id, [
       { k: 'banked', playerId: claim.playerId, idx, letters, word: claim.word, points },
     ]);
+
+    if (t.settings.endMode === 'points' && p && p.score >= t.settings.targetScore) {
+      this.endGame(t.id);
+    }
   }
 
   // ------------------------------------------------------------- plumbing

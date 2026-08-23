@@ -63,11 +63,23 @@ section('live word lists: longest on top, shortest truncated away');
 }
 
 section('settings are clamped to the offered range');
-for (const [asked, want] of [[3, 4], [4, 4], [5, 5], [6, 6], [7, 6], [99, 6]]) {
-  check(`grid ${asked} clamps to ${want}`, R.clampSettings(asked, 30000).gridSize === want);
+{
+  const base = { gridSize: 5, holdMs: 30_000, endMode: 'points', gameMs: 300_000, targetScore: 50 };
+  const clamp = (patch) => R.clampSettings({ ...base, ...patch });
+  for (const [asked, want] of [[3, 4], [4, 4], [5, 5], [6, 6], [7, 6], [99, 6]]) {
+    check(`grid ${asked} clamps to ${want}`, clamp({ gridSize: asked }).gridSize === want);
+  }
+  check('hold time clamps low', clamp({ holdMs: 1 }).holdMs >= 3_000);
+  check('hold time clamps high', clamp({ holdMs: 1e9 }).holdMs <= 60_000);
+  check('match length clamps low', clamp({ gameMs: 1 }).gameMs >= 30_000);
+  check('target clamps low', clamp({ targetScore: 0 }).targetScore >= 10);
+  check('target clamps high', clamp({ targetScore: 1e6 }).targetScore <= 1_000);
+  for (const m of ['time', 'points', 'unlimited']) {
+    check(`${m} is a valid end mode`, clamp({ endMode: m }).endMode === m);
+  }
+  check('a nonsense end mode falls back to points',
+    clamp({ endMode: 'whenever' }).endMode === 'points');
 }
-check('hold time clamps low', R.clampSettings(5, 1).holdMs >= 3000);
-check('hold time clamps high', R.clampSettings(5, 1e9).holdMs <= 60000);
 
 section('medals: standard competition ranking, and nothing for nothing');
 {

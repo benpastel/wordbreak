@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
-import type { Settings, TableView } from '../shared/types';
+import type { EndMode, Settings, TableView } from '../shared/types';
 import NameField from './NameField';
 
 interface Props {
@@ -14,7 +14,13 @@ interface Props {
 }
 
 const HOLD_CHOICES = [10, 20, 30, 40, 60];
-const GAME_CHOICES = [2, 3, 5, 10, 15];
+const TIME_CHOICES = [3, 5, 10, 15];
+const POINT_CHOICES = [30, 50, 100, 200];
+const END_MODES: { mode: EndMode; label: string }[] = [
+  { mode: 'time', label: 'by time' },
+  { mode: 'points', label: 'by points' },
+  { mode: 'unlimited', label: 'unlimited' },
+];
 
 export default function TableRoom({
   table,
@@ -104,20 +110,56 @@ export default function TableRoom({
         </div>
 
         <div className="setting">
-          <label>match</label>
+          <label>ends</label>
           <div className="segmented">
-            {GAME_CHOICES.map((m) => (
+            {END_MODES.map(({ mode, label }) => (
               <button
-                key={m}
-                className={table.settings.gameMs === m * 60_000 ? 'on' : ''}
+                key={mode}
+                className={table.settings.endMode === mode ? 'on' : ''}
                 disabled={!isHost}
-                onClick={() => onSettings({ gameMs: m * 60_000 })}
+                onClick={() => onSettings({ endMode: mode })}
               >
-                {m}m
+                {label}
               </button>
             ))}
           </div>
         </div>
+
+        {table.settings.endMode === 'time' && (
+          <div className="setting">
+            <label>length</label>
+            <div className="segmented">
+              {TIME_CHOICES.map((m) => (
+                <button
+                  key={m}
+                  className={table.settings.gameMs === m * 60_000 ? 'on' : ''}
+                  disabled={!isHost}
+                  onClick={() => onSettings({ gameMs: m * 60_000 })}
+                >
+                  {m} min
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {table.settings.endMode === 'points' && (
+          <div className="setting">
+            <label>target</label>
+            <div className="segmented">
+              {POINT_CHOICES.map((n) => (
+                <button
+                  key={n}
+                  className={table.settings.targetScore === n ? 'on' : ''}
+                  disabled={!isHost}
+                  onClick={() => onSettings({ targetScore: n })}
+                >
+                  {n} pts
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="setting">
           <label>hold time</label>

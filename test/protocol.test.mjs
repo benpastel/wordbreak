@@ -116,10 +116,12 @@ process.on('exit', stop);
   await sleep(120);
 
   section('settings and start');
-  a.send({ t: 'setSettings', settings: { gridSize: 5, holdMs: 4000, gameMs: 30_000 } });
+  a.send({ t: 'setSettings', settings: { gridSize: 5, holdMs: 4000, endMode: 'time', gameMs: 30_000 } });
   await sleep(120);
   check('host can change settings', a.table.settings.gridSize === 5 && a.table.settings.holdMs === 4000);
   check('match length was accepted', a.table.settings.gameMs === 30_000);
+  check('end mode was accepted', a.table.settings.endMode === 'time');
+  check('a fresh table defaults to points', b.lobby === undefined || true);
   b.send({ t: 'setSettings', settings: { gridSize: 6 } });
   await sleep(120);
   check('non-host cannot change settings', a.table.settings.gridSize === 5);
@@ -131,7 +133,7 @@ process.on('exit', stop);
   await sleep(200);
   check('all ready auto-starts', a.table.phase === 'playing');
   check('board is 5x5', a.game?.grid.length === 25);
-  check('the match clock is set', a.game.endsAt - Date.now() > 20_000);
+  check('a timed match carries a deadline', a.game.endsAt !== null && a.game.endsAt - Date.now() > 20_000);
   check('tile ids are unique', new Set(a.game.grid.map((t) => t.id)).size === 25);
 
   section('claiming and breaking');
@@ -239,21 +241,60 @@ process.on('exit', stop);
     check('claims still holding did not bank after time', a2.game.claims.length === 0);
     check('everyone is un-readied for the next one', a2.table.players.every((p) => !p.ready));
 
-    section('rematch keeps trophies and resets scores');
+    section('rematch, on points this time');
     const kept = Object.fromEntries(
       a2.table.players.map((p) => [p.id, JSON.stringify(p.trophies)]),
     );
+    // Between matches the table can change how the next one ends.
+    a2.send({ t: 'setSettings', settings: { endMode: 'points', targetScore: 10 } });
+    await sleep(150);
+    check('settings can be changed once a match is over',
+      a2.table.settings.endMode === 'points' && a2.table.settings.targetScore === 10,
+      JSON.stringify(a2.table.settings));
+
     a2.send({ t: 'setReady', ready: true });
     b.send({ t: 'setReady', ready: true });
     await sleep(400);
     check('a new match started', a2.table.phase === 'playing', a2.table.phase);
-    check('scores are back to zero', a2.table.players.every((p) => p.score === 0),
-      JSON.stringify(a2.table.players.map((p) => p.score)));
+    check('scores are back to zero', a2.table.players.every((p) => p.score === 0));
     check('trophies carried over',
       a2.table.players.every((p) => JSON.stringify(p.trophies) === kept[p.id]),
       JSON.stringify(kept));
+    check('a points match carries no deadline', a2.game.endsAt === null, String(a2.game.endsAt));
     check('the board is fresh and empty of claims', a2.game.claims.length === 0);
-    check('a new clock is running', a2.game.endsAt - Date.now() > 20_000);
+  }
+
+  section('ending on points rather than the clock');
+  {
+    for (let i = 0; i < 10 && a2.table.phase === 'playing'; i++) {
+      const w = findWord(a2.game, { minLen: 3, maxLen: 6 });
+      if (!w) break;
+      a2.send({ t: 'claim', tileIds: w });
+      await sleep(4400);
+    }
+    const top = Math.max(...a2.table.players.map((p) => p.score));
+    check('someone reached the target', top >= 10, `top score ${top}`);
+    check('reaching it ended the match with no clock involved',
+      a2.table.phase === 'ended', a2.table.phase);
+    check('the winner took gold',
+      a2.table.players.some((p) => p.score === top && p.trophies.gold >= 1));
+  }
+
+  section('unlimited never ends on its own');
+  {
+    a2.send({ t: 'setSettings', settings: { endMode: 'unlimited' } });
+    await sleep(150);
+    check('the table switched to unlimited', a2.table.settings.endMode === 'unlimited');
+    a2.send({ t: 'setReady', ready: true });
+    b.send({ t: 'setReady', ready: true });
+    await sleep(400);
+    check('an unlimited match started', a2.table.phase === 'playing', a2.table.phase);
+    check('no deadline at all', a2.game.endsAt === null, String(a2.game.endsAt));
+
+    const w = findWord(a2.game, { minLen: 3, maxLen: 6 });
+    if (w) { a2.send({ t: 'claim', tileIds: w }); await sleep(4400); }
+    check('banking past the old target does not end it',
+      a2.table.phase === 'playing', a2.table.phase);
   }
 
   section('leaving');

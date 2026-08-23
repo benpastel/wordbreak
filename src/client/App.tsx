@@ -8,7 +8,15 @@ import TableRoom from './TableRoom';
 import Game from './Game';
 
 const ID_KEY = 'wordbreak.playerId';
+/** A name the player actually typed. Kept forever. */
 const NAME_KEY = 'wordbreak.name';
+/** This visit's placeholder. Session-scoped on purpose — see initialName. */
+const AUTO_KEY = 'wordbreak.autoName';
+/** Placeholders from before names were two words; clear them so they are not
+ *  mistaken for a chosen name and pinned to the browser for good. */
+const LEGACY_AUTO = new Set([
+  'quick', 'plain', 'brisk', 'lucky', 'quiet', 'sharp', 'brave', 'clever',
+]);
 
 // A placeholder with a bit of personality, but still obviously a placeholder — the
 // point is that you replace it. Kept short so eight of them fit across a score bar.
@@ -25,6 +33,33 @@ function defaultName(): string {
   return `${pick(ADJECTIVES)} ${pick(ANIMALS)}`;
 }
 
+/**
+ * A chosen name outlives the browser session; a generated one only lasts the tab.
+ *
+ * Persisting placeholders was the bug: once written they were indistinguishable
+ * from a real choice, so a player who never typed a name was pinned to whatever
+ * the generator happened to produce the first time — and never saw a later, better
+ * default. Session scope keeps it stable across a refresh mid-game while letting a
+ * fresh visit get a fresh placeholder.
+ */
+function initialName(): string {
+  const stored = localStorage.getItem(NAME_KEY);
+  if (stored && LEGACY_AUTO.has(stored)) localStorage.removeItem(NAME_KEY);
+  else if (stored) return stored;
+
+  const auto = sessionStorage.getItem(AUTO_KEY);
+  if (auto) return auto;
+  const fresh = defaultName();
+  sessionStorage.setItem(AUTO_KEY, fresh);
+  return fresh;
+}
+
+/** What to greet the server with. Empty means "keep whatever you have for me",
+ *  which is what a reconnecting player with an unchosen name wants. */
+function helloName(): string {
+  return localStorage.getItem(NAME_KEY) ?? sessionStorage.getItem(AUTO_KEY) ?? '';
+}
+
 function hashTable(): string | null {
   const m = location.hash.match(/^#\/t\/([a-z0-9]+)/i);
   return m ? m[1] : null;
@@ -33,7 +68,7 @@ function hashTable(): string | null {
 export default function App() {
   const [status, setStatus] = useState<NetStatus>('connecting');
   const [meId, setMeId] = useState<string | null>(null);
-  const [name, setName] = useState(() => localStorage.getItem(NAME_KEY) ?? defaultName());
+  const [name, setName] = useState(initialName);
   const [tables, setTables] = useState<TableSummary[]>([]);
   const [table, setTable] = useState<TableView | null>(null);
   const [fx, setFx] = useState<{ seq: number; items: Fx[] }>({ seq: 0, items: [] });
@@ -50,10 +85,6 @@ export default function App() {
       () => setToast('Could not load the dictionary.'),
     );
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem(NAME_KEY, name);
-  }, [name]);
 
   const onMsg = useCallback((msg: ServerMsg) => {
     switch (msg.t) {
@@ -84,7 +115,7 @@ export default function App() {
     const net = new Net(onMsg, setStatus, () => ({
       t: 'hello',
       playerId: localStorage.getItem(ID_KEY),
-      name: localStorage.getItem(NAME_KEY) ?? '',
+      name: helloName(),
     }));
     netRef.current = net;
     net.connect();
@@ -118,6 +149,8 @@ export default function App() {
     () => ({
       setName: (n: string) => {
         setName(n);
+        localStorage.setItem(NAME_KEY, n);
+        sessionStorage.removeItem(AUTO_KEY);
         send({ t: 'setName', name: n });
       },
       create: (n: string) => send({ t: 'createTable', name: n }),

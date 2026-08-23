@@ -16,9 +16,18 @@ export const MAX_HOLD_MS = 60_000;
 export const DEFAULT_HOLD_MS = 30_000;
 export const DEFAULT_GRID = 5;
 
+/** How a match finishes. */
+export type EndMode = 'time' | 'points' | 'unlimited';
+
 export const MIN_GAME_MS = 30_000;
 export const MAX_GAME_MS = 1_800_000;
 export const DEFAULT_GAME_MS = 300_000;
+
+export const MIN_TARGET = 10;
+export const MAX_TARGET = 1_000;
+export const DEFAULT_TARGET = 50;
+
+export const DEFAULT_END_MODE: EndMode = 'points';
 
 export type Medal = 'gold' | 'silver' | 'bronze';
 export const MEDALS: Medal[] = ['gold', 'silver', 'bronze'];
@@ -55,8 +64,11 @@ export interface Player {
 export interface Settings {
   gridSize: number;
   holdMs: number;
-  /** How long a match runs before the clock stops it. */
+  endMode: EndMode;
+  /** Used when endMode is 'time'. */
   gameMs: number;
+  /** Used when endMode is 'points': first to reach it ends the match. */
+  targetScore: number;
 }
 
 export interface GameState {
@@ -64,7 +76,8 @@ export interface GameState {
   /** Row-major, length size*size. */
   grid: Tile[];
   claims: Claim[];
-  endsAt: number; // server epoch ms
+  /** Server epoch ms, or null when the match is not on a clock. */
+  endsAt: number | null;
 }
 
 export type Phase = 'lobby' | 'playing' | 'ended';

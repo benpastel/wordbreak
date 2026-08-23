@@ -5,9 +5,10 @@
 
 import { drawLetter } from './letters';
 import {
-  MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MEDALS, MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS,
+  MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MAX_TARGET, MEDALS,
+  MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS, MIN_TARGET,
 } from './types';
-import type { Claim, GameState, Medal, Tile } from './types';
+import type { Claim, EndMode, GameState, Medal, Settings, Tile } from './types';
 
 export type AllocId = () => number;
 
@@ -19,7 +20,7 @@ export function makeGrid(size: number, allocId: AllocId): Tile[] {
   return grid;
 }
 
-export function newGame(size: number, allocId: AllocId, endsAt: number): GameState {
+export function newGame(size: number, allocId: AllocId, endsAt: number | null): GameState {
   return { size, grid: makeGrid(size, allocId), claims: [], endsAt };
 }
 
@@ -180,13 +181,17 @@ export function claimsByPlayer(claims: Claim[]): Map<string, Claim[]> {
   return byPlayer;
 }
 
+const END_MODES: EndMode[] = ['time', 'points', 'unlimited'];
+
 /** The server's floor and ceiling on what a client may ask for. Bounds come from the
- *  shared constants so the lobby cannot offer a size this would reject, or vice versa. */
-export function clampSettings(gridSize: number, holdMs: number, gameMs: number) {
+ *  shared constants so the lobby cannot offer a value this would reject, or vice versa. */
+export function clampSettings(s: Settings): Settings {
   return {
-    gridSize: Math.max(MIN_GRID, Math.min(MAX_GRID, Math.round(gridSize))),
-    holdMs: Math.max(MIN_HOLD_MS, Math.min(MAX_HOLD_MS, Math.round(holdMs))),
-    gameMs: Math.max(MIN_GAME_MS, Math.min(MAX_GAME_MS, Math.round(gameMs))),
+    gridSize: Math.max(MIN_GRID, Math.min(MAX_GRID, Math.round(s.gridSize))),
+    holdMs: Math.max(MIN_HOLD_MS, Math.min(MAX_HOLD_MS, Math.round(s.holdMs))),
+    endMode: END_MODES.includes(s.endMode) ? s.endMode : 'points',
+    gameMs: Math.max(MIN_GAME_MS, Math.min(MAX_GAME_MS, Math.round(s.gameMs))),
+    targetScore: Math.max(MIN_TARGET, Math.min(MAX_TARGET, Math.round(s.targetScore))),
   };
 }
 
