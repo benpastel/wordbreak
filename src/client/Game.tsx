@@ -141,16 +141,21 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
     [game, over],
   );
 
-  // The lists sit below the board, so cap them by what the window can spare rather
-  // than by a fixed number that is wrong on half of all screens.
-  const [maxWords, setMaxWords] = useState(6);
+  // Cap the lists by the room the scoreboard region actually has. Wide layouts give
+  // it a tall column of its own; narrow ones share a shrinking strip above the board
+  // between every player at once.
+  const [maxWords, setMaxWords] = useState(5);
   useEffect(() => {
-    const measure = () =>
-      setMaxWords(Math.max(2, Math.min(14, Math.floor((window.innerHeight * 0.2) / 19))));
+    const measure = () => {
+      const wide = window.innerWidth >= 700 && window.innerWidth >= window.innerHeight;
+      const room = wide ? window.innerHeight * 0.72 : window.innerHeight * 0.3;
+      const perPlayer = wide ? room / Math.max(1, table.players.length) : room / 2;
+      setMaxWords(Math.max(2, Math.min(14, Math.floor((perPlayer - 26) / 19))));
+    };
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, []);
+  }, [table.players.length]);
 
   useEffect(() => {
     const up = () => {
@@ -182,7 +187,33 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
 
   return (
     <div className="play">
-      <Clock endsAt={game.endsAt} over={over} />
+      <div className="side">
+        <div className="playtop">
+          <Clock endsAt={game.endsAt} over={over} />
+          <button className="leave" onClick={onLeave}>
+            leave
+          </button>
+        </div>
+        <div className="scores">
+          {table.players.map((p) => (
+            <div
+              key={p.id}
+              className={`player c${p.color}${p.id === meId ? ' isme' : ''}${
+                p.connected ? '' : ' gone'
+              }${over && p.ready ? ' setgo' : ''}`}
+              data-player={p.id}
+            >
+              <div className="playerhead">
+                <span className="name">{p.name}</span>
+                <span className="pts">{p.score}</span>
+                <Trophies trophies={p.trophies} />
+              </div>
+              <ClaimList claims={claimsByPlayer.get(p.id) ?? []} max={maxWords} />
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="boardwrap" style={{ '--n': game.size } as React.CSSProperties}>
         <div
           className={`board${over ? ' over' : ''}`}
@@ -262,28 +293,7 @@ export default function Game({ table, meId, fx, onClaim, onReady, onLeave }: Pro
         </div>
       </div>
 
-      <div className="scores">
-        {table.players.map((p) => (
-          <div
-            key={p.id}
-            className={`player c${p.color}${p.id === meId ? ' isme' : ''}${
-              p.connected ? '' : ' gone'
-            }${over && p.ready ? ' setgo' : ''}`}
-            data-player={p.id}
-          >
-            <div className="playerhead">
-              <span className="name">{p.name}</span>
-              <span className="pts">{p.score}</span>
-              <Trophies trophies={p.trophies} />
-            </div>
-            <ClaimList claims={claimsByPlayer.get(p.id) ?? []} max={maxWords} />
-          </div>
-        ))}
-      </div>
 
-      <button className="leave" onClick={onLeave}>
-        leave table
-      </button>
     </div>
   );
 }
