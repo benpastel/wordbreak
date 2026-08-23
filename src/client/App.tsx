@@ -167,7 +167,9 @@ export default function App() {
   let body: React.ReactNode;
   if (!meId) {
     body = <Splash text={status === 'closed' ? 'reconnecting…' : 'connecting…'} />;
-  } else if (table && table.phase === 'playing' && table.game) {
+    // 'ended' stays on the board: final scores, trophies and the ready button are
+    // all part of the game view, and being thrown back to the setup screen loses them.
+  } else if (table && table.game && (table.phase === 'playing' || table.phase === 'ended')) {
     body = dict ? (
       <Game
         table={table}

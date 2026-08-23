@@ -272,14 +272,22 @@ export class Hub {
     this.endTimers.delete(tableId);
   }
 
-  /** The match is over, however it got there. Claims still holding are simply lost —
-   *  they did not survive their hold time, so by the ordinary rule they do not bank. */
+  /** The match is over, however it got there. Everything still held pays out: the
+   *  buzzer should not confiscate a claim nobody managed to break, and without this
+   *  the last stretch of a match is dead time where claiming is pointless. */
   private endGame(tableId: string): void {
     this.endTimers.delete(tableId);
     const t = this.store.getTable(tableId);
     if (!t || t.phase !== 'playing' || !t.game) return;
 
-    for (const c of t.game.claims) this.clearTimer(c.id);
+    for (const c of t.game.claims) {
+      this.clearTimer(c.id);
+      const holder = this.store.getPlayer(c.playerId);
+      if (holder) {
+        holder.score += c.tileIds.length;
+        this.store.putPlayer(holder);
+      }
+    }
     t.game.claims = [];
     t.phase = 'ended';
 

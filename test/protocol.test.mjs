@@ -213,12 +213,42 @@ process.on('exit', stop);
     const w = findWord(a2.game, { minLen: 3, maxLen: 5 });
     if (w) { a2.send({ t: 'claim', tileIds: w }); await sleep(4500); }
 
-    const finalScores = a2.table.players.map((p) => ({ id: p.id, score: p.score }));
-    const expected = R.medalsFor(finalScores);
+    // Claim again with less than a hold time left, so it cannot possibly bank on its
+    // own — the only way it can score is if the buzzer pays it out.
+    const untilLate = Math.max(0, a2.game.endsAt - Date.now() - 2500);
+    if (untilLate > 0) {
+      console.log(`  ..    waiting ${(untilLate / 1000).toFixed(1)}s to claim late`);
+      await sleep(untilLate);
+    }
+    const scoresBeforeLate = Object.fromEntries(a2.table.players.map((p) => [p.id, p.score]));
+    const late = findWord(a2.game, { minLen: 3, maxLen: 6 });
+    let lateOwner = null;
+    let lateWorth = 0;
+    if (late) {
+      a2.send({ t: 'claim', tileIds: late });
+      await sleep(250);
+      const live = a2.game.claims.find((c) => c.playerId === savedId);
+      if (live) {
+        lateOwner = savedId;
+        lateWorth = live.tileIds.length;
+        check('a late claim is holding and cannot bank before the buzzer',
+          live.banksAt > a2.game.endsAt, `banks ${live.banksAt - a2.game.endsAt}ms after the end`);
+      }
+    }
 
     const waitMs = Math.max(0, a2.game.endsAt - Date.now()) + 1500;
     console.log(`  ..    waiting ${(waitMs / 1000).toFixed(1)}s for the clock`);
     await sleep(waitMs);
+
+    if (lateOwner) {
+      const now = a2.table.players.find((p) => p.id === lateOwner).score;
+      check('the buzzer paid out the claim still being held',
+        now === scoresBeforeLate[lateOwner] + lateWorth,
+        `${scoresBeforeLate[lateOwner]} + ${lateWorth} -> ${now}`);
+    }
+
+    const finalScores = a2.table.players.map((p) => ({ id: p.id, score: p.score }));
+    const expected = R.medalsFor(finalScores);
 
     check('the match ended on its own', a2.table.phase === 'ended', a2.table.phase);
     const ended = [...a2.fx].reverse().find((f) => f.k === 'ended');
@@ -229,7 +259,7 @@ process.on('exit', stop);
     check('someone actually placed', Object.keys(expected).length > 0,
       JSON.stringify(finalScores));
 
-    check('final scores are still on the board',
+    check('medals were judged on the scores including the buzzer payouts',
       a2.table.players.every((p) => p.score === finalScores.find((f) => f.id === p.id).score));
     check('each medal became exactly one trophy',
       a2.table.players.every((p) => {
@@ -238,7 +268,7 @@ process.on('exit', stop);
         return m ? p.trophies[m] === 1 && total === 1 : total === 0;
       }),
       JSON.stringify(a2.table.players.map((p) => [p.name, p.trophies])));
-    check('claims still holding did not bank after time', a2.game.claims.length === 0);
+    check('no claims survive into the ended state', a2.game.claims.length === 0);
     check('everyone is un-readied for the next one', a2.table.players.every((p) => !p.ready));
 
     section('rematch, on points this time');
