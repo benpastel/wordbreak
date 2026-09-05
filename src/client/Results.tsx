@@ -9,8 +9,10 @@ import Trophies from './Trophies';
 const AWARD_LABEL: Record<AwardKind, string> = {
   longest: 'longest word',
   shortest: 'shortest word',
+  hardest: 'hardest letters',
   obscure: 'most obscure',
   fastest: 'quickest off a new letter',
+  repeat: 'kept going back to',
 };
 
 interface Props {

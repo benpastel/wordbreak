@@ -97,3 +97,9 @@ everyday English words, no proper nouns and no abbreviations. We drop anything
 containing `q`, since there is no Q tile. `public/words.txt` is the filtered result
 (1.6MB raw, ~430KB gzipped); the client fetches it once so the claim button can light
 up with no round trip, and the server validates against the same file.
+
+`data/word-frequency.txt` ranks those words by how often they turn up in ordinary
+speech, which decides the **most obscure** award at the end of a match. It is
+server-side only. Derived from [FrequencyWords](https://github.com/hermitdave/FrequencyWords)
+(OpenSubtitles, CC BY-SA 4.0) — see [`data/README.md`](data/README.md) for
+attribution and how to rebuild it.

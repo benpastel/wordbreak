@@ -6,18 +6,20 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import type { WebSocket } from 'ws';
 import { loadDictionary } from './dictionary';
+import { loadFrequencies } from './frequency';
 import { Hub } from './hub';
 import type { ClientMsg, ServerMsg } from '../shared/types';
 
 const PORT = Number(process.env.PORT) || 8080;
 
 const wordCount = loadDictionary();
+const freqCount = loadFrequencies();
 
 const app = express();
 app.use(compression()); // words.txt is 1.6MB raw, ~450KB over the wire
 
 app.get('/healthz', (_req, res) => {
-  res.json({ ok: true, words: wordCount });
+  res.json({ ok: true, words: wordCount, ranked: freqCount });
 });
 
 // In dev the client is served by Vite on :5173 (which proxies /ws here), so this
@@ -120,5 +122,8 @@ wss.on('connection', (ws: WebSocket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`wordbreak listening on :${PORT}  (${wordCount.toLocaleString()} words)`);
+  console.log(
+    `wordbreak listening on :${PORT}  ` +
+      `(${wordCount.toLocaleString()} words, ${freqCount.toLocaleString()} ranked)`,
+  );
 });

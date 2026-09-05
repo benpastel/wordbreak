@@ -8,6 +8,7 @@ import {
   MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MAX_TARGET, MEDALS,
   MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS, MIN_TARGET,
 } from './types';
+import { REPEAT_THRESHOLD } from './types';
 import type {
   Award, BreakNote, Claim, ClaimRecord, EndMode, GameState, MatchStats, Medal, Settings, Tile,
 } from './types';
@@ -187,8 +188,17 @@ export function rarity(word: string): number {
   return total;
 }
 
-/** The end-of-match write-up: one holder per award, plus the biggest thefts. */
-export function computeStats(log: ClaimRecord[]): MatchStats {
+/**
+ * The end-of-match write-up: one holder per award, plus the biggest thefts.
+ *
+ * `corpusRank` places a word in everyday English, most common first, and returns
+ * null for anything rarer than the corpus has seen. It is injected rather than
+ * imported so these rules stay pure and testable.
+ */
+export function computeStats(
+  log: ClaimRecord[],
+  corpusRank: (word: string) => number | null = () => null,
+): MatchStats {
   const awards: Award[] = [];
 
   const award = (
@@ -202,15 +212,40 @@ export function computeStats(log: ClaimRecord[]): MatchStats {
     awards.push({ kind, playerId: winner.playerId, word: winner.word, detail: detail(winner) });
   };
 
+  // Beyond the end of the corpus everything is equally unheard-of, so fall back to
+  // letter rarity to separate them.
+  const obscurity = (w: string) => {
+    const r = corpusRank(w);
+    return r === null ? 1e6 + rarity(w) : r;
+  };
+
   award('longest', log, (a, b) => b.word.length > a.word.length, (c) => `${c.word.length} letters`);
   award('shortest', log, (a, b) => b.word.length < a.word.length, (c) => `${c.word.length} letters`);
-  award('obscure', log, (a, b) => rarity(b.word) > rarity(a.word), () => 'rarest letters');
+  award('hardest', log, (a, b) => rarity(b.word) > rarity(a.word), () => 'rarest letters');
+  award('obscure', log, (a, b) => obscurity(b.word) > obscurity(a.word), (c) =>
+    corpusRank(c.word) === null ? 'not in everyday use' : 'seldom said out loud',
+  );
   award(
     'fastest',
     log.filter((c) => c.reactionMs !== null),
     (a, b) => (b.reactionMs as number) < (a.reactionMs as number),
     (c) => `${((c.reactionMs as number) / 1000).toFixed(1)}s after it landed`,
   );
+
+  // Going back to the same word again and again is worth calling out; ties all place.
+  const tally = new Map<string, number>();
+  for (const c of log) {
+    const key = `${c.playerId}\u0000${c.word}`;
+    tally.set(key, (tally.get(key) ?? 0) + 1);
+  }
+  const most = Math.max(0, ...tally.values());
+  if (most >= REPEAT_THRESHOLD) {
+    for (const [key, n] of tally) {
+      if (n !== most) continue;
+      const [playerId, word] = key.split('\u0000');
+      awards.push({ kind: 'repeat', playerId, word, detail: `found it ${n} times` });
+    }
+  }
 
   type Broke = ClaimRecord & { broke: { playerId: string; word: string } };
   const breaks: BreakNote[] = log

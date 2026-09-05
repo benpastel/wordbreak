@@ -100,7 +100,16 @@ export const MAX_CHAT_LEN = 240;
 /** Seconds of warning between the table agreeing and the board appearing. */
 export const COUNTDOWN_MS = 5_000;
 
-export type AwardKind = 'longest' | 'shortest' | 'obscure' | 'fastest';
+export type AwardKind =
+  | 'longest'
+  | 'shortest'
+  | 'hardest'
+  | 'obscure'
+  | 'fastest'
+  | 'repeat';
+
+/** How many times you must find the same word before it is worth mentioning. */
+export const REPEAT_THRESHOLD = 3;
 
 export interface Award {
   kind: AwardKind;

@@ -52,8 +52,8 @@ section('match write-up');
   const by = Object.fromEntries(stats.awards.map((x) => [x.kind, x]));
   check('longest goes to the longest word', by.longest.word === 'strained', by.longest?.word);
   check('shortest goes to the shortest', by.shortest.word === 'do', by.shortest?.word);
-  check('obscure prefers rare letters over length',
-    by.obscure.word === 'jazzy', by.obscure?.word);
+  check('hardest letters prefers rare letters over length',
+    by.hardest.word === 'jazzy', by.hardest?.word);
   check('fastest goes to the quickest reaction', by.fastest.word === 'rates', by.fastest?.word);
   check('fastest reads in seconds', by.fastest.detail.startsWith('0.3'), by.fastest.detail);
   check('each award names its winner', by.longest.playerId === 'b' && by.obscure.playerId === 'a');
@@ -69,6 +69,52 @@ section('match write-up');
   check('a match with no claims has nothing to say',
     empty.awards.length === 0 && empty.breaks.length === 0);
 
+  // obscurity uses the corpus when it has one, and only falls back to letters beyond it
+  const corpus = { do: 5, cat: 900, rates: 4000, strained: 12000, jazzy: 15000, breaking: 3000 };
+  const rank = (w) => (w in corpus ? corpus[w] : null);
+  const ranked = R.computeStats(
+    [c('a', 'cat'), c('a', 'jazzy'), c('b', 'strained')],
+    rank,
+  );
+  const rby = Object.fromEntries(ranked.awards.map((x) => [x.kind, x]));
+  check('obscure follows the corpus, not word length',
+    rby.obscure.word === 'jazzy', rby.obscure?.word);
+  check('hardest letters and most obscure are separate awards',
+    rby.hardest.kind === 'hardest' && rby.obscure.kind === 'obscure');
+
+  const offCorpus = R.computeStats([c('a', 'cat'), c('a', 'jazzy'), c('b', 'syzygy')], rank);
+  const oby = Object.fromEntries(offCorpus.awards.map((x) => [x.kind, x]));
+  check('a word the corpus has never seen beats anything in it',
+    oby.obscure.word === 'syzygy', oby.obscure?.word);
+  check('and says so', oby.obscure.detail === 'not in everyday use', oby.obscure.detail);
+
+  section('kept going back to the same word');
+  {
+    const twice = R.computeStats([c('a', 'sea'), c('a', 'sea'), c('a', 'ore')]);
+    check('twice is not worth mentioning', !twice.awards.some((x) => x.kind === 'repeat'));
+
+    const thrice = R.computeStats([c('a', 'sea'), c('a', 'sea'), c('a', 'sea'), c('b', 'ore')]);
+    const rep = thrice.awards.find((x) => x.kind === 'repeat');
+    check('three times is', !!rep && rep.word === 'sea' && rep.playerId === 'a');
+    check('and it says how many', rep?.detail === 'found it 3 times', rep?.detail);
+
+    const both = R.computeStats([
+      c('a', 'sea'), c('a', 'sea'), c('a', 'sea'),
+      c('b', 'ore'), c('b', 'ore'), c('b', 'ore'),
+    ]);
+    const reps = both.awards.filter((x) => x.kind === 'repeat');
+    check('two players can both place', reps.length === 2,
+      JSON.stringify(reps.map((r) => `${r.playerId}:${r.word}`)));
+
+    const sameWord = R.computeStats([
+      c('a', 'sea'), c('a', 'sea'), c('a', 'sea'),
+      c('b', 'sea'), c('b', 'sea'),
+    ]);
+    check('the same word by different players is counted separately',
+      sameWord.awards.filter((x) => x.kind === 'repeat').length === 1);
+  }
+
+  section('match write-up, continued');
   const noReactions = R.computeStats([c('a', 'cat')]);
   check('no fastest award when nothing was a reaction',
     !noReactions.awards.some((x) => x.kind === 'fastest'));
