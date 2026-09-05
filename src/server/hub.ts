@@ -3,8 +3,8 @@
 // a fresh snapshot plus a few animation hints.
 
 import {
-  COLOR_COUNT, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID, DEFAULT_HOLD_MS,
-  DEFAULT_TARGET, MAX_PLAYERS,
+  COLOR_COUNT, COUNTDOWN_MS, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
+  DEFAULT_HOLD_MS, DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
 } from '../shared/types';
 import type {
   Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
@@ -39,6 +39,8 @@ export class Hub {
   private timers = new Map<string, NodeJS.Timeout>();
   /** tableId -> the match clock. */
   private endTimers = new Map<string, NodeJS.Timeout>();
+  /** tableId -> the pre-match countdown. */
+  private startTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(private send: Send) {
     setInterval(() => this.reap(), 30_000).unref();
@@ -123,6 +125,10 @@ export class Hub {
       nextTileId: 1,
       claimSeq: 1,
       createdAt: Date.now(),
+      chat: [],
+      log: [],
+      stats: null,
+      startsAt: null,
     };
     this.store.putTable(t);
     this.joinTable(playerId, t.id);
@@ -226,9 +232,45 @@ export class Hub {
     this.store.putPlayer(p);
     this.pushTable(t.id, []);
 
-    // Everyone present has said yes — no need to make the host click again.
+    // Everyone present has said yes. Count down rather than dropping the board on
+    // them, and let anyone take it back by un-readying.
     const present = t.playerIds.map((id) => this.store.getPlayer(id)!).filter((x) => x?.connected);
-    if (present.length > 0 && present.every((x) => x.ready)) this.start(t.hostId);
+    const agreed = present.length > 0 && present.every((x) => x.ready);
+    if (agreed && t.startsAt === null) {
+      t.startsAt = Date.now() + COUNTDOWN_MS;
+      this.clearStartTimer(t.id);
+      this.startTimers.set(t.id, setTimeout(() => this.start(t.hostId), COUNTDOWN_MS));
+    } else if (!agreed && t.startsAt !== null) {
+      t.startsAt = null;
+      this.clearStartTimer(t.id);
+    }
+    this.store.putTable(t);
+    this.pushTable(t.id, []);
+  }
+
+  private clearStartTimer(tableId: string): void {
+    const timer = this.startTimers.get(tableId);
+    if (timer) clearTimeout(timer);
+    this.startTimers.delete(tableId);
+  }
+
+  chat(playerId: string, text: string): void {
+    const t = this.tableOf(playerId);
+    const p = this.store.getPlayer(playerId);
+    if (!t || !p) return;
+    const clean = text.replace(/\s+/g, ' ').trim().slice(0, MAX_CHAT_LEN);
+    if (!clean) return;
+    t.chat.push({
+      id: `${t.id}-${t.chat.length}-${Date.now()}`,
+      playerId,
+      name: p.name,
+      color: p.color,
+      text: clean,
+      at: Date.now(),
+    });
+    if (t.chat.length > MAX_CHAT) t.chat.splice(0, t.chat.length - MAX_CHAT);
+    this.store.putTable(t);
+    this.pushTable(t.id, []);
   }
 
   /** Starts the first match, and every rematch: a fresh board and fresh scores, but
@@ -236,12 +278,18 @@ export class Hub {
   start(playerId: string): void {
     const t = this.tableOf(playerId);
     if (!t || t.phase === 'playing' || t.playerIds.length === 0) return;
+    this.clearStartTimer(t.id);
+    t.startsAt = null;
     t.phase = 'playing';
+    t.log = [];
+    t.stats = null;
+    const now = Date.now();
     // Only a timed match carries a deadline; the other two end on a score or not at all.
     t.game = R.newGame(
       t.settings.gridSize,
       () => t.nextTileId++,
-      t.settings.endMode === 'time' ? Date.now() + t.settings.gameMs : null,
+      t.settings.endMode === 'time' ? now + t.settings.gameMs : null,
+      now,
     );
     for (const id of t.playerIds) {
       const p = this.store.getPlayer(id);
@@ -306,6 +354,7 @@ export class Hub {
       this.store.putPlayer(p);
     }
 
+    t.stats = R.computeStats(t.log);
     this.store.putTable(t);
     this.pushTable(t.id, [{ k: 'ended', medals }]);
     this.pushLobby();
@@ -338,15 +387,28 @@ export class Hub {
 
     // A repeat of a claim you already hold is caught by validatePath above, since
     // an identical path is not strictly longer than itself.
+    const now = Date.now();
+    // Reaction is measured against the newest letter the word used, and only counts
+    // when that letter arrived mid-match — otherwise every opening word would qualify.
+    const newest = Math.max(...tileIds.map((id) => game.grid.find((x) => x.id === id)!.bornAt));
+    const openedAt = game.grid.reduce((min, x) => Math.min(min, x.bornAt), Infinity);
     const { claim, broken } = R.applyClaim(
       game,
       tileIds,
       playerId,
       word,
-      Date.now(),
+      now,
       t.settings.holdMs,
       `${t.id}-${t.claimSeq++}`,
     );
+    const stolen = broken.find((b) => b.playerId !== playerId) ?? null;
+    t.log.push({
+      playerId,
+      word,
+      at: now,
+      reactionMs: newest > openedAt ? now - newest : null,
+      broke: stolen ? { playerId: stolen.playerId, word: stolen.word } : null,
+    });
 
     const fx: Fx[] = [];
     // Breaking is breaking, whoever held the claim — including you extending your
@@ -386,7 +448,7 @@ export class Hub {
     const claim = t.game.claims.find((c) => c.id === claimId);
     if (!claim) return;
 
-    const { points, idx, letters } = R.bankClaim(t.game, claim, () => t.nextTileId++);
+    const { points, idx, letters } = R.bankClaim(t.game, claim, () => t.nextTileId++, Date.now());
     const p = this.store.getPlayer(claim.playerId);
     if (p) {
       p.score += points;
@@ -424,6 +486,7 @@ export class Hub {
   private destroyTable(t: TableRecord): void {
     for (const c of t.game?.claims ?? []) this.clearTimer(c.id);
     this.clearEndTimer(t.id);
+    this.clearStartTimer(t.id);
     this.store.deleteTable(t.id);
   }
 
@@ -450,6 +513,9 @@ export class Hub {
       settings: t.settings,
       players: t.playerIds.map((id) => this.playerView(id)).filter((x): x is Player => !!x),
       game: t.game,
+      chat: t.chat,
+      stats: t.stats,
+      startsAt: t.startsAt,
     };
   }
 

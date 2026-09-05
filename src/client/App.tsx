@@ -6,6 +6,7 @@ import { loadWords, wordsReady } from './dict';
 import Lobby from './Lobby';
 import TableRoom from './TableRoom';
 import Game from './Game';
+import Results from './Results';
 
 const ID_KEY = 'wordbreak.playerId';
 /** A name the player actually typed. Kept forever. */
@@ -160,6 +161,7 @@ export default function App() {
       color: (c: number) => send({ t: 'setColor', color: c }),
       ready: (r: boolean) => send({ t: 'setReady', ready: r }),
       claim: (tileIds: number[]) => send({ t: 'claim', tileIds }),
+      chat: (text: string) => send({ t: 'chat', text }),
     }),
     [send],
   );
@@ -167,16 +169,26 @@ export default function App() {
   let body: React.ReactNode;
   if (!meId) {
     body = <Splash text={status === 'closed' ? 'reconnecting…' : 'connecting…'} />;
-    // 'ended' stays on the board: final scores, trophies and the ready button are
-    // all part of the game view, and being thrown back to the setup screen loses them.
-  } else if (table && table.game && (table.phase === 'playing' || table.phase === 'ended')) {
+  } else if (table && table.phase === 'ended') {
+    // Between matches the board is put away; the write-up and the table talking
+    // about it are the whole screen.
+    body = (
+      <Results
+        table={table}
+        meId={meId}
+        fx={fx}
+        onReady={actions.ready}
+        onChat={actions.chat}
+        onLeave={actions.leave}
+      />
+    );
+  } else if (table && table.phase === 'playing' && table.game) {
     body = dict ? (
       <Game
         table={table}
         meId={meId}
         fx={fx}
         onClaim={actions.claim}
-        onReady={actions.ready}
         onLeave={actions.leave}
       />
     ) : (
@@ -191,6 +203,7 @@ export default function App() {
         onSettings={actions.settings}
         onColor={actions.color}
         onReady={actions.ready}
+        onChat={actions.chat}
         onLeave={actions.leave}
       />
     );

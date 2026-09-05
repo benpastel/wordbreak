@@ -3,25 +3,32 @@
 // every function that needs "now" takes it as an argument, which is also what makes
 // swapping the in-memory store for a database a contained change later.
 
-import { drawLetter } from './letters';
+import { drawLetter, WEIGHTS } from './letters';
 import {
   MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MAX_TARGET, MEDALS,
   MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS, MIN_TARGET,
 } from './types';
-import type { Claim, EndMode, GameState, Medal, Settings, Tile } from './types';
+import type {
+  Award, BreakNote, Claim, ClaimRecord, EndMode, GameState, MatchStats, Medal, Settings, Tile,
+} from './types';
 
 export type AllocId = () => number;
 
-export function makeGrid(size: number, allocId: AllocId): Tile[] {
+export function makeGrid(size: number, allocId: AllocId, now: number): Tile[] {
   const grid: Tile[] = [];
   for (let i = 0; i < size * size; i++) {
-    grid.push({ id: allocId(), letter: drawLetter(grid.map((t) => t.letter)) });
+    grid.push({ id: allocId(), letter: drawLetter(grid.map((t) => t.letter)), bornAt: now });
   }
   return grid;
 }
 
-export function newGame(size: number, allocId: AllocId, endsAt: number | null): GameState {
-  return { size, grid: makeGrid(size, allocId), claims: [], endsAt };
+export function newGame(
+  size: number,
+  allocId: AllocId,
+  endsAt: number | null,
+  now: number,
+): GameState {
+  return { size, grid: makeGrid(size, allocId, now), claims: [], endsAt };
 }
 
 export function tileIndex(game: GameState, tileId: number): number {
@@ -147,7 +154,12 @@ export interface BankResult {
 }
 
 /** Hold time elapsed: score one point per letter, vacate the tiles, reseed them. */
-export function bankClaim(game: GameState, claim: Claim, allocId: AllocId): BankResult {
+export function bankClaim(
+  game: GameState,
+  claim: Claim,
+  allocId: AllocId,
+  now: number,
+): BankResult {
   const idx = claim.tileIds.map((id) => tileIndex(game, id)).filter((i) => i >= 0);
   const letters = idx.map((i) => game.grid[i].letter);
 
@@ -156,11 +168,64 @@ export function bankClaim(game: GameState, claim: Claim, allocId: AllocId): Bank
   const vacating = new Set(idx);
   for (const i of idx) {
     const survivors = game.grid.filter((_, j) => !vacating.has(j)).map((t) => t.letter);
-    game.grid[i] = { id: allocId(), letter: drawLetter(survivors) };
+    game.grid[i] = { id: allocId(), letter: drawLetter(survivors), bornAt: now };
     vacating.delete(i);
   }
 
   return { points: claim.tileIds.length, idx, letters };
+}
+
+/**
+ * A crude stand-in for how obscure a word is: rarer letters score higher, using the
+ * same weights the bag is drawn from. It is not corpus frequency — it cannot tell a
+ * common word from an odd one — but it reliably surfaces the JAZZY over the RATES,
+ * which is what the write-up is for.
+ */
+export function rarity(word: string): number {
+  let total = 0;
+  for (const ch of word.toUpperCase()) total += 1 / (WEIGHTS[ch] ?? 1);
+  return total;
+}
+
+/** The end-of-match write-up: one holder per award, plus the biggest thefts. */
+export function computeStats(log: ClaimRecord[]): MatchStats {
+  const awards: Award[] = [];
+
+  const award = (
+    kind: Award['kind'],
+    pool: ClaimRecord[],
+    better: (a: ClaimRecord, b: ClaimRecord) => boolean,
+    detail: (c: ClaimRecord) => string,
+  ) => {
+    if (pool.length === 0) return;
+    const winner = pool.reduce((a, b) => (better(a, b) ? b : a));
+    awards.push({ kind, playerId: winner.playerId, word: winner.word, detail: detail(winner) });
+  };
+
+  award('longest', log, (a, b) => b.word.length > a.word.length, (c) => `${c.word.length} letters`);
+  award('shortest', log, (a, b) => b.word.length < a.word.length, (c) => `${c.word.length} letters`);
+  award('obscure', log, (a, b) => rarity(b.word) > rarity(a.word), () => 'rarest letters');
+  award(
+    'fastest',
+    log.filter((c) => c.reactionMs !== null),
+    (a, b) => (b.reactionMs as number) < (a.reactionMs as number),
+    (c) => `${((c.reactionMs as number) / 1000).toFixed(1)}s after it landed`,
+  );
+
+  type Broke = ClaimRecord & { broke: { playerId: string; word: string } };
+  const breaks: BreakNote[] = log
+    .filter((c): c is Broke => c.broke !== null)
+    // Biggest jump in length first: taking a 3 with an 8 is the story, a 3 with a 4 is not.
+    .sort((a, b) => b.word.length - b.broke.word.length - (a.word.length - a.broke.word.length))
+    .slice(0, 4)
+    .map((c) => ({
+      byPlayerId: c.playerId,
+      word: c.word,
+      overPlayerId: c.broke.playerId,
+      overWord: c.broke.word,
+    }));
+
+  return { awards, breaks };
 }
 
 /**

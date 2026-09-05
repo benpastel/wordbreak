@@ -38,6 +38,43 @@ check('longer over an opponent claim accepted', R.validatePath(theirs, [1, 2, 3,
 check('a word touching no claim accepted', R.validatePath(game, [4, 5]) === null);
 check('a broken path is a path error, not a length one', R.validatePath(game, [1, 6]) === 'not-adjacent');
 
+section('match write-up');
+{
+  const c = (playerId, word, reactionMs = null, broke = null) =>
+    ({ playerId, word, at: 0, reactionMs, broke });
+  const stats = R.computeStats([
+    c('a', 'do'),
+    c('b', 'strained', 4200),
+    c('a', 'jazzy', 900),
+    c('b', 'rates', 300, { playerId: 'a', word: 'rat' }),
+    c('a', 'breaking', 1500, { playerId: 'b', word: 'bre' }),
+  ]);
+  const by = Object.fromEntries(stats.awards.map((x) => [x.kind, x]));
+  check('longest goes to the longest word', by.longest.word === 'strained', by.longest?.word);
+  check('shortest goes to the shortest', by.shortest.word === 'do', by.shortest?.word);
+  check('obscure prefers rare letters over length',
+    by.obscure.word === 'jazzy', by.obscure?.word);
+  check('fastest goes to the quickest reaction', by.fastest.word === 'rates', by.fastest?.word);
+  check('fastest reads in seconds', by.fastest.detail.startsWith('0.3'), by.fastest.detail);
+  check('each award names its winner', by.longest.playerId === 'b' && by.obscure.playerId === 'a');
+
+  check('only broken claims are listed', stats.breaks.length === 2);
+  check('the biggest jump leads',
+    stats.breaks[0].word === 'breaking' && stats.breaks[0].overWord === 'bre',
+    stats.breaks.map((b) => `${b.overWord}->${b.word}`).join(', '));
+  check('a break records both sides',
+    stats.breaks[0].byPlayerId === 'a' && stats.breaks[0].overPlayerId === 'b');
+
+  const empty = R.computeStats([]);
+  check('a match with no claims has nothing to say',
+    empty.awards.length === 0 && empty.breaks.length === 0);
+
+  const noReactions = R.computeStats([c('a', 'cat')]);
+  check('no fastest award when nothing was a reaction',
+    !noReactions.awards.some((x) => x.kind === 'fastest'));
+  check('rarity ranks rare letters above common ones', R.rarity('jazz') > R.rarity('tease'));
+}
+
 section('live word lists: longest on top, shortest truncated away');
 {
   const c = (id, playerId, len, banksAt, word) =>

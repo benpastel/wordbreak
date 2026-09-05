@@ -39,6 +39,8 @@ export type Trophies = Record<Medal, number>;
 export interface Tile {
   id: number;
   letter: string; // single uppercase A-Z
+  /** When this letter appeared. Used to time reactions to a reseed. */
+  bornAt: number;
 }
 
 export interface Claim {
@@ -82,6 +84,56 @@ export interface GameState {
 
 export type Phase = 'lobby' | 'playing' | 'ended';
 
+export interface ChatMessage {
+  id: string;
+  playerId: string;
+  /** Name and colour as they were when it was sent, so history stays readable
+   *  after someone renames or recolours. */
+  name: string;
+  color: number;
+  text: string;
+  at: number;
+}
+export const MAX_CHAT = 200;
+export const MAX_CHAT_LEN = 240;
+
+/** Seconds of warning between the table agreeing and the board appearing. */
+export const COUNTDOWN_MS = 5_000;
+
+export type AwardKind = 'longest' | 'shortest' | 'obscure' | 'fastest';
+
+export interface Award {
+  kind: AwardKind;
+  playerId: string;
+  word: string;
+  /** Pre-rendered supporting text, e.g. "1.4s". */
+  detail: string;
+}
+
+export interface BreakNote {
+  byPlayerId: string;
+  word: string;
+  overPlayerId: string;
+  overWord: string;
+}
+
+/** Everything worth saying about the match that just finished. */
+export interface MatchStats {
+  awards: Award[];
+  breaks: BreakNote[];
+}
+
+/** One claim as it happened, kept for the end-of-match write-up. */
+export interface ClaimRecord {
+  playerId: string;
+  word: string;
+  at: number;
+  /** Time from the newest letter it used appearing to the claim landing, when that
+   *  letter arrived mid-match. Null for words built only from the opening board. */
+  reactionMs: number | null;
+  broke: { playerId: string; word: string } | null;
+}
+
 export interface TableView {
   id: string;
   name: string;
@@ -90,6 +142,11 @@ export interface TableView {
   settings: Settings;
   players: Player[];
   game: GameState | null;
+  chat: ChatMessage[];
+  /** The write-up for the last finished match, kept until the next one starts. */
+  stats: MatchStats | null;
+  /** Set once the table has agreed to play; the board appears when it passes. */
+  startsAt: number | null;
 }
 
 export interface TableSummary {
@@ -128,7 +185,8 @@ export type ClientMsg =
   | { t: 'setColor'; color: number }
   | { t: 'setReady'; ready: boolean }
   | { t: 'start' }
-  | { t: 'claim'; tileIds: number[] };
+  | { t: 'claim'; tileIds: number[] }
+  | { t: 'chat'; text: string };
 
 export type ServerMsg =
   | { t: 'welcome'; playerId: string; name: string }

@@ -364,17 +364,92 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   color: var(--ink-soft); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.74rem;
 }
 
-.matchover { display: flex; align-items: center; gap: 14px; }
-.matchover .readystate { font-size: 0.78rem; color: var(--ink-mute); }
+/* -------------------------------------------------------- between matches
+   The board is put away here, so this screen can use the whole column: the
+   standings, what happened in them, and the table talking about it. */
+.results {
+  width: min(100%, 620px); margin: 0 auto; padding: 12px 16px 60px;
+  display: flex; flex-direction: column; gap: 18px;
+}
 
-/* The board goes quiet once the clock stops, so the score bar is what you read. */
-.board.over { opacity: 0.72; }
-.board.over .tile { cursor: default; }
+.standings { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.standing {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: var(--tile-face); border-radius: 14px; padding: 14px 18px;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.standing .place {
+  font-weight: 800; font-size: 1.05rem; color: var(--ink-mute);
+  font-variant-numeric: tabular-nums; min-width: 1.2ch; padding-top: 1px;
+}
+.standing .who { flex: 1; min-width: 0; }
+.standing.isme { box-shadow: var(--shadow-1), var(--shadow-2), inset 0 0 0 2px var(--pc); }
+.standing.setgo .name::after {
+  content: '✓'; margin-left: 6px; font-size: 0.8em; color: oklch(0.55 0.13 148);
+}
+
+.awards { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.awards li { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.awards .lab {
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.awards .word {
+  font-size: 0.86rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--pc);
+}
+.awards .det { font-size: 0.72rem; color: var(--ink-mute); }
+
+.breaks h2 { margin-bottom: 10px; }
+.breaks ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.breaks li { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.breaks .bw {
+  font-size: 0.88rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--pc);
+}
+.breaks .arrow { color: var(--ink-mute); font-weight: 700; }
+.breaks .by { font-size: 0.74rem; color: var(--ink-mute); }
+
+.readyrow { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.readystate { font-size: 0.78rem; color: var(--ink-mute); }
+
+/* ------------------------------------------------------------------- chat */
+.chat {
+  background: var(--tile-face); border-radius: 14px;
+  box-shadow: var(--shadow-1), var(--shadow-2); overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.chatlog {
+  padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain;
+  height: 168px; display: flex; flex-direction: column; gap: 5px;
+}
+.chatempty { color: var(--ink-mute); font-size: 0.84rem; margin: auto 0; text-align: center; }
+.chatline { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--ink); }
+.chatline b { color: var(--pc); font-weight: 700; margin-right: 8px; }
+.chatbox { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--hairline); }
+.chatbox input { flex: 1; width: auto; font-weight: 500; box-shadow: none; background: var(--ground); }
+
+/* -------------------------------------------------------------- countdown */
+.countdown { display: flex; align-items: baseline; gap: 10px; }
+.countdown .num {
+  font-size: 2.1rem; font-weight: 800; color: var(--ink);
+  font-variant-numeric: tabular-nums; line-height: 1;
+  animation: tick 240ms cubic-bezier(.2,.9,.3,1);
+}
+.countdown .lab {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-mute);
+}
+@keyframes tick {
+  from { transform: scale(1.45); opacity: 0.35; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .countdown .num { animation: none; } }
 
 /* --------------------------------------------------------------- trophies
    Playing pieces rather than icons: a domed disc with a lit top edge and a
    shadow under it, so they read as objects sitting on the table next to a name. */
-.trophies { display: inline-flex; align-items: center; gap: 7px; margin-left: 2px; }
+.trophies { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; flex-wrap: wrap; }
 .trophy { display: inline-flex; align-items: center; gap: 2px; }
 .trophy i {
   width: 13px; height: 13px; border-radius: 50%;
@@ -384,7 +459,7 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
     inset 0 1px 1px oklch(1 0 0 / 0.55),
     0 1px 1.5px oklch(0.3 0.02 70 / 0.3);
 }
-.trophy b {
+.trophies .more {
   font-size: 0.66rem; font-weight: 800; color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
 }

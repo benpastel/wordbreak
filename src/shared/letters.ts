@@ -4,7 +4,7 @@
 // Q is dropped entirely: a bare Q is nearly unusable, and a Qu tile counting as two
 // letters would complicate every length comparison in the rules for one face in ~95.
 
-const WEIGHTS: Record<string, number> = {
+export const WEIGHTS: Record<string, number> = {
   A: 6, B: 2, C: 2, D: 3, E: 11, F: 2, G: 2, H: 5, I: 6,
   J: 1, K: 1, L: 4, M: 2, N: 6, O: 7, P: 2, R: 5, S: 6,
   T: 9, U: 2, V: 2, W: 3, X: 1, Y: 3, Z: 1,

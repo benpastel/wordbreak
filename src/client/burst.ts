@@ -4,24 +4,28 @@
 
 import type { Medal } from '../shared/types';
 
-const PALETTE: Record<Medal, string[]> = {
+/** Everyone gets a pop; placing just makes it your medal's colour. */
+export type BurstKind = Medal | 'none';
+
+const PALETTE: Record<BurstKind, string[]> = {
   gold: ['oklch(0.84 0.15 88)', 'oklch(0.72 0.14 72)', 'oklch(0.93 0.09 95)'],
   silver: ['oklch(0.86 0.015 250)', 'oklch(0.72 0.02 250)', 'oklch(0.95 0.008 250)'],
   bronze: ['oklch(0.70 0.11 52)', 'oklch(0.58 0.10 45)', 'oklch(0.82 0.08 60)'],
+  none: ['oklch(0.72 0.13 250)', 'oklch(0.74 0.14 148)', 'oklch(0.72 0.15 25)', 'oklch(0.76 0.13 300)'],
 };
 
-const COUNT = 26;
+const COUNT = 22;
 const MS = 900;
 
-/** Fires from `origin` (their own name in the score bar), so the celebration is
- *  attached to the thing that just changed rather than floating in the middle. */
-export function burst(medal: Medal, origin: HTMLElement | null): void {
+/** Fires from `origin` (a player's own name), so the celebration is attached to the
+ *  thing that just changed rather than floating in the middle. */
+export function burst(kind: BurstKind, origin: HTMLElement | null): void {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   const r = origin?.getBoundingClientRect();
   const x = r ? r.left + r.width / 2 : window.innerWidth / 2;
   const y = r ? r.top + r.height / 2 : window.innerHeight / 2;
-  const colors = PALETTE[medal];
+  const colors = PALETTE[kind];
 
   for (let i = 0; i < COUNT; i++) {
     const bit = document.createElement('i');

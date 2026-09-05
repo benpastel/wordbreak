@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
 import type { EndMode, Settings, TableView } from '../shared/types';
 import NameField from './NameField';
+import Chat from './Chat';
+import Countdown from './Countdown';
 
 interface Props {
   table: TableView;
@@ -10,6 +12,7 @@ interface Props {
   onSettings: (s: Partial<Settings>) => void;
   onColor: (c: number) => void;
   onReady: (r: boolean) => void;
+  onChat: (text: string) => void;
   onLeave: () => void;
 }
 
@@ -29,6 +32,7 @@ export default function TableRoom({
   onSettings,
   onColor,
   onReady,
+  onChat,
   onLeave,
 }: Props) {
   const [copied, setCopied] = useState(false);
@@ -188,10 +192,19 @@ export default function TableRoom({
         </div>
       </section>
 
+      <Chat messages={table.chat} onSend={onChat} />
+
       <div className="startrow">
-        <button className={`primary big${me?.ready ? ' on' : ''}`} onClick={() => onReady(!me?.ready)}>
-          {me?.ready ? 'ready — waiting for others' : "I'm ready"}
-        </button>
+        {table.startsAt !== null ? (
+          <Countdown startsAt={table.startsAt} />
+        ) : (
+          <button
+            className={`primary big${me?.ready ? ' on' : ''}`}
+            onClick={() => onReady(!me?.ready)}
+          >
+            {me?.ready ? 'ready — waiting for others' : "I'm ready"}
+          </button>
+        )}
       </div>
     </div>
   );

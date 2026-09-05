@@ -92,6 +92,9 @@ wss.on('connection', (ws: WebSocket) => {
       case 'claim':
         hub.claim(playerId, msg.tileIds);
         break;
+      case 'chat':
+        hub.chat(playerId, msg.text);
+        break;
     }
   });
 

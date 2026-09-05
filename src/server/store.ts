@@ -3,7 +3,9 @@
 // this interface so that adding a real store later is a contained change rather than
 // a rewrite: the rules in src/shared stay pure, and the hub only ever talks to a Store.
 
-import type { GameState, Phase, Settings, Trophies } from '../shared/types';
+import type {
+  ChatMessage, ClaimRecord, GameState, MatchStats, Phase, Settings, Trophies,
+} from '../shared/types';
 
 export interface PlayerRecord {
   id: string;
@@ -28,6 +30,14 @@ export interface TableRecord {
   nextTileId: number;
   claimSeq: number;
   createdAt: number;
+  /** Kept for the life of the table, across every match played at it. */
+  chat: ChatMessage[];
+  /** Claims made in the match currently running, for the write-up at the end. */
+  log: ClaimRecord[];
+  /** The write-up for the last finished match. */
+  stats: MatchStats | null;
+  /** When the agreed countdown fires, or null if nobody is waiting. */
+  startsAt: number | null;
 }
 
 export interface Store {

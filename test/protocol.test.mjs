@@ -115,6 +115,22 @@ process.on('exit', stop);
   b.send({ t: 'setName', name: 'benji' });
   await sleep(120);
 
+  section('chat');
+  {
+    a.send({ t: 'chat', text: '  hello   table  ' });
+    await sleep(150);
+    check('a message reaches everyone at the table', b.table.chat.length === 1);
+    check('whitespace is collapsed', b.table.chat[0].text === 'hello table', b.table.chat[0]?.text);
+    check('it carries the sender\'s name and colour',
+      b.table.chat[0].name === 'ana' && typeof b.table.chat[0].color === 'number');
+    a.send({ t: 'chat', text: '   ' });
+    await sleep(120);
+    check('an empty message is dropped', b.table.chat.length === 1);
+    a.send({ t: 'chat', text: 'z'.repeat(400) });
+    await sleep(120);
+    check('a long message is capped', b.table.chat[1].text.length === 240);
+  }
+
   section('settings and start');
   a.send({ t: 'setSettings', settings: { gridSize: 5, holdMs: 4000, endMode: 'time', gameMs: 30_000 } });
   await sleep(120);
@@ -128,10 +144,23 @@ process.on('exit', stop);
 
   a.send({ t: 'setReady', ready: true });
   await sleep(100);
-  check('one ready is not enough', a.table.phase === 'lobby');
+  check('one ready is not enough', a.table.phase === 'lobby' && a.table.startsAt === null);
   b.send({ t: 'setReady', ready: true });
-  await sleep(200);
-  check('all ready auto-starts', a.table.phase === 'playing');
+  await sleep(150);
+  check('all ready arms a countdown rather than starting', a.table.startsAt !== null);
+  check('the countdown is about five seconds',
+    Math.abs(a.table.startsAt - Date.now() - 5000) < 900, String(a.table.startsAt - Date.now()));
+  check('the board is not up yet', a.table.phase === 'lobby');
+
+  b.send({ t: 'setReady', ready: false });
+  await sleep(150);
+  check('un-readying cancels the countdown', a.table.startsAt === null);
+  check('still not started', a.table.phase === 'lobby');
+
+  b.send({ t: 'setReady', ready: true });
+  await sleep(5600);
+  check('the countdown starts the match', a.table.phase === 'playing');
+  check('startsAt is cleared once it fires', a.table.startsAt === null);
   check('board is 5x5', a.game?.grid.length === 25);
   check('a timed match carries a deadline', a.game.endsAt !== null && a.game.endsAt - Date.now() > 20_000);
   check('tile ids are unique', new Set(a.game.grid.map((t) => t.id)).size === 25);
@@ -270,6 +299,11 @@ process.on('exit', stop);
       JSON.stringify(a2.table.players.map((p) => [p.name, p.trophies])));
     check('no claims survive into the ended state', a2.game.claims.length === 0);
     check('everyone is un-readied for the next one', a2.table.players.every((p) => !p.ready));
+    check('a write-up was produced', !!a2.table.stats && a2.table.stats.awards.length > 0,
+      JSON.stringify(a2.table.stats?.awards.map((x) => `${x.kind}:${x.word}`)));
+    check('awards name players actually at the table',
+      (a2.table.stats?.awards ?? []).every((x) => a2.table.players.some((p) => p.id === x.playerId)));
+    check('chat survived the match', a2.table.chat.length >= 2, String(a2.table.chat.length));
 
     section('rematch, on points this time');
     const kept = Object.fromEntries(
@@ -284,7 +318,7 @@ process.on('exit', stop);
 
     a2.send({ t: 'setReady', ready: true });
     b.send({ t: 'setReady', ready: true });
-    await sleep(400);
+    await sleep(5600);
     check('a new match started', a2.table.phase === 'playing', a2.table.phase);
     check('scores are back to zero', a2.table.players.every((p) => p.score === 0));
     check('trophies carried over',
@@ -292,6 +326,8 @@ process.on('exit', stop);
       JSON.stringify(kept));
     check('a points match carries no deadline', a2.game.endsAt === null, String(a2.game.endsAt));
     check('the board is fresh and empty of claims', a2.game.claims.length === 0);
+    check('the previous write-up was cleared', a2.table.stats === null);
+    check('chat still carries across into the new match', a2.table.chat.length >= 2);
   }
 
   section('ending on points rather than the clock');
@@ -317,7 +353,7 @@ process.on('exit', stop);
     check('the table switched to unlimited', a2.table.settings.endMode === 'unlimited');
     a2.send({ t: 'setReady', ready: true });
     b.send({ t: 'setReady', ready: true });
-    await sleep(400);
+    await sleep(5600);
     check('an unlimited match started', a2.table.phase === 'playing', a2.table.phase);
     check('no deadline at all', a2.game.endsAt === null, String(a2.game.endsAt));
 
