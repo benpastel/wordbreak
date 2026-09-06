@@ -326,7 +326,16 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 .readout .claim kbd { background: oklch(1 0 0 / 0.18); color: inherit; }
 .readout .claim:disabled { background: var(--tray); color: var(--ink-mute); opacity: 1; }
 .readout .claim:disabled kbd { background: oklch(0.3 0.02 70 / 0.07); }
-.readout .x { background: none; color: var(--ink-soft); font-size: 0.95rem; font-weight: 700; padding: 0 4px; }
+/* Sized as a real touch target: on a phone this is the button you hit most after
+   the letters themselves, and it was a 20px hitbox. */
+.readout .x {
+  background: var(--tray); color: var(--ink-soft);
+  width: 46px; height: 46px; flex: none;
+  border-radius: 50%; font-size: 1.35rem; font-weight: 700; line-height: 1;
+  display: grid; place-items: center; padding: 0;
+}
+.readout .x:hover { background: oklch(0.86 0.014 85); color: var(--ink); }
+.readout .x:active { transform: scale(0.94); }
 
 /* Beneath the board, players side by side with their words hanging below each.
    Growth is downward only, which is why the board above never moves. */
@@ -399,6 +408,10 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   letter-spacing: 0.06em; color: var(--pc);
 }
 .awards .det { font-size: 0.72rem; color: var(--ink-mute); }
+.awards .def {
+  flex-basis: 100%; font-size: 0.76rem; line-height: 1.4;
+  color: var(--ink-soft); font-style: italic;
+}
 
 .breaks h2 { margin-bottom: 10px; }
 .breaks ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }

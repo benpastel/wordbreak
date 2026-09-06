@@ -14,9 +14,6 @@ const AWARD_LABEL: Record<AwardKind, string> = {
   fastest: 'quickest off a new letter',
   repeat: 'kept going back to',
   thief: 'thief',
-  busiest: 'busiest',
-  rapid: 'rapid fire',
-  first: 'first blood',
 };
 
 interface Props {
@@ -88,6 +85,7 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
                       <span className="lab">{AWARD_LABEL[a.kind]}</span>
                       {a.word && <b className="word">{a.word}</b>}
                       {a.detail && <span className="det">{a.detail}</span>}
+                      {a.definition && <span className="def">{a.definition}</span>}
                     </li>
                   ))}
                 </ul>

@@ -8,9 +8,7 @@ import {
   MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MAX_TARGET, MEDALS,
   MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS, MIN_TARGET,
 } from './types';
-import {
-  BUSIEST_THRESHOLD, RAPID_THRESHOLD, RAPID_WINDOW_MS, REPEAT_THRESHOLD, THIEF_THRESHOLD,
-} from './types';
+import { MAX_TIED_AWARDS, REPEAT_THRESHOLD, THIEF_THRESHOLD } from './types';
 import type {
   Award, BreakNote, Claim, ClaimRecord, EndMode, GameState, MatchStats, Medal, Settings, Tile,
 } from './types';
@@ -197,10 +195,15 @@ export function rarity(word: string): number {
  * null for anything rarer than the corpus has seen. It is injected rather than
  * imported so these rules stay pure and testable.
  */
-export function computeStats(
-  log: ClaimRecord[],
-  corpusRank: (word: string) => number | null = () => null,
-): MatchStats {
+export interface StatLookups {
+  /** Position in everyday English, most common first; null if rarer than the corpus. */
+  rank?: (word: string) => number | null;
+  define?: (word: string) => string | null;
+}
+
+export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): MatchStats {
+  const corpusRank = lookups.rank ?? (() => null);
+  const define = lookups.define ?? (() => null);
   const awards: Award[] = [];
 
   const award = (
@@ -227,6 +230,12 @@ export function computeStats(
   award('obscure', log, (a, b) => obscurity(b.word) > obscurity(a.word), (c) =>
     corpusRank(c.word) === null ? 'not in everyday use' : 'seldom said out loud',
   );
+  // The point of naming the most obscure word is settling what it meant.
+  const obscure = awards.find((a) => a.kind === 'obscure');
+  if (obscure) {
+    const meaning = define(obscure.word);
+    if (meaning) obscure.definition = meaning;
+  }
   award(
     'fastest',
     log.filter((c) => c.reactionMs !== null),
@@ -242,17 +251,20 @@ export function computeStats(
   }
   const most = Math.max(0, ...tally.values());
   if (most >= REPEAT_THRESHOLD) {
+    let placed = 0;
     for (const [key, n] of tally) {
-      if (n !== most) continue;
+      if (n !== most || placed >= MAX_TIED_AWARDS) continue;
       const [playerId, word] = key.split('\u0000');
       awards.push({ kind: 'repeat', playerId, word, detail: `found it ${n} times` });
+      placed++;
     }
   }
 
   /**
-   * Awards decided by counting rather than by comparing single claims. Ties go to
-   * whoever reached the number first, since the map is filled in log order — an
-   * arbitrary winner would be worse than a rule nobody has to think about.
+   * Awards decided by counting rather than by comparing single claims. Everyone on
+   * the top count places, because splitting a genuine tie by a technicality reads as
+   * a bug; past MAX_TIED_AWARDS the earliest to reach the number keep it, which falls
+   * out of tallying in log order.
    */
   const countAward = (
     kind: Award['kind'],
@@ -261,71 +273,30 @@ export function computeStats(
     word: (playerId: string) => string,
     detail: (n: number) => string,
   ) => {
-    let bestId: string | null = null;
     let best = 0;
+    for (const n of counts.values()) best = Math.max(best, n);
+    if (best < floor) return;
     for (const [id, n] of counts) {
-      if (n > best) {
-        best = n;
-        bestId = id;
-      }
-    }
-    if (bestId !== null && best >= floor) {
-      awards.push({ kind, playerId: bestId, word: word(bestId), detail: detail(best) });
+      if (n !== best) continue;
+      if (awards.filter((a) => a.kind === kind).length >= MAX_TIED_AWARDS) break;
+      awards.push({ kind, playerId: id, word: word(id), detail: detail(n) });
     }
   };
 
   const bump = (m: Map<string, number>, id: string) => m.set(id, (m.get(id) ?? 0) + 1);
 
   const steals = new Map<string, number>();
-  const made = new Map<string, number>();
-  const times = new Map<string, number[]>();
-  for (const c of log) {
-    bump(made, c.playerId);
-    if (c.broke) bump(steals, c.playerId);
-    const ts = times.get(c.playerId);
-    if (ts) ts.push(c.at);
-    else times.set(c.playerId, [c.at]);
-  }
+  for (const c of log) if (c.broke) bump(steals, c.playerId);
 
   /** The theft that gained the most letters, which is the one worth showing. */
   const bestSteal = (playerId: string) =>
     log
       .filter((c) => c.playerId === playerId && c.broke)
-      .reduce((a, b) => (b.word.length - b.broke!.word.length > a.word.length - a.broke!.word.length ? b : a))
-      .word;
+      .reduce((a, b) =>
+        b.word.length - b.broke!.word.length > a.word.length - a.broke!.word.length ? b : a,
+      ).word;
 
   countAward('thief', steals, THIEF_THRESHOLD, bestSteal, (n) => `broke ${n} claims`);
-  countAward('busiest', made, BUSIEST_THRESHOLD, () => '', (n) => `${n} words claimed`);
-
-  // Most claims fitting inside any one window, by sliding a pair of indices along.
-  const bursts = new Map<string, number>();
-  for (const [playerId, ts] of times) {
-    ts.sort((a, b) => a - b);
-    let start = 0;
-    let most = 0;
-    for (let end = 0; end < ts.length; end++) {
-      while (ts[end] - ts[start] > RAPID_WINDOW_MS) start++;
-      most = Math.max(most, end - start + 1);
-    }
-    bursts.set(playerId, most);
-  }
-  countAward(
-    'rapid',
-    bursts,
-    RAPID_THRESHOLD,
-    () => '',
-    (n) => `${n} in ${RAPID_WINDOW_MS / 1000}s`,
-  );
-
-  if (log.length > 0) {
-    const opener = log.reduce((a, b) => (b.at < a.at ? b : a));
-    awards.push({
-      kind: 'first',
-      playerId: opener.playerId,
-      word: opener.word,
-      detail: 'opened the match',
-    });
-  }
 
   type Broke = ClaimRecord & { broke: { playerId: string; word: string } };
   const breaks: BreakNote[] = log

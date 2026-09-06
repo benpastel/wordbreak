@@ -107,18 +107,13 @@ export type AwardKind =
   | 'obscure'
   | 'fastest'
   | 'repeat'
-  | 'thief'
-  | 'busiest'
-  | 'rapid'
-  | 'first';
+  | 'thief';
 
 /** Floors below which an award is not worth a line on the results screen. */
 export const REPEAT_THRESHOLD = 3;
 export const THIEF_THRESHOLD = 2;
-export const BUSIEST_THRESHOLD = 3;
-export const RAPID_THRESHOLD = 3;
-/** The span a burst of claims has to fit inside to count as rapid fire. */
-export const RAPID_WINDOW_MS = 10_000;
+/** Tied holders all place, up to this many; past it the earliest to get there win. */
+export const MAX_TIED_AWARDS = 5;
 
 export interface Award {
   kind: AwardKind;
@@ -126,6 +121,8 @@ export interface Award {
   word: string;
   /** Pre-rendered supporting text, e.g. "1.4s". */
   detail: string;
+  /** What the word means, when we know and it is worth saying. */
+  definition?: string;
 }
 
 export interface BreakNote {

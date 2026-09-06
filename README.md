@@ -103,3 +103,7 @@ speech, which decides the **most obscure** award at the end of a match. It is
 server-side only. Derived from [FrequencyWords](https://github.com/hermitdave/FrequencyWords)
 (OpenSubtitles, CC BY-SA 4.0) — see [`data/README.md`](data/README.md) for
 attribution and how to rebuild it.
+
+`data/definitions.txt` holds a one-line definition for each word, shown under the
+most obscure word in the write-up. From [Princeton WordNet 3.0](https://wordnet.princeton.edu/)
+under the OSI-approved WordNet licence. Also server-side only.

@@ -11,6 +11,7 @@ import type {
 } from '../shared/types';
 import * as R from '../shared/rules';
 import { isWord } from './dictionary';
+import { define } from './definitions';
 import { corpusRank } from './frequency';
 import { MemoryStore } from './store';
 import type { PlayerRecord, Store, TableRecord } from './store';
@@ -355,7 +356,7 @@ export class Hub {
       this.store.putPlayer(p);
     }
 
-    t.stats = R.computeStats(t.log, corpusRank);
+    t.stats = R.computeStats(t.log, { rank: corpusRank, define });
     this.store.putTable(t);
     this.pushTable(t.id, [{ k: 'ended', medals }]);
     this.pushLobby();
