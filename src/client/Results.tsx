@@ -13,6 +13,10 @@ const AWARD_LABEL: Record<AwardKind, string> = {
   obscure: 'most obscure',
   fastest: 'quickest off a new letter',
   repeat: 'kept going back to',
+  thief: 'thief',
+  busiest: 'busiest',
+  rapid: 'rapid fire',
+  first: 'first blood',
 };
 
 interface Props {
@@ -82,7 +86,7 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
                   {awardsFor(p.id).map((a) => (
                     <li key={a.kind}>
                       <span className="lab">{AWARD_LABEL[a.kind]}</span>
-                      <b className="word">{a.word}</b>
+                      {a.word && <b className="word">{a.word}</b>}
                       {a.detail && <span className="det">{a.detail}</span>}
                     </li>
                   ))}

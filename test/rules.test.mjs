@@ -121,6 +121,52 @@ section('match write-up');
   check('rarity ranks rare letters above common ones', R.rarity('jazz') > R.rarity('tease'));
 }
 
+section('thief, busiest, rapid fire, first blood');
+{
+  const c = (playerId, word, at = 0, broke = null) => ({ playerId, word, at, reactionMs: null, broke });
+  const kinds = (st) => Object.fromEntries(st.awards.map((x) => [x.kind, x]));
+
+  // a takes three claims off b; b takes one off a
+  const thieving = kinds(R.computeStats([
+    c('a', 'cats', 1, { playerId: 'b', word: 'cat' }),
+    c('a', 'breaking', 2, { playerId: 'b', word: 'bre' }),
+    c('a', 'seas', 3, { playerId: 'b', word: 'sea' }),
+    c('b', 'ores', 4, { playerId: 'a', word: 'ore' }),
+  ]));
+  check('thief goes to whoever broke the most', thieving.thief.playerId === 'a');
+  check('and counts them', thieving.thief.detail === 'broke 3 claims', thieving.thief?.detail);
+  check('and shows the theft that gained the most letters',
+    thieving.thief.word === 'breaking', thieving.thief?.word);
+
+  const oneSteal = kinds(R.computeStats([c('a', 'cats', 1, { playerId: 'b', word: 'cat' })]));
+  check('a single break is not thievery', !oneSteal.thief);
+
+  const busy = kinds(R.computeStats([
+    c('a', 'one', 1), c('a', 'two', 2), c('a', 'six', 3), c('b', 'ore', 4),
+  ]));
+  check('busiest counts only that player\'s claims',
+    busy.busiest.playerId === 'a' && busy.busiest.detail === '3 words claimed',
+    busy.busiest?.detail);
+  check('busiest shows no word, since there is no one word to show', busy.busiest.word === '');
+  check('two claims is not busy', !kinds(R.computeStats([c('a', 'one', 1), c('a', 'two', 2)])).busiest);
+
+  // three inside ten seconds counts; the same three spread out does not
+  const burst = kinds(R.computeStats([c('a', 'one', 0), c('a', 'two', 4000), c('a', 'six', 9000)]));
+  check('rapid fire spots a burst', !!burst.rapid && burst.rapid.detail === '3 in 10s', burst.rapid?.detail);
+  const spread = kinds(R.computeStats([c('a', 'one', 0), c('a', 'two', 20_000), c('a', 'six', 40_000)]));
+  check('but not the same claims spread out', !spread.rapid);
+  const late = kinds(R.computeStats([
+    c('a', 'one', 0), c('a', 'two', 60_000), c('a', 'six', 61_000), c('a', 'ten', 62_000),
+  ]));
+  check('the window slides rather than starting at the first claim',
+    !!late.rapid && late.rapid.detail === '3 in 10s', late.rapid?.detail);
+
+  const opened = kinds(R.computeStats([c('b', 'later', 900), c('a', 'first', 100)]));
+  check('first blood is the earliest claim, not the first logged',
+    opened.first.playerId === 'a' && opened.first.word === 'first', opened.first?.word);
+  check('no first blood without any claims', !kinds(R.computeStats([])).first);
+}
+
 section('live word lists: longest on top, shortest truncated away');
 {
   const c = (id, playerId, len, banksAt, word) =>

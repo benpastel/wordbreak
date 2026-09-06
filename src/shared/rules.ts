@@ -8,7 +8,9 @@ import {
   MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MAX_TARGET, MEDALS,
   MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS, MIN_TARGET,
 } from './types';
-import { REPEAT_THRESHOLD } from './types';
+import {
+  BUSIEST_THRESHOLD, RAPID_THRESHOLD, RAPID_WINDOW_MS, REPEAT_THRESHOLD, THIEF_THRESHOLD,
+} from './types';
 import type {
   Award, BreakNote, Claim, ClaimRecord, EndMode, GameState, MatchStats, Medal, Settings, Tile,
 } from './types';
@@ -245,6 +247,84 @@ export function computeStats(
       const [playerId, word] = key.split('\u0000');
       awards.push({ kind: 'repeat', playerId, word, detail: `found it ${n} times` });
     }
+  }
+
+  /**
+   * Awards decided by counting rather than by comparing single claims. Ties go to
+   * whoever reached the number first, since the map is filled in log order — an
+   * arbitrary winner would be worse than a rule nobody has to think about.
+   */
+  const countAward = (
+    kind: Award['kind'],
+    counts: Map<string, number>,
+    floor: number,
+    word: (playerId: string) => string,
+    detail: (n: number) => string,
+  ) => {
+    let bestId: string | null = null;
+    let best = 0;
+    for (const [id, n] of counts) {
+      if (n > best) {
+        best = n;
+        bestId = id;
+      }
+    }
+    if (bestId !== null && best >= floor) {
+      awards.push({ kind, playerId: bestId, word: word(bestId), detail: detail(best) });
+    }
+  };
+
+  const bump = (m: Map<string, number>, id: string) => m.set(id, (m.get(id) ?? 0) + 1);
+
+  const steals = new Map<string, number>();
+  const made = new Map<string, number>();
+  const times = new Map<string, number[]>();
+  for (const c of log) {
+    bump(made, c.playerId);
+    if (c.broke) bump(steals, c.playerId);
+    const ts = times.get(c.playerId);
+    if (ts) ts.push(c.at);
+    else times.set(c.playerId, [c.at]);
+  }
+
+  /** The theft that gained the most letters, which is the one worth showing. */
+  const bestSteal = (playerId: string) =>
+    log
+      .filter((c) => c.playerId === playerId && c.broke)
+      .reduce((a, b) => (b.word.length - b.broke!.word.length > a.word.length - a.broke!.word.length ? b : a))
+      .word;
+
+  countAward('thief', steals, THIEF_THRESHOLD, bestSteal, (n) => `broke ${n} claims`);
+  countAward('busiest', made, BUSIEST_THRESHOLD, () => '', (n) => `${n} words claimed`);
+
+  // Most claims fitting inside any one window, by sliding a pair of indices along.
+  const bursts = new Map<string, number>();
+  for (const [playerId, ts] of times) {
+    ts.sort((a, b) => a - b);
+    let start = 0;
+    let most = 0;
+    for (let end = 0; end < ts.length; end++) {
+      while (ts[end] - ts[start] > RAPID_WINDOW_MS) start++;
+      most = Math.max(most, end - start + 1);
+    }
+    bursts.set(playerId, most);
+  }
+  countAward(
+    'rapid',
+    bursts,
+    RAPID_THRESHOLD,
+    () => '',
+    (n) => `${n} in ${RAPID_WINDOW_MS / 1000}s`,
+  );
+
+  if (log.length > 0) {
+    const opener = log.reduce((a, b) => (b.at < a.at ? b : a));
+    awards.push({
+      kind: 'first',
+      playerId: opener.playerId,
+      word: opener.word,
+      detail: 'opened the match',
+    });
   }
 
   type Broke = ClaimRecord & { broke: { playerId: string; word: string } };

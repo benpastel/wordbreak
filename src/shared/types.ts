@@ -106,10 +106,19 @@ export type AwardKind =
   | 'hardest'
   | 'obscure'
   | 'fastest'
-  | 'repeat';
+  | 'repeat'
+  | 'thief'
+  | 'busiest'
+  | 'rapid'
+  | 'first';
 
-/** How many times you must find the same word before it is worth mentioning. */
+/** Floors below which an award is not worth a line on the results screen. */
 export const REPEAT_THRESHOLD = 3;
+export const THIEF_THRESHOLD = 2;
+export const BUSIEST_THRESHOLD = 3;
+export const RAPID_THRESHOLD = 3;
+/** The span a burst of claims has to fit inside to count as rapid fire. */
+export const RAPID_WINDOW_MS = 10_000;
 
 export interface Award {
   kind: AwardKind;
