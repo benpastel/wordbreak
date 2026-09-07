@@ -26,12 +26,31 @@ filtered and reordered derivative is published under the same licence.
 
 ## `definitions.txt`
 
-A one-line definition for every WordNet base lemma that a playable word can reach.
-Inflected forms are resolved at lookup time by the same suffix rules the build
-script uses, so `CATS` finds the definition of `CAT` without storing its own copy —
-that halves the file for identical coverage. 53,658 lemmas cover 62% of the
-dictionary. Shown under the **most obscure** word at the end of a match; words
-without an entry simply appear without one.
+A one-line definition for every base lemma a playable word can reach — 65,577
+entries covering **81.8%** of the dictionary. Shown under the **most obscure**
+word at the end of a match; words without an entry simply appear without one.
+
+Two sources, in that order of preference:
+
+- **Princeton WordNet 3.0** — modern and concise, but only reaches about two
+  thirds of a Scrabble dictionary. It has never heard of `xebec` or `crocein`.
+- **Webster's Unabridged (1913)** — strongest on exactly the archaic and
+  technical vocabulary WordNet lacks, which is also what tends to win the award.
+
+WordNet wins ties, including through its irregular-form lists, because `drank`
+is the past tense of `drink` long before it is Webster's word for darnel grass.
+Webster's cross-reference stubs (`pl. of Wolf.`) are dropped so the word falls
+through to its base, where a real definition is waiting, and trailing
+attributions (`Sir. T. Elyot.`) are stripped.
+
+Only base lemmas are stored; inflections are resolved at lookup time by the
+suffix rules in `scripts/build-definitions.mjs`, duplicated in
+`src/server/definitions.ts` and covered by `test/definitions.test.mjs`. Words
+those rules cannot derive — irregular plurals and past tenses — are written out
+in full, so runtime coverage always equals what the build script reports.
+
+Negating affixes are deliberately never stripped: showing the definition of
+`hope` under `hopeless` would be worse than showing none.
 
 Rebuild with `node scripts/build-definitions.mjs`.
 
@@ -52,3 +71,7 @@ BSD-style, commercial use permitted).
 >
 > THE SOFTWARE AND DATABASE IS PROVIDED "AS IS" AND PRINCETON UNIVERSITY MAKES NO
 > REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED.
+
+Remaining entries are from Webster's Unabridged Dictionary (1913), which is in
+the public domain, via [ssvivian/WebstersDictionary](https://github.com/ssvivian/WebstersDictionary)
+(MIT).
