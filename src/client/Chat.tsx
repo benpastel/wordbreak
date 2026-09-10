@@ -36,16 +36,12 @@ export default function Chat({
   return (
     <div className="chat">
       <div className="chatlog" ref={listRef}>
-        {messages.length === 0 ? (
-          <p className="chatempty">Say something while you wait.</p>
-        ) : (
-          messages.map((m) => (
-            <p key={m.id} className={`chatline c${m.color}`}>
-              <b>{m.name}</b>
-              {m.text}
-            </p>
-          ))
-        )}
+        {messages.map((m) => (
+          <p key={m.id} className={`chatline c${m.color}`}>
+            <b>{m.name}</b>
+            {m.text}
+          </p>
+        ))}
       </div>
       <div className="chatbox">
         <input

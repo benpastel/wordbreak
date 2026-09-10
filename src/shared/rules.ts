@@ -201,11 +201,10 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
     kind: Award['kind'],
     pool: ClaimRecord[],
     better: (a: ClaimRecord, b: ClaimRecord) => boolean,
-    detail: (c: ClaimRecord) => string,
   ) => {
     if (pool.length === 0) return;
     const winner = pool.reduce((a, b) => (better(a, b) ? b : a));
-    awards.push({ kind, playerId: winner.playerId, word: winner.word, detail: detail(winner) });
+    awards.push({ kind, playerId: winner.playerId, word: winner.word });
   };
 
   /** One line each, for everyone who claimed anything — a personal highlight rather
@@ -213,16 +212,13 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
   const perPlayer = (
     kind: Award['kind'],
     better: (a: ClaimRecord, b: ClaimRecord) => boolean,
-    detail: (c: ClaimRecord) => string,
   ) => {
     const best = new Map<string, ClaimRecord>();
     for (const c of log) {
       const cur = best.get(c.playerId);
       if (!cur || better(cur, c)) best.set(c.playerId, c);
     }
-    for (const [playerId, c] of best) {
-      awards.push({ kind, playerId, word: c.word, detail: detail(c) });
-    }
+    for (const [playerId, c] of best) awards.push({ kind, playerId, word: c.word });
   };
 
   // Beyond the end of the corpus everything is equally unheard-of, so fall back to
@@ -232,10 +228,8 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
     return r === null ? 1e6 + rarity(w) : r;
   };
 
-  perPlayer('longest', (a, b) => b.word.length > a.word.length, (c) => `${c.word.length} letters`);
-  perPlayer('obscure', (a, b) => obscurity(b.word) > obscurity(a.word), (c) =>
-    corpusRank(c.word) === null ? 'not in everyday use' : 'seldom said out loud',
-  );
+  perPlayer('longest', (a, b) => b.word.length > a.word.length);
+  perPlayer('obscure', (a, b) => obscurity(b.word) > obscurity(a.word));
 
   // With one claim, or a long word that is also your rarest, both awards land on the
   // same word — one line saying it twice. Keep the longest and let it carry the
@@ -259,8 +253,8 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
   awards.length = 0;
   awards.push(...kept);
 
-  award('shortest', log, (a, b) => b.word.length < a.word.length, (c) => `${c.word.length} letters`);
-  award('hardest', log, (a, b) => rarity(b.word) > rarity(a.word), () => 'rarest letters');
+  award('shortest', log, (a, b) => b.word.length < a.word.length);
+  award('hardest', log, (a, b) => rarity(b.word) > rarity(a.word));
 
   // Going back to the same word again and again is worth calling out; ties all place.
   const tally = new Map<string, number>();
@@ -274,7 +268,7 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
     for (const [key, n] of tally) {
       if (n !== most || placed >= MAX_TIED_AWARDS) continue;
       const [playerId, word] = key.split('\u0000');
-      awards.push({ kind: 'repeat', playerId, word, detail: `found it ${n} times` });
+      awards.push({ kind: 'repeat', playerId, word });
       placed++;
     }
   }
@@ -290,7 +284,6 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
     counts: Map<string, number>,
     floor: number,
     word: (playerId: string) => string,
-    detail: (n: number) => string,
   ) => {
     let best = 0;
     for (const n of counts.values()) best = Math.max(best, n);
@@ -298,7 +291,7 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
     for (const [id, n] of counts) {
       if (n !== best) continue;
       if (awards.filter((a) => a.kind === kind).length >= MAX_TIED_AWARDS) break;
-      awards.push({ kind, playerId: id, word: word(id), detail: detail(n) });
+      awards.push({ kind, playerId: id, word: word(id) });
     }
   };
 
@@ -315,7 +308,7 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
         b.word.length - b.broke!.word.length > a.word.length - a.broke!.word.length ? b : a,
       ).word;
 
-  countAward('thief', steals, THIEF_THRESHOLD, bestSteal, (n) => `broke ${n} claims`);
+  countAward('thief', steals, THIEF_THRESHOLD, bestSteal);
 
   type Broke = ClaimRecord & { broke: { playerId: string; word: string } };
   const breaks: BreakNote[] = log

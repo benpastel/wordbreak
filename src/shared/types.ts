@@ -118,9 +118,8 @@ export interface Award {
   kind: AwardKind;
   playerId: string;
   word: string;
-  /** Pre-rendered supporting text, e.g. "1.4s". */
-  detail: string;
-  /** What the word means, when we know and it is worth saying. */
+  /** What the word means, when we know it. The only thing shown beside an award
+   *  that the label and the word do not already say. */
   definition?: string;
 }
 

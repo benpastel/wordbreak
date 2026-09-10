@@ -397,8 +397,15 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   content: '✓'; margin-left: 6px; font-size: 0.8em; color: oklch(0.55 0.13 148);
 }
 
-.awards { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.awards li { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+/* Two columns: the award and its word on the left, what the word means on the
+   right, so the definitions line up down the list instead of interrupting it. */
+.awards {
+  list-style: none; margin: 8px 0 0; padding: 0;
+  display: grid; grid-template-columns: max-content 1fr;
+  column-gap: 20px; row-gap: 5px; align-items: baseline;
+}
+.awards li { display: contents; }
+.awards .head { display: flex; align-items: baseline; gap: 8px; }
 .awards .lab {
   font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--ink-mute);
@@ -407,10 +414,14 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   font-size: 0.86rem; font-weight: 800; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--pc);
 }
-.awards .det { font-size: 0.72rem; color: var(--ink-mute); }
 .awards .def {
-  flex-basis: 100%; font-size: 0.76rem; line-height: 1.4;
-  color: var(--ink-soft); font-style: italic;
+  font-size: 0.76rem; line-height: 1.35; color: var(--ink-soft); font-style: italic;
+}
+/* Too narrow for two columns: let the definition drop under its word. */
+@media (max-width: 560px) {
+  .awards { grid-template-columns: 1fr; row-gap: 2px; }
+  .awards li { display: block; margin-bottom: 5px; }
+  .awards .def { display: block; }
 }
 
 .breaks h2 { margin-bottom: 10px; }
@@ -436,7 +447,6 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
   padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain;
   height: 168px; display: flex; flex-direction: column; gap: 5px;
 }
-.chatempty { color: var(--ink-mute); font-size: 0.84rem; margin: auto 0; text-align: center; }
 .chatline { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--ink); }
 .chatline b { color: var(--pc); font-weight: 700; margin-right: 8px; }
 .chatbox { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--hairline); }

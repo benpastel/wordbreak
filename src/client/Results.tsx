@@ -81,11 +81,14 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
               {awardsFor(p.id).length > 0 && (
                 <ul className="awards">
                   {awardsFor(p.id).map((a) => (
+                    // display: contents, so the label and the definition land in the
+                    // two columns of the parent grid and stay aligned down the list.
                     <li key={a.kind}>
-                      <span className="lab">{AWARD_LABEL[a.kind]}</span>
-                      {a.word && <b className="word">{a.word}</b>}
-                      {a.detail && <span className="det">{a.detail}</span>}
-                      {a.definition && <span className="def">{a.definition}</span>}
+                      <span className="head">
+                        <span className="lab">{AWARD_LABEL[a.kind]}</span>
+                        <b className="word">{a.word}</b>
+                      </span>
+                      <span className="def">{a.definition ?? ''}</span>
                     </li>
                   ))}
                 </ul>

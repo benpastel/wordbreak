@@ -67,7 +67,6 @@ section('match write-up');
     of(stats, 'longest', 'a').word === 'breaking', of(stats, 'longest', 'a')?.word);
   check("b's longest is theirs", of(stats, 'longest', 'b').word === 'strained',
     of(stats, 'longest', 'b')?.word);
-  check('longest counts letters', of(stats, 'longest', 'a').detail === '8 letters');
 
   check('everyone gets their own most obscure too', all(stats, 'obscure').length === 2,
     JSON.stringify(all(stats, 'obscure').map((x) => `${x.playerId}:${x.word}`)));
@@ -99,11 +98,10 @@ section('match write-up');
   const offCorpus = R.computeStats([c('a', 'breaking'), c('a', 'syzygy')], { rank });
   check('a word the corpus has never seen beats anything in it',
     of(offCorpus, 'obscure', 'a').word === 'syzygy', of(offCorpus, 'obscure', 'a')?.word);
-  check('and says so', of(offCorpus, 'obscure', 'a').detail === 'not in everyday use',
-    of(offCorpus, 'obscure', 'a').detail);
-  check('while a word it does know is described differently',
-    of(stats, 'obscure', 'a').detail === 'seldom said out loud',
-    of(stats, 'obscure', 'a').detail);
+  check('an award carries nothing but its word and, when known, a definition',
+    Object.keys(of(offCorpus, 'obscure', 'a')).every((k) =>
+      ['kind', 'playerId', 'word', 'definition'].includes(k)),
+    JSON.stringify(Object.keys(of(offCorpus, 'obscure', 'a'))));
 
   section('a word is never listed twice for the same player');
   {
@@ -150,7 +148,6 @@ section('kept going back to the same word');
     const thrice = R.computeStats([c('a', 'sea'), c('a', 'sea'), c('a', 'sea'), c('b', 'ore')]);
     const rep = thrice.awards.find((x) => x.kind === 'repeat');
     check('three times is', !!rep && rep.word === 'sea' && rep.playerId === 'a');
-    check('and it says how many', rep?.detail === 'found it 3 times', rep?.detail);
 
     const both = R.computeStats([
       c('a', 'sea'), c('a', 'sea'), c('a', 'sea'),
@@ -184,7 +181,6 @@ section('thief, and ties');
   ]);
   const th = kinds(thieving).thief;
   check('thief goes to whoever broke the most', th.playerId === 'a');
-  check('and counts them', th.detail === 'broke 3 claims', th.detail);
   check('and shows the theft that gained the most letters', th.word === 'breaking', th.word);
   check('a single break is not thievery',
     !kinds(R.computeStats([c('a', 'cats', 1, { playerId: 'b', word: 'cat' })])).thief);
