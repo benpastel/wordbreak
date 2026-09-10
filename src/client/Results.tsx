@@ -11,9 +11,9 @@ const AWARD_LABEL: Record<AwardKind, string> = {
   shortest: 'shortest word',
   hardest: 'hardest letters',
   obscure: 'most obscure',
-  fastest: 'quickest off a new letter',
   repeat: 'kept going back to',
   thief: 'thief',
+  duplicate: '',
 };
 
 interface Props {

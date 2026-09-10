@@ -285,13 +285,11 @@ export class Hub {
     t.phase = 'playing';
     t.log = [];
     t.stats = null;
-    const now = Date.now();
     // Only a timed match carries a deadline; the other two end on a score or not at all.
     t.game = R.newGame(
       t.settings.gridSize,
       () => t.nextTileId++,
-      t.settings.endMode === 'time' ? now + t.settings.gameMs : null,
-      now,
+      t.settings.endMode === 'time' ? Date.now() + t.settings.gameMs : null,
     );
     for (const id of t.playerIds) {
       const p = this.store.getPlayer(id);
@@ -390,10 +388,6 @@ export class Hub {
     // A repeat of a claim you already hold is caught by validatePath above, since
     // an identical path is not strictly longer than itself.
     const now = Date.now();
-    // Reaction is measured against the newest letter the word used, and only counts
-    // when that letter arrived mid-match — otherwise every opening word would qualify.
-    const newest = Math.max(...tileIds.map((id) => game.grid.find((x) => x.id === id)!.bornAt));
-    const openedAt = game.grid.reduce((min, x) => Math.min(min, x.bornAt), Infinity);
     const { claim, broken } = R.applyClaim(
       game,
       tileIds,
@@ -408,7 +402,6 @@ export class Hub {
       playerId,
       word,
       at: now,
-      reactionMs: newest > openedAt ? now - newest : null,
       broke: stolen ? { playerId: stolen.playerId, word: stolen.word } : null,
     });
 
@@ -450,7 +443,7 @@ export class Hub {
     const claim = t.game.claims.find((c) => c.id === claimId);
     if (!claim) return;
 
-    const { points, idx, letters } = R.bankClaim(t.game, claim, () => t.nextTileId++, Date.now());
+    const { points, idx, letters } = R.bankClaim(t.game, claim, () => t.nextTileId++);
     const p = this.store.getPlayer(claim.playerId);
     if (p) {
       p.score += points;

@@ -40,23 +40,48 @@ check('a broken path is a path error, not a length one', R.validatePath(game, [1
 
 section('match write-up');
 {
-  const c = (playerId, word, reactionMs = null, broke = null) =>
-    ({ playerId, word, at: 0, reactionMs, broke });
+  const c = (playerId, word, broke = null) => ({ playerId, word, at: 0, broke });
+  const of = (st, kind, playerId) =>
+    st.awards.find((x) => x.kind === kind && x.playerId === playerId);
+  const all = (st, kind) => st.awards.filter((x) => x.kind === kind);
+
+  // A corpus rank, as in production. Without one, obscurity falls back to letter
+  // rarity, which sums over the word and so mostly just re-picks the longest.
+  const corpus = {
+    do: 5, cat: 900, rates: 4000, breaking: 3000, strained: 12000, jazzy: 15000,
+    zephyr: 21000,
+  };
+  const rank = (w) => (w in corpus ? corpus[w] : null);
+
   const stats = R.computeStats([
     c('a', 'do'),
-    c('b', 'strained', 4200),
-    c('a', 'jazzy', 900),
-    c('b', 'rates', 300, { playerId: 'a', word: 'rat' }),
-    c('a', 'breaking', 1500, { playerId: 'b', word: 'bre' }),
-  ]);
-  const by = Object.fromEntries(stats.awards.map((x) => [x.kind, x]));
-  check('longest goes to the longest word', by.longest.word === 'strained', by.longest?.word);
-  check('shortest goes to the shortest', by.shortest.word === 'do', by.shortest?.word);
-  check('hardest letters prefers rare letters over length',
-    by.hardest.word === 'jazzy', by.hardest?.word);
-  check('fastest goes to the quickest reaction', by.fastest.word === 'rates', by.fastest?.word);
-  check('fastest reads in seconds', by.fastest.detail.startsWith('0.3'), by.fastest.detail);
-  check('each award names its winner', by.longest.playerId === 'b' && by.obscure.playerId === 'a');
+    c('b', 'strained'),
+    c('a', 'jazzy'),
+    c('b', 'rates', { playerId: 'a', word: 'rat' }),
+    c('b', 'zephyr'),
+    c('a', 'breaking', { playerId: 'b', word: 'bre' }),
+  ], { rank });
+
+  check('everyone who claimed gets their own longest', all(stats, 'longest').length === 2);
+  check("a's longest is their own, not the table's",
+    of(stats, 'longest', 'a').word === 'breaking', of(stats, 'longest', 'a')?.word);
+  check("b's longest is theirs", of(stats, 'longest', 'b').word === 'strained',
+    of(stats, 'longest', 'b')?.word);
+  check('longest counts letters', of(stats, 'longest', 'a').detail === '8 letters');
+
+  check('everyone gets their own most obscure too', all(stats, 'obscure').length === 2,
+    JSON.stringify(all(stats, 'obscure').map((x) => `${x.playerId}:${x.word}`)));
+  check("a's most obscure is theirs, and not their longest",
+    of(stats, 'obscure', 'a').word === 'jazzy', of(stats, 'obscure', 'a')?.word);
+  check("b's most obscure is theirs, and is not their longest",
+    of(stats, 'obscure', 'b').word === 'zephyr', of(stats, 'obscure', 'b')?.word);
+  check('shortest is still one winner across the table', all(stats, 'shortest').length === 1);
+  check('and it is the shortest word anyone claimed',
+    of(stats, 'shortest', 'a').word === 'do', all(stats, 'shortest')[0]?.word);
+  check('hardest letters is also table-wide', all(stats, 'hardest').length === 1);
+  check('and prefers rare letters over length',
+    all(stats, 'hardest')[0].word === 'jazzy', all(stats, 'hardest')[0]?.word);
+  check('the removed reaction award is gone', all(stats, 'fastest').length === 0);
 
   check('only broken claims are listed', stats.breaks.length === 2);
   check('the biggest jump leads',
@@ -69,39 +94,55 @@ section('match write-up');
   check('a match with no claims has nothing to say',
     empty.awards.length === 0 && empty.breaks.length === 0);
 
-  // obscurity uses the corpus when it has one, and only falls back to letters beyond it
-  const corpus = { do: 5, cat: 900, rates: 4000, strained: 12000, jazzy: 15000, breaking: 3000 };
-  const rank = (w) => (w in corpus ? corpus[w] : null);
-  const ranked = R.computeStats(
-    [c('a', 'cat'), c('a', 'jazzy'), c('b', 'strained')],
-    { rank },
-  );
-  const rby = Object.fromEntries(ranked.awards.map((x) => [x.kind, x]));
-  check('obscure follows the corpus, not word length',
-    rby.obscure.word === 'jazzy', rby.obscure?.word);
-  check('hardest letters and most obscure are separate awards',
-    rby.hardest.kind === 'hardest' && rby.obscure.kind === 'obscure');
-
-  const offCorpus = R.computeStats([c('a', 'cat'), c('a', 'jazzy'), c('b', 'syzygy')], { rank });
-  const oby = Object.fromEntries(offCorpus.awards.map((x) => [x.kind, x]));
+  // 'syzygy' is off the corpus entirely, which outranks anything on it — even a
+  // longer word the corpus does know.
+  const offCorpus = R.computeStats([c('a', 'breaking'), c('a', 'syzygy')], { rank });
   check('a word the corpus has never seen beats anything in it',
-    oby.obscure.word === 'syzygy', oby.obscure?.word);
-  check('and says so', oby.obscure.detail === 'not in everyday use', oby.obscure.detail);
+    of(offCorpus, 'obscure', 'a').word === 'syzygy', of(offCorpus, 'obscure', 'a')?.word);
+  check('and says so', of(offCorpus, 'obscure', 'a').detail === 'not in everyday use',
+    of(offCorpus, 'obscure', 'a').detail);
+  check('while a word it does know is described differently',
+    of(stats, 'obscure', 'a').detail === 'seldom said out loud',
+    of(stats, 'obscure', 'a').detail);
 
-  const defined = R.computeStats([c('a', 'cat'), c('b', 'syzygy')], {
-    rank,
-    define: (w) => (w === 'syzygy' ? 'a straight-line configuration of three celestial bodies' : null),
-  });
-  const dob = defined.awards.find((x) => x.kind === 'obscure');
-  check('the obscure word carries its definition',
-    dob.definition === 'a straight-line configuration of three celestial bodies', dob?.definition);
-  const undefined_ = R.computeStats([c('a', 'cat'), c('b', 'syzygy')], { rank });
-  check('and simply goes without one when unknown',
-    undefined_.awards.find((x) => x.kind === 'obscure').definition === undefined);
-  check('only the obscure award gets a definition',
-    defined.awards.filter((x) => x.definition !== undefined).length === 1);
+  section('a word is never listed twice for the same player');
+  {
+    // one claim each: their longest and their most obscure are necessarily the same
+    const single = R.computeStats([c('a', 'cat'), c('b', 'syzygy')], { rank });
+    check('the obscure line is dropped rather than repeating the longest',
+      all(single, 'obscure').length === 0,
+      JSON.stringify(single.awards.map((x) => `${x.playerId}:${x.kind}:${x.word}`)));
+    check('the longest line survives', all(single, 'longest').length === 2);
 
-  section('kept going back to the same word');
+    const defined = R.computeStats([c('a', 'cat'), c('b', 'syzygy')], {
+      rank,
+      define: (w) => (w === 'syzygy' ? 'three celestial bodies in a straight line' : null),
+    });
+    check('and inherits the definition the dropped line would have carried',
+      of(defined, 'longest', 'b').definition === 'three celestial bodies in a straight line',
+      of(defined, 'longest', 'b')?.definition);
+
+    // longest and most obscure genuinely differ here, so both lines stay
+    const two = R.computeStats([c('a', 'breaking'), c('a', 'syzygy')], {
+      rank,
+      define: (w) => (w === 'syzygy' ? 'three celestial bodies in a straight line' : null),
+    });
+    check('with distinct words both lines are kept',
+      of(two, 'longest', 'a').word === 'breaking' && of(two, 'obscure', 'a').word === 'syzygy',
+      JSON.stringify(two.awards.filter((x) => x.playerId === 'a').map((x) => `${x.kind}:${x.word}`)));
+    check('the definition sits on the obscure line, not the longest',
+      of(two, 'obscure', 'a').definition === 'three celestial bodies in a straight line' &&
+        of(two, 'longest', 'a').definition === undefined);
+    check('a word with no definition simply goes without one',
+      of(R.computeStats([c('a', 'cat')], { rank }), 'longest', 'a').definition === undefined);
+    check('the internal duplicate marker never escapes',
+      !single.awards.some((x) => x.kind === 'duplicate'));
+  }
+}
+
+section('kept going back to the same word');
+{
+  const c = (playerId, word) => ({ playerId, word, at: 0, broke: null });
   {
     const twice = R.computeStats([c('a', 'sea'), c('a', 'sea'), c('a', 'ore')]);
     check('twice is not worth mentioning', !twice.awards.some((x) => x.kind === 'repeat'));
@@ -126,17 +167,12 @@ section('match write-up');
     check('the same word by different players is counted separately',
       sameWord.awards.filter((x) => x.kind === 'repeat').length === 1);
   }
-
-  section('match write-up, continued');
-  const noReactions = R.computeStats([c('a', 'cat')]);
-  check('no fastest award when nothing was a reaction',
-    !noReactions.awards.some((x) => x.kind === 'fastest'));
   check('rarity ranks rare letters above common ones', R.rarity('jazz') > R.rarity('tease'));
 }
 
 section('thief, and ties');
 {
-  const c = (playerId, word, at = 0, broke = null) => ({ playerId, word, at, reactionMs: null, broke });
+  const c = (playerId, word, at = 0, broke = null) => ({ playerId, word, at, broke });
   const kinds = (st) => Object.fromEntries(st.awards.map((x) => [x.kind, x]));
   const all = (st, kind) => st.awards.filter((x) => x.kind === kind);
 

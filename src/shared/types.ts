@@ -39,8 +39,6 @@ export type Trophies = Record<Medal, number>;
 export interface Tile {
   id: number;
   letter: string; // single uppercase A-Z
-  /** When this letter appeared. Used to time reactions to a reseed. */
-  bornAt: number;
 }
 
 export interface Claim {
@@ -105,8 +103,9 @@ export type AwardKind =
   | 'shortest'
   | 'hardest'
   | 'obscure'
-  | 'fastest'
   | 'repeat'
+  /** Internal marker: an award suppressed for naming a word already shown. */
+  | 'duplicate'
   | 'thief';
 
 /** Floors below which an award is not worth a line on the results screen. */
@@ -143,9 +142,6 @@ export interface ClaimRecord {
   playerId: string;
   word: string;
   at: number;
-  /** Time from the newest letter it used appearing to the claim landing, when that
-   *  letter arrived mid-match. Null for words built only from the opening board. */
-  reactionMs: number | null;
   broke: { playerId: string; word: string } | null;
 }
 

@@ -15,21 +15,16 @@ import type {
 
 export type AllocId = () => number;
 
-export function makeGrid(size: number, allocId: AllocId, now: number): Tile[] {
+export function makeGrid(size: number, allocId: AllocId): Tile[] {
   const grid: Tile[] = [];
   for (let i = 0; i < size * size; i++) {
-    grid.push({ id: allocId(), letter: drawLetter(grid.map((t) => t.letter)), bornAt: now });
+    grid.push({ id: allocId(), letter: drawLetter(grid.map((t) => t.letter)) });
   }
   return grid;
 }
 
-export function newGame(
-  size: number,
-  allocId: AllocId,
-  endsAt: number | null,
-  now: number,
-): GameState {
-  return { size, grid: makeGrid(size, allocId, now), claims: [], endsAt };
+export function newGame(size: number, allocId: AllocId, endsAt: number | null): GameState {
+  return { size, grid: makeGrid(size, allocId), claims: [], endsAt };
 }
 
 export function tileIndex(game: GameState, tileId: number): number {
@@ -155,12 +150,7 @@ export interface BankResult {
 }
 
 /** Hold time elapsed: score one point per letter, vacate the tiles, reseed them. */
-export function bankClaim(
-  game: GameState,
-  claim: Claim,
-  allocId: AllocId,
-  now: number,
-): BankResult {
+export function bankClaim(game: GameState, claim: Claim, allocId: AllocId): BankResult {
   const idx = claim.tileIds.map((id) => tileIndex(game, id)).filter((i) => i >= 0);
   const letters = idx.map((i) => game.grid[i].letter);
 
@@ -169,7 +159,7 @@ export function bankClaim(
   const vacating = new Set(idx);
   for (const i of idx) {
     const survivors = game.grid.filter((_, j) => !vacating.has(j)).map((t) => t.letter);
-    game.grid[i] = { id: allocId(), letter: drawLetter(survivors), bornAt: now };
+    game.grid[i] = { id: allocId(), letter: drawLetter(survivors) };
     vacating.delete(i);
   }
 
@@ -206,6 +196,7 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
   const define = lookups.define ?? (() => null);
   const awards: Award[] = [];
 
+  /** One winner across the whole table. */
   const award = (
     kind: Award['kind'],
     pool: ClaimRecord[],
@@ -217,6 +208,23 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
     awards.push({ kind, playerId: winner.playerId, word: winner.word, detail: detail(winner) });
   };
 
+  /** One line each, for everyone who claimed anything — a personal highlight rather
+   *  than a competition, so a quiet player still has something to look at. */
+  const perPlayer = (
+    kind: Award['kind'],
+    better: (a: ClaimRecord, b: ClaimRecord) => boolean,
+    detail: (c: ClaimRecord) => string,
+  ) => {
+    const best = new Map<string, ClaimRecord>();
+    for (const c of log) {
+      const cur = best.get(c.playerId);
+      if (!cur || better(cur, c)) best.set(c.playerId, c);
+    }
+    for (const [playerId, c] of best) {
+      awards.push({ kind, playerId, word: c.word, detail: detail(c) });
+    }
+  };
+
   // Beyond the end of the corpus everything is equally unheard-of, so fall back to
   // letter rarity to separate them.
   const obscurity = (w: string) => {
@@ -224,24 +232,35 @@ export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): Mat
     return r === null ? 1e6 + rarity(w) : r;
   };
 
-  award('longest', log, (a, b) => b.word.length > a.word.length, (c) => `${c.word.length} letters`);
-  award('shortest', log, (a, b) => b.word.length < a.word.length, (c) => `${c.word.length} letters`);
-  award('hardest', log, (a, b) => rarity(b.word) > rarity(a.word), () => 'rarest letters');
-  award('obscure', log, (a, b) => obscurity(b.word) > obscurity(a.word), (c) =>
+  perPlayer('longest', (a, b) => b.word.length > a.word.length, (c) => `${c.word.length} letters`);
+  perPlayer('obscure', (a, b) => obscurity(b.word) > obscurity(a.word), (c) =>
     corpusRank(c.word) === null ? 'not in everyday use' : 'seldom said out loud',
   );
-  // The point of naming the most obscure word is settling what it meant.
-  const obscure = awards.find((a) => a.kind === 'obscure');
-  if (obscure) {
-    const meaning = define(obscure.word);
-    if (meaning) obscure.definition = meaning;
+
+  // With one claim, or a long word that is also your rarest, both awards land on the
+  // same word — one line saying it twice. Keep the longest and let it carry the
+  // definition, which is the part worth reading either way.
+  for (const ob of awards.filter((a) => a.kind === 'obscure')) {
+    const longest = awards.find((a) => a.kind === 'longest' && a.playerId === ob.playerId);
+    if (longest && longest.word === ob.word) ob.kind = 'duplicate';
   }
-  award(
-    'fastest',
-    log.filter((c) => c.reactionMs !== null),
-    (a, b) => (b.reactionMs as number) < (a.reactionMs as number),
-    (c) => `${((c.reactionMs as number) / 1000).toFixed(1)}s after it landed`,
-  );
+  for (const a of awards) {
+    if (a.kind !== 'obscure' && a.kind !== 'duplicate') continue;
+    const meaning = define(a.word);
+    if (!meaning) continue;
+    // The definition follows the word, so a suppressed one hands it to the longest.
+    const target =
+      a.kind === 'duplicate'
+        ? awards.find((x) => x.kind === 'longest' && x.playerId === a.playerId)
+        : a;
+    if (target) target.definition = meaning;
+  }
+  const kept = awards.filter((a) => a.kind !== 'duplicate');
+  awards.length = 0;
+  awards.push(...kept);
+
+  award('shortest', log, (a, b) => b.word.length < a.word.length, (c) => `${c.word.length} letters`);
+  award('hardest', log, (a, b) => rarity(b.word) > rarity(a.word), () => 'rarest letters');
 
   // Going back to the same word again and again is worth calling out; ties all place.
   const tally = new Map<string, number>();
