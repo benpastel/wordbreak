@@ -6530,6 +6530,8 @@ blockhouse	a stronghold that is reinforced for protection from enemy fire; with 
 blocking	the act of obstructing or deflecting someone's movements
 blockish	resembling a block in shape
 blocky	resembling a block in shape
+blog	a shared on-line journal where people can post diary entries about their personal experiences and hobbies
+blogger	a person who keeps and updates a blog
 blok	Russian poet (1880-1921)
 bloke	a boy or man
 blond	a person with fair skin and hair
@@ -14313,6 +14315,7 @@ cyanohydrin	any organic compound in which the cyano radical -CN and the hydroxyl
 cyanosed	Rendered blue, as the surface of the body, from cyanosis or deficient a
 cyanosis	a bluish discoloration of the skin and mucous membranes; a sign that oxygen in the blood is dangerously diminished (as…
 cyanotic	Relating to cyanosis; affected with cyanosis; as, a cyanotic patient; having the hue caused by cyanosis; as, a cyanitic…
+cybercrime	crime committed using a computer and the internet to steal a person's identity or sell contraband or stalk victims or…
 cybernate	control a function, process, or creation by a computer
 cybernation	the control of processes by computer
 cybernetic	of or relating the principles of cybernetics
@@ -14435,6 +14438,7 @@ czarevna	The title of the wife of the czarowitz.
 czarina	the wife or widow of a czar
 czarist	of or relating to or characteristic of a czar
 czaritza	the wife or widow of a czar
+da	an official prosecutor for a judicial district
 dab	a light touch or stroke
 dabber	That with which one dabs; hence, a pad or other device used by printers, engravers, etc., as for dabbing type or…
 dabble	dip a foot or hand briefly into a liquid
@@ -17592,6 +17596,7 @@ donator	One who makes a gift; a donor; a giver.
 done	having finished or arrived at completion
 donee	the recipient of funds or other benefits
 dong	the basic unit of money in Vietnam
+dongle	(computer science) an electronic device that must be attached to a computer in order for it to use protected software
 dongola	A government of Upper Egypt.
 donjon	the main tower within the walls of a medieval castle or fortress
 donkey	the symbol of the Democratic Party; introduced in cartoons by Thomas Nast in 1874
@@ -19003,6 +19008,7 @@ em	a quad with a square body
 emaciate	cause to grow thin or weak
 emaciated	very thin especially from disease or hunger or cold
 emaciation	extreme leanness (usually caused by starvation or disease)
+email	(computer science) a system of world-wide electronic communication in which a computer user can compose a message at…
 emanate	proceed or issue forth, as from a source
 emanation	something that is emitted or radiated (as a gas or an odor or a light, etc.)
 emanative	Issuing forth; effluent.
@@ -19158,6 +19164,7 @@ emodin	An orange-red crystalline substance, C15H10O5, obtained from the buckthor
 emollient	toiletry consisting of any of various substances in the form of a thick liquid that have a soothing and moisturizing…
 emolument	compensation received by virtue of holding an office or having employment (usually in the form of wages or fees)
 emote	give expression or emotion to, in a stage or movie role
+emoticon	a representation of a facial expression (as a smile or frown) created by typing a sequence of characters in sending…
 emotion	any strong feeling
 emotional	determined or actuated by emotion rather than reason
 emotionalism	emotional nature or quality
@@ -20479,6 +20486,7 @@ evolutionist	a person who believes in organic evolution
 evolve	work out
 evolvement	The act of evolving, or the state of being evolved; evolution.
 evulsion	The act of plucking out; a rooting out.
+ew	military action involving the use of electromagnetic energy to determine or exploit or reduce or prevent hostile use of…
 ewe	a member of a people living in southern Benin and Togo and southeastern Ghana
 ewer	an open vessel with a handle and a spout for pouring
 ex	a man who was formerly a certain woman's husband
@@ -22209,6 +22217,7 @@ firestone	a piece of flint that is struck to light a fire
 firestorm	a storm in which violent winds are drawn into the column of hot air rising over a severely bombed area
 firethorn	any of various thorny shrubs of the genus Pyracantha bearing small white flowers followed by hard red or orange-red…
 firetrap	a building that would be hard to escape from if it were to catch fire
+firewall	(colloquial) the application of maximum thrust
 firewater	any strong spirits (such as strong whisky or rum)
 fireweed	tall North American perennial with creeping rootstocks and narrow leaves and spikes of pinkish-purple flowers occurring…
 firewood	wood used for fuel
@@ -24613,6 +24622,7 @@ ghostwrote	write for someone else
 ghoul	someone who takes bodies from graves and sells them for anatomical dissection
 ghoulish	suggesting the horror of death and decay
 ghyll	A ravine. See Gill a woody glen.
+gi	a unit of magnetomotive force equal to 0.7958 ampere-turns
 giant	any creature of exceptional size
 giantess	a female giant
 giantism	excessive size; usually caused by excessive secretion of growth hormone from the pituitary gland
@@ -27843,6 +27853,7 @@ hotness	the presence of heat
 hotpress	To apply to, in conjunction with mechanical pressure, for the purpose of giving a smooth and glosay surface, or to…
 hotpressed	Pressed while heat is applied. See Hotpress, v. t.
 hotshot	someone who is dazzlingly skilled in any field
+hotspot	a place of political unrest and potential violence
 hotspur	English soldier killed in a rebellion against Henry IV (1364-1403)
 hottish	somewhat hot
 houdah	a (usually canopied) seat for riding on the back of a camel or elephant
@@ -28282,6 +28293,7 @@ hyperfine	extremely fine or thin, as in a spectral line split into two or more c
 hyperglycemia	abnormally high blood sugar usually associated with diabetes
 hyperhidrosis	excessive and profuse perspiration
 hyperkinesis	Abnormally increased muscular movement; spasm.
+hyperlink	a link from a hypertext file to another location or file; typically activated by clicking on a highlighted word or icon…
 hyperlipemia	presence of excess lipids in the blood
 hyperlipidemia	presence of excess lipids in the blood
 hypermarket	a huge supermarket (usually built on the outskirts of a town)
@@ -29925,6 +29937,7 @@ inflictive	Causing infliction; acting as an infliction.
 inflorescence	the time and process of budding and unfolding of blossoms
 inflow	the process of flowing in
 influence	a power to affect persons or events especially power based on prestige etc
+influencer	One who, or that which, influences.
 influent	flowing inward
 influential	having or exercising influence or power
 influentially	exerting influence
@@ -30655,6 +30668,7 @@ internationally	throughout the world
 interne	an advanced student or graduate in medicine gaining supervised practical experience (`houseman' is a British term)
 internecine	(of conflict) within a group or organization
 internee	a person who is interned
+internet	a computer network consisting of a worldwide network of computer networks that use the TCP/IP network protocols to…
 internist	a specialist in internal medicine
 internment	confinement during wartime
 internode	a segment of a stem between two nodes
@@ -30811,6 +30825,7 @@ intramolecular	within the molecule; occurring by a reaction between different pa
 intramural	carried on within the bounds of an institution or community
 intramuscular	within a muscle
 intramuscularly	in an intramuscular way
+intranet	a restricted computer network; a private network created using World Wide Web software
 intransigence	the trait of being intransigent; stubbornly refusing to compromise
 intransigent	impervious to pleas, persuasion, requests, reason
 intransitive	a verb (or verb construction) that does not take an object
@@ -33387,6 +33402,7 @@ lifeblood	the blood considered as the seat of vitality
 lifeboat	a strong sea boat designed to rescue people from a sinking ship
 lifeful	Full of vitality.
 lifeguard	an attendant employed at a beach or pool to protect swimmers from accidents
+lifehack	make one's day-to-day activities more efficient
 lifeless	deprived of life; no longer living
 lifelessly	without animation or vitality
 lifelessness	a state of no motion or movement
@@ -35657,6 +35673,7 @@ membered	having members; normally used in chemistry in combination with a number
 membership	the body of members of an organization or group
 membrane	a thin pliable sheet of material
 membranous	relating to or made of or similar to a membrane
+meme	a cultural unit (an idea or value or pattern of behavior) that is passed from one person to another by non-genetic…
 memento	a reminder of past events
 memo	a written proposal or reminder
 memoir	an account of the author's personal experiences
@@ -39776,6 +39793,7 @@ oilstone	a whetstone for use with oil
 oily	containing an unusual amount of grease or oil
 oink	the short low gruff noise of the kind made by hogs
 ointment	semisolid preparation (usually containing a medicine) applied externally as a remedy or for soothing an irritation
+ok	a state in south central United States
 oka	a Turkish unit of weight equal to about 2.75 pounds
 okapi	similar to the giraffe but smaller with much shorter neck and stripe on the legs
 okay	an endorsement
@@ -44003,6 +44021,7 @@ pneumonia	respiratory disease characterized by inflammation of the lung parenchy
 pneumonic	pertaining to or characterized by or affected by pneumonia
 pneumonitis	inflammation of the lungs; caused by a virus or an allergic reaction
 pneumothorax	abnormal presence of air in the pleural cavity resulting in the collapse of the lung; may be spontaneous (due to injury…
+po	a radioactive metallic element that is similar to tellurium and bismuth; occurs in uranium ores but can be produced by…
 poach	hunt illegally
 poached	cooked in hot water
 poacher	someone who hunts or fishes illegally on the property of another
@@ -44024,6 +44043,7 @@ pococurante	A careless person; a trifler.
 pococurantism	Carelessness; apathy; indifference.
 pod	the vessel that contains the seeds of a plant (not the seeds themselves)
 podagra	Gout in the joints of the foot; -- applied also to gout in other parts of body.
+podcast	distribute (multimedia files) over the internet for playback on a mobile device or a personal computer
 podesta	One of the chief magistrates of the Italian republics in the Middle Ages. Brande & C.
 podgy	short and plump
 podia	a platform raised above the surrounding level to give prominence to the person on it
@@ -54636,6 +54656,7 @@ spy	(military) a secret agent hired by a state to obtain information about its e
 spyglass	a small refracting telescope
 spying	keeping a secret or furtive watch
 spymaster	someone who directs clandestine intelligence activities
+spyware	computer software that obtains information from a user's computer without the user's knowledge or consent
 stab	a sudden sharp feeling
 stabber	someone who stabs another person
 stabbing	causing physical or especially psychological injury
@@ -56098,6 +56119,7 @@ sudd	A tangled mass of floating vegetal matter obstructing navigation.
 sudden	happening without warning or in a short space of time
 suddenly	happening unexpectedly
 suddenness	the quality of happening with headlong haste or without warning
+sudoku	a number puzzle in which the numbers 1 through 9 must be placed into a grid of cells so that each row or column…
 sudor	salty fluid secreted by sweat glands
 sudoriferous	Producing, or secreting, sweat; sudoriparous. Sudoriferous glands (Anat.), small convoluted tubular glands which are…
 sudorific	a medicine that causes or increases sweating
@@ -57519,6 +57541,7 @@ taxus	yews
 taxying	a car driven by a person whose job is to take passengers where they want to go in exchange for money
 tazza	An ornamental cup or vase with a large, flat, shallow bowl, resting on a pedestal and often having handles.
 tchotchke	(Yiddish) an attractive, unconventional woman
+te	a brittle silver-white metalloid element that is related to selenium and sulfur; it is used in alloys and as a…
 tea	a beverage made by steeping tea leaves in water
 teaberry	creeping shrub of eastern North America having white bell-shaped flowers followed by spicy red berrylike fruit and…
 teacake	flat semisweet cookie or biscuit usually served with tea
@@ -57700,6 +57723,7 @@ televangelism	evangelism at a distance by the use of television
 televangelist	an evangelist who conducts services on television
 televise	broadcast via television
 television	broadcasting visual images of stationary or moving objects
+teleworking	employment at home while communicating with the workplace by phone or fax or modem
 telex	a character printer connected to a telegraph that operates like a typewriter
 telfer	one of the conveyances (or cars) in a telpherage
 telford	Designating, or pert. to, a road pavement having a surface of small stone rolled hard and smooth, distinguished from…
@@ -59182,6 +59206,7 @@ touchiness	feeling easily irritated
 touching	the event of something coming in contact with the body
 touchingly	in a poignant or touching manner
 touchline	either of the sidelines in soccer or rugby
+touchscreen	a computer display that enables the user to interact with the computer by touching areas on the screen
 touchstone	a basis for comparison; a reference point against which other things can be evaluated
 touchwood	material for starting a fire
 touchy	quick to take offense
@@ -59447,6 +59472,7 @@ transformer	an electrical device by which alternating current of one voltage is 
 transfuse	impart gradually
 transfusible	Capable of being transfused; transferable by transfusion.
 transfusion	the introduction of blood or blood plasma into a vein or artery
+transgender	involving a partial or full reversal of gender
 transgress	act in disregard of laws, rules, contracts, or promises
 transgression	the act of transgressing; the violation of a law or a duty or moral principle
 transgressive	Disposed or tending to transgress; faulty; culpable. -
@@ -61374,6 +61400,7 @@ unfounded	without a basis in reason or fact
 unframed	not provided with a frame
 unfree	held in servitude
 unfreeze	become or cause to become soft or liquid
+unfriend	One not a friend; an enemy.
 unfriended	Wanting friends; not befriended; not countenanced or supported. Goldsmith. If Richard indeed does come back, it must be…
 unfriendliness	dislike experienced as an absence of friendliness
 unfriendly	not easy to understand or use
@@ -62812,6 +62839,7 @@ vanner	A machine for concentrating ore. See Frue vanner.
 vanning	A process by which ores are washed on a shovel, or in a vanner.
 vantage	place or situation affording some advantage (especially a comprehensive view or commanding perspective)
 vanward	Being on, or towards, the van, or front. "The vanward frontier." De Quincey.
+vap	That which is vapid, insipid, or lifeless; especially, the lifeless part of liquor or wine. In vain it is to wash a…
 vapid	lacking taste or flavor or tang
 vapidity	the quality of being vapid and unsophisticated
 vapidly	in a vapid manner
@@ -64233,9 +64261,12 @@ web	an intricate network suggesting something that was formed by weaving or inte
 webbed	(of the feet of some animals) having the digits connected by a thin fold of skin
 webbing	something forming a web (as between the toes of birds)
 webby	having open interstices or resembling a web
+webcam	a digital camera designed to take digital photographs and transmit them over the internet
 weber	a unit of magnetic flux equal to 100,000,000 maxwells
 webfoot	a foot having the toes connected by folds of skin
 weblike	having open interstices or resembling a web
+webpage	a document connected to the World Wide Web and viewable by anyone connected to the internet who has a web browser
+website	a computer connected to the internet that maintains a series of web pages on the World Wide Web
 webster	English playwright (1580-1625)
 webworm	several gregarious moth larvae that spin webs over foliage on which they feed
 wed	the fourth day of the week; the third working day
@@ -64654,6 +64685,7 @@ wife	a married woman; a man's partner in marriage
 wifeless	Without a wife; unmarried.
 wifelike	befitting or characteristic of a wife
 wifely	befitting or characteristic of a wife
+wifi	a local area network that uses high frequency radio signals to transmit and receive data over distances of a few…
 wig	hairpiece covering the head and made of real or synthetic hair
 wigan	A kind of canvaslike cotton fabric, used to stiffen and protect the lower part of trousers and of the skirts of women's…
 wigeon	freshwater duck of Eurasia and northern Africa related to mallards and teals
@@ -64673,6 +64705,7 @@ wild	a wild primitive state untouched by civilization
 wildcat	an exploratory oil well drilled in land not known to be an oil field
 wildcatter	an oilman who drills exploratory wells in territory not known to be an oil field
 wildebeest	large African antelope having a head with horns like an ox and a long tufted tail
+wilded	Become wild. An old garden plant escaped and wilded.
 wilder	United States writer and dramatist (1897-1975)
 wildering	A plant growing in a state of nature; especially, one which has run wild, or escaped from cultivation.
 wilderment	The state of being bewildered; confusion; bewilderment. And snatched her breathless from beneath This wilderment of…
@@ -65446,6 +65479,7 @@ yummy	extremely pleasing to the sense of taste
 yuppie	a young upwardly mobile professional individual; a well-paid middle-class professional who works in a city and has a…
 yurt	a circular domed dwelling that is portable and self-supporting; originally used by nomadic Mongol and Turkic people of…
 ywis	Certainly; most likely; truly; probably. "Ywis," quod he, "it is full dear, I say." Chaucer. She answered me, "I-wisse,…
+za	An old solfeggio name for B flat; the seventh harmonic, as heard in the or æolian string; -- so called by Tartini. It…
 zabaglione	light foamy custard-like dessert served hot or chilled
 zaffer	A pigment obtained, usually by roasting cobalt glance with sand or quartz, as a dark earthy powder. It consists of…
 zaftig	(of a female body) healthily plump and vigorous
@@ -65479,6 +65513,7 @@ zee	the 26th letter of the Roman alphabet
 zein	A nitrogenous substance of the nature of gluten, obtained from the seeds of Indian corn (Zea) as a soft, yellowish,…
 zeitgeist	the spirit of the time; the spirit characteristic of an age or generation
 zemstvo	In Russia, an elective local district and provincial administrative assembly. Originally it was composed of…
+zen	school of Mahayana Buddhism asserting that enlightenment can come through meditation and intuition rather than faith;…
 zenana	The part of a dwelling appropriated to women.
 zenith	the point above the observer that is directly opposite the nadir on the imaginary sphere against which celestial bodies…
 zenithal	relating to or located at or near the zenith

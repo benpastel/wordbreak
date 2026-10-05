@@ -92,11 +92,15 @@ database later stays contained.
 
 ## Words
 
-[ENABLE](https://github.com/dolph/dictionary) — a public-domain list of ~170,000
-everyday English words, no proper nouns and no abbreviations. We drop anything
-containing `q`, since there is no Q tile. `public/words.txt` is the filtered result
-(1.6MB raw, ~430KB gzipped); the client fetches it once so the claim button can light
-up with no round trip, and the server validates against the same file.
+[ENABLE](https://github.com/dolph/dictionary) — a list of ~173,000 everyday English
+words, no proper nouns and no abbreviations, [released into the public
+domain](https://tiltingatwindmills.dev/enable_README.txt) by its compilers. We drop
+anything containing `q`, since there is no Q tile, and add the 313 entries of
+[`data/modern-words.txt`](data/modern-words.txt) — ENABLE was last revised in 1999,
+and a rejected `selfie` reads as a bug rather than a rule. `public/words.txt` is the
+result, 166,393 words (1.6MB raw, ~430KB gzipped); the client fetches it once so the
+claim button can light up with no round trip, and the server validates against the
+same file. Rebuild with `node scripts/build-words.mjs`.
 
 `data/word-frequency.txt` ranks those words by how often they turn up in ordinary
 speech, which decides the **most obscure** award at the end of a match. It is
