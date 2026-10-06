@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WordBreak — control ideas</title>
+<style>
+@property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+
+:root {
+  --ground: oklch(0.94 0.008 85);
+  --tray: oklch(0.902 0.012 85);
+  --tile-face: oklch(0.985 0.004 85);
+  --ink: oklch(0.22 0.01 60);
+  --ink-soft: oklch(0.52 0.008 70);
+  --ink-mute: oklch(0.7 0.008 70);
+  --hairline: oklch(0.86 0.01 85);
+  --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+  --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+  /* the debossed well, lifted straight from .tile.sel::before */
+  --well-face: oklch(0.885 0.008 75);
+  --well: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 oklch(1 0 0 / 0.7);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: light;
+}
+.c2 { --hue: 148; --cf: 0.12; --lf: 0.845; --ci: 0.14; }
+.c0 { --hue: 250; --cf: 0.085; --lf: 0.87; --ci: 0.16; }
+.c1 { --hue: 25;  --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+.c2, .c0, .c1 { --pf: oklch(var(--lf) var(--cf) var(--hue)); --pc: oklch(0.55 var(--ci) var(--hue)); }
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+main { width: min(880px, 100%); margin: 0 auto; padding: 36px 24px 90px; }
+
+h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 28px; }
+h2 {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0;
+}
+.note { color: var(--ink-soft); font-size: 0.88rem; margin: 6px 0 0; max-width: 62ch; }
+.tag { color: var(--ink-soft); font-size: 0.9rem; margin: 6px 0 0; }
+a { color: var(--ink-soft); text-underline-offset: 2px; }
+
+/* ---------- the thing being evoked: real board tiles ---------- */
+.ref { margin-bottom: 34px; }
+.refrow { display: flex; gap: 6px; margin-top: 12px; }
+.tile {
+  width: 56px; height: 56px; border-radius: 13%;
+  display: grid; place-items: center;
+  font-size: 26px; font-weight: 800; letter-spacing: 0.01em;
+  color: var(--ink); background: var(--tile-face);
+  --ring: inset 0 0 0 0 transparent;
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
+}
+.tile.claimed {
+  --ring: inset 0 0 0 3px var(--pc); --p: 62%;
+  background:
+    linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    var(--tile-face);
+}
+.tile.sel::before {
+  content: ''; position: absolute; inset: 17%; border-radius: 50%;
+  background: var(--well-face); box-shadow: var(--well);
+}
+.tile.sel { position: relative; }
+.tile.sel > span { position: relative; z-index: 1; }
+
+/* ---------- panels ---------- */
+.idea {
+  background: var(--ground); border: 1px solid var(--hairline); border-radius: 14px;
+  padding: 26px 26px 30px; margin-bottom: 26px;
+}
+.ideahead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.badge {
+  font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--ink); color: var(--ground); padding: 3px 9px; border-radius: 5px;
+}
+.ideaname { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; }
+
+/* a miniature of the real lobby, so each idea is judged in place */
+.stage { margin-top: 22px; }
+.lobbyhead {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 24px; flex-wrap: wrap; margin-bottom: 30px;
+}
+.lobbyhead h3 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.tablehead {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 10px; border-bottom: 1px solid var(--hairline);
+}
+.lbl {
+  font-size: 0.74rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 7px;
+}
+.field { display: flex; flex-direction: column; align-items: flex-start; }
+button { font: inherit; cursor: pointer; border: 0; }
+
+/* ============================================================
+   A — TILE FACE
+   The control is one tile. Same corner, same face, same shadow
+   stack as the board; only the silhouette changes.
+   ============================================================ */
+.a-input {
+  font: inherit; font-weight: 800; font-size: 1.25rem; color: var(--ink);
+  background: var(--tile-face); border: 0; border-radius: 9px;
+  padding: 12px 20px; width: 15ch; outline: none;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.a-input::placeholder { color: var(--ink-mute); font-weight: 700; }
+.a-input:focus { box-shadow: inset 0 0 0 3px var(--ink-mute), var(--shadow-1), var(--shadow-2); }
+.a-btn {
+  background: var(--ink); color: var(--ground); font-weight: 800; font-size: 0.9rem;
+  padding: 11px 22px; border-radius: 7px; letter-spacing: 0.01em;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+.a-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-1), 0 4px 9px oklch(0.3 0.02 70 / 0.14); }
+.a-btn:active { transform: translateY(1px); box-shadow: var(--shadow-1); }
+
+/* ============================================================
+   B — SPELLED OUT
+   The control is a word on the board: one small tile per letter.
+   The primary action wears a claim ring, like a banked word.
+   ============================================================ */
+.b-word { display: inline-flex; gap: 3px; background: none; padding: 0; }
+.b-word i {
+  font-style: normal; width: 30px; height: 30px; border-radius: 13%;
+  display: grid; place-items: center;
+  font-size: 15px; font-weight: 800; text-transform: uppercase;
+  color: var(--ink); background: var(--tile-face);
+  box-shadow: var(--shadow-1), var(--shadow-2);
+  transition: transform 120ms ease;
+}
+.b-word i.sp { width: 9px; box-shadow: none; background: none; }
+.b-word.claim i:not(.sp) { box-shadow: inset 0 0 0 2px var(--pc), var(--shadow-1), var(--shadow-2); }
+.b-word:hover i:not(.sp) { transform: translateY(-2px); }
+.b-word:hover i:nth-child(odd):not(.sp) { transform: translateY(-3px); }
+.b-word:active i:not(.sp) { transform: translateY(1px); }
+
+/* name as a rack of tiles, with a real (invisible) input behind it */
+.b-rack { position: relative; display: inline-block; cursor: text; }
+.b-tiles { display: inline-flex; gap: 3px; min-height: 44px; align-items: center; }
+.b-tiles i {
+  font-style: normal; width: 36px; height: 44px; border-radius: 11%;
+  display: grid; place-items: center;
+  font-size: 20px; font-weight: 800; text-transform: uppercase;
+  color: var(--ink); background: var(--tile-face);
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.b-tiles i.blank { background: var(--well-face); box-shadow: var(--well); }
+.b-caret { width: 2px; height: 26px; background: var(--ink); animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.b-rack input {
+  position: absolute; inset: 0; opacity: 0; width: 100%; border: 0;
+  font: inherit; cursor: text;
+}
+
+/* ============================================================
+   C — TRAY & DEBOSS
+   Reuses the board's own two-state physics: where you type is
+   pressed INTO the tray, what you press stands proud of it.
+   ============================================================ */
+.c-input {
+  font: inherit; font-weight: 800; font-size: 1.25rem; color: var(--ink);
+  background: var(--well-face); border: 0; border-radius: 9px;
+  padding: 12px 20px; width: 15ch; outline: none;
+  box-shadow: var(--well);
+}
+.c-input::placeholder { color: oklch(0.62 0.008 70); font-weight: 700; }
+.c-input:focus { background: oklch(0.9 0.008 75); box-shadow: var(--well), 0 0 0 2px var(--ink-mute); }
+.c-btn {
+  background: var(--tile-face); color: var(--ink); font-weight: 800; font-size: 0.9rem;
+  padding: 11px 22px; border-radius: 7px;
+  box-shadow: inset 0 0 0 3px var(--pc), var(--shadow-1), var(--shadow-2);
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+.c-btn:hover { transform: translateY(-1px); box-shadow: inset 0 0 0 3px var(--pc), var(--shadow-1), 0 4px 9px oklch(0.3 0.02 70 / 0.14); }
+.c-btn:active { transform: translateY(1px); box-shadow: inset 0 0 0 3px var(--pc), var(--shadow-1); }
+/* the same button with the rising fill a tile uses while banking */
+.c-btn.filling {
+  --p: 55%;
+  background: linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%), var(--tile-face);
+}
+
+.foot { color: var(--ink-mute); font-size: 0.8rem; margin-top: 40px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Control ideas — Name &amp; New&nbsp;table</h1>
+
+  <section class="ref">
+    <h2>what we're evoking</h2>
+    <p class="note">Board tiles as they render today: 13% corner, paper face, two stacked shadows,
+      weight 800. Third tile is claimed, fourth is selected.</p>
+    <div class="refrow">
+      <div class="tile"><span>W</span></div>
+      <div class="tile"><span>O</span></div>
+      <div class="tile claimed c2"><span>R</span></div>
+      <div class="tile sel"><span>D</span></div>
+    </div>
+    <p class="note" style="margin-top:14px">Every control today is a 999px pill — a different
+      language from the board. Each idea below reconciles them differently.</p>
+  </section>
+
+  <!-- ===================== A ===================== -->
+  <section class="idea">
+    <div class="ideahead">
+      <span class="badge">A</span>
+      <span class="ideaname">Tile face</span>
+    </div>
+    <p class="note">The control <em>is</em> a tile — same corner radius, face colour and shadow
+      stack, just a wider silhouette. Smallest change; nothing new to learn.</p>
+    <div class="stage">
+      <div class="lobbyhead">
+        <div>
+          <h3>WordBreak</h3>
+          <p class="tag"><a href="#">how to play</a></p>
+        </div>
+        <label class="field">
+          <span class="lbl">Name</span>
+          <input class="a-input" value="Benji" spellcheck="false">
+        </label>
+      </div>
+      <div class="tablehead">
+        <h2>tables</h2>
+        <button class="a-btn">new table</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== B ===================== -->
+  <section class="idea">
+    <div class="ideahead">
+      <span class="badge">B</span>
+      <span class="ideaname">Spelled out</span>
+    </div>
+    <p class="note">The control is a word <em>on</em> the board: one tile per letter. Your name sits
+      in a rack you can type into; the primary action wears a claim ring, like a banked word.
+      Most evocative, and the most fragile — long names and narrow phones both strain it.</p>
+    <div class="stage">
+      <div class="lobbyhead">
+        <div>
+          <h3>WordBreak</h3>
+          <p class="tag"><a href="#">how to play</a></p>
+        </div>
+        <div class="field">
+          <span class="lbl">Name</span>
+          <div class="b-rack" id="rack">
+            <div class="b-tiles" id="racktiles"></div>
+            <input id="rackinput" value="Benji" maxlength="10" spellcheck="false" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <div class="tablehead">
+        <h2>tables</h2>
+        <button class="b-word claim c2">
+          <i>n</i><i>e</i><i>w</i><i class="sp"></i><i>t</i><i>a</i><i>b</i><i>l</i><i>e</i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== C ===================== -->
+  <section class="idea">
+    <div class="ideahead">
+      <span class="badge">C</span>
+      <span class="ideaname">Tray &amp; deboss</span>
+    </div>
+    <p class="note">Borrows the board's own physics rather than its shape. Where you type is pressed
+      <em>into</em> the tray — the same debossed well a selected tile wears. What you press stands
+      proud of it, ringed like a claim. Raised vs. recessed does the explaining, so the meaning
+      survives without a label.</p>
+    <div class="stage">
+      <div class="lobbyhead">
+        <div>
+          <h3>WordBreak</h3>
+          <p class="tag"><a href="#">how to play</a></p>
+        </div>
+        <label class="field">
+          <span class="lbl">Name</span>
+          <input class="c-input" value="Benji" spellcheck="false">
+        </label>
+      </div>
+      <div class="tablehead">
+        <h2>tables</h2>
+        <button class="c-btn c2">new table</button>
+      </div>
+    </div>
+    <div class="stage" style="margin-top:26px">
+      <h2>and the same button mid-bank, borrowing the rising fill</h2>
+      <div style="margin-top:12px"><button class="c-btn filling c2">new table</button></div>
+    </div>
+  </section>
+
+  <p class="foot">mockup/controls.html — static, not wired to the app.</p>
+</main>
+
+<script>
+// B: mirror the hidden input into a rack of letter tiles.
+const input = document.getElementById('rackinput');
+const tiles = document.getElementById('racktiles');
+function render() {
+  const v = input.value;
+  tiles.innerHTML = '';
+  for (const ch of v) {
+    const i = document.createElement('i');
+    i.textContent = ch === ' ' ? ' ' : ch;
+    tiles.appendChild(i);
+  }
+  // one empty well showing where the next letter lands
+  if (v.length < Number(input.maxLength)) {
+    const b = document.createElement('i');
+    b.className = 'blank';
+    tiles.appendChild(b);
+  }
+}
+input.addEventListener('input', render);
+document.getElementById('rack').addEventListener('click', () => input.focus());
+render();
+</script>
+</body>
+</html>

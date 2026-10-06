@@ -3,7 +3,7 @@ import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
 import type { EndMode, Settings, TableView } from '../shared/types';
 import NameField from './NameField';
 import Chat from './Chat';
-import Countdown from './Countdown';
+import ReadyButton from './ReadyButton';
 
 interface Props {
   table: TableView;
@@ -195,16 +195,12 @@ export default function TableRoom({
       <Chat messages={table.chat} onSend={onChat} />
 
       <div className="startrow">
-        {table.startsAt !== null ? (
-          <Countdown startsAt={table.startsAt} />
-        ) : (
-          <button
-            className={`primary big${me?.ready ? ' on' : ''}`}
-            onClick={() => onReady(!me?.ready)}
-          >
-            {me?.ready ? 'ready — waiting for others' : "I'm ready"}
-          </button>
-        )}
+        <ReadyButton
+          ready={!!me?.ready}
+          waiting={table.players.filter((p) => p.connected && !p.ready).length}
+          startsAt={table.startsAt}
+          onReady={onReady}
+        />
       </div>
     </div>
   );

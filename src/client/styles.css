@@ -32,6 +32,17 @@
 
   --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
   --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+  --shadow-lift: 0 4px 9px oklch(0.3 0.02 70 / 0.14);
+
+  /* A board tile's corner is 13% of its size, which lands near 7px at the cell
+     sizes we actually render. Controls take that as a flat value so they read as
+     the same cut of card regardless of how wide they get. */
+  --r-ctl: 7px;
+  --r-ctl-lg: 9px;
+
+  /* "Yes, go" green — the ready button, and the countdown sweeping across it. */
+  --go: oklch(0.55 0.12 148);
+  --go-deep: oklch(0.44 0.15 148);
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color-scheme: light;
@@ -80,36 +91,71 @@ kbd {
 }
 code { font: 600 0.82em ui-monospace, SFMono-Regular, Menlo, monospace; }
 
-/* ------------------------------------------------------------ controls */
-button { font: inherit; cursor: pointer; border: 0; border-radius: 999px; }
+/* ------------------------------------------------------------ controls
+
+   Controls are cut from the same card as the board: a tile's corner, its paper
+   face and its two stacked shadows. Pressing one pushes it into the ground the
+   way a tile does, so the lobby and the board stop speaking different languages.
+
+   Round still means something — it just no longer means "control". Pills are
+   passive labels (.phase, .badge, .tick, .toast) and circles are the colour dots
+   and the one deliberate round touch target, .readout .x. */
+button {
+  font: inherit; cursor: pointer; border: 0; border-radius: var(--r-ctl);
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
 button:disabled { cursor: default; opacity: 0.4; }
+button:not(:disabled):active { transform: translateY(1px); }
 
 .primary {
   background: var(--ink); color: var(--ground);
-  font-weight: 700; padding: 9px 20px; font-size: 0.9rem;
+  font-weight: 800; padding: 9px 20px; font-size: 0.9rem;
+  box-shadow: var(--shadow-1), var(--shadow-2);
 }
-.primary.big { padding: 13px 28px; font-size: 1rem; }
-.primary.on { background: oklch(0.55 0.12 148); }
+.primary.big { padding: 13px 28px; font-size: 1rem; border-radius: var(--r-ctl-lg); }
+.primary.on { background: var(--go); }
+.primary:hover:not(:disabled) { box-shadow: var(--shadow-1), var(--shadow-lift); transform: translateY(-1px); }
+.primary:not(:disabled):active { box-shadow: var(--shadow-1); }
 
 .ghost {
   background: var(--tile-face); color: var(--ink-soft);
-  font-weight: 600; padding: 8px 16px; font-size: 0.85rem; box-shadow: var(--shadow-1);
+  font-weight: 600; padding: 8px 16px; font-size: 0.85rem;
+  box-shadow: var(--shadow-1), var(--shadow-2);
 }
-.ghost:hover:not(:disabled) { color: var(--ink); }
+.ghost:hover:not(:disabled) { color: var(--ink); box-shadow: var(--shadow-1), var(--shadow-lift); transform: translateY(-1px); }
+.ghost:not(:disabled):active { box-shadow: var(--shadow-1); }
 
 input {
-  font: inherit; font-weight: 700; color: var(--ink);
-  background: var(--tile-face); border: 0; border-radius: 999px;
-  padding: 8px 16px; box-shadow: var(--shadow-1); outline: none; width: 10ch;
+  font: inherit; font-weight: 800; color: var(--ink);
+  background: var(--tile-face); border: 0; border-radius: var(--r-ctl);
+  padding: 8px 16px; box-shadow: var(--shadow-1), var(--shadow-2); outline: none; width: 10ch;
 }
-input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
+/* Inset, so focus never haloes outside the tile's edge. */
+input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(--shadow-2); }
 
 .segmented { display: flex; flex-wrap: wrap; gap: 6px; }
 .segmented button {
   background: var(--tile-face); color: var(--ink-soft);
-  font-size: 0.82rem; font-weight: 700; padding: 6px 13px; box-shadow: var(--shadow-1);
+  font-size: 0.82rem; font-weight: 700; padding: 6px 13px;
+  box-shadow: var(--shadow-1), var(--shadow-2);
 }
 .segmented button.on { background: var(--ink); color: var(--ground); box-shadow: none; }
+
+/* The start countdown runs inside the ready button instead of beside it, driven by
+   the same --p the board uses for a banking tile: a filling surface already means
+   "a timer is running, and when it lands this commits".
+
+   Swept left to right rather than bottom to top. A tile is square and has the
+   height to read a rising fill; a 46px button does not, and across its width the
+   same five seconds are unmistakable. */
+.primary.filling {
+  background:
+    linear-gradient(to right, var(--go-deep) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    var(--go);
+}
+/* It stays live while it fills — the server cancels the start if anyone un-readies,
+   and this is the control that does it. */
+.primary.filling:hover:not(:disabled) { transform: none; box-shadow: var(--shadow-1), var(--shadow-2); }
 
 .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--pc); display: inline-block; }
 
@@ -134,8 +180,13 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 /* Lobby: the default name is a placeholder, so make replacing it the obvious first move. */
 .namefield.big span { font-size: 0.74rem; }
 .namefield.big input {
-  font-size: 1.25rem; padding: 12px 20px;
+  font-size: 1.25rem; padding: 12px 20px; border-radius: var(--r-ctl-lg);
   box-shadow: var(--shadow-1), var(--shadow-2);
+}
+/* Needed explicitly: the rule above outranks `input:focus`, so the lobby's own
+   name field has been focusing with no ring at all. */
+.namefield.big input:focus {
+  box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(--shadow-2);
 }
 
 .tablehead {
@@ -512,4 +563,6 @@ input:focus { box-shadow: var(--shadow-1), 0 0 0 2px var(--ink-mute); }
 @media (prefers-reduced-motion: reduce) {
   .trail polyline.sel { animation: none; }
   .tile.reseed, .tile.broke { animation: none; }
+  button { transition: none; }
+  button:hover, button:active { transform: none; }
 }
