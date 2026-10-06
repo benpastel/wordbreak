@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
 import type { EndMode, Settings, TableView } from '../shared/types';
 import TableShell from './TableShell';
@@ -93,6 +93,62 @@ function EditableName({ name, onSetName }: { name: string; onSetName: (n: string
   );
 }
 
+/** Your own colour dot. Click it for the swatches; picking one, clicking anywhere
+ *  else or Escape puts them away. */
+function ColorDot({
+  color,
+  taken,
+  onColor,
+}: {
+  color: number;
+  taken: Set<number>;
+  onColor: (c: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+
+  return (
+    <span className="dotpick" ref={ref}>
+      <button
+        className="dot mine"
+        aria-label="Change colour"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      />
+      {open && (
+        <span className="swatchpop">
+          {Array.from({ length: COLOR_COUNT }, (_, c) => (
+            <button
+              key={c}
+              className={`sw c${c}${color === c ? ' on' : ''}`}
+              disabled={taken.has(c)}
+              aria-label={`colour ${c + 1}`}
+              onClick={() => {
+                onColor(c);
+                setOpen(false);
+              }}
+            />
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export default function TableRoom({
   table,
   meId,
@@ -104,7 +160,6 @@ export default function TableRoom({
   onLeave,
 }: Props) {
   const [copied, setCopied] = useState(false);
-  const me = table.players.find((p) => p.id === meId);
   const s = table.settings;
   const locked = table.hostId !== meId;
   const taken = new Set(table.players.filter((p) => p.id !== meId).map((p) => p.color));
@@ -130,28 +185,20 @@ export default function TableRoom({
               className={`seat c${p.color}${p.connected ? '' : ' gone'}${p.ready ? ' setgo' : ''}`}
             >
               {p.id === meId ? (
-                <EditableName name={p.name} onSetName={onSetName} />
+                <>
+                  <ColorDot color={p.color} taken={taken} onColor={onColor} />
+                  <EditableName name={p.name} onSetName={onSetName} />
+                </>
               ) : (
-                <span className="name">{p.name}</span>
+                <>
+                  <i className="dot" />
+                  <span className="name">{p.name}</span>
+                </>
               )}
               {p.id === table.hostId && <span className="badge">host</span>}
             </li>
           ))}
         </ul>
-
-        {me && (
-          <div className="swatches">
-            {Array.from({ length: COLOR_COUNT }, (_, c) => (
-              <button
-                key={c}
-                className={`sw c${c}${me.color === c ? ' on' : ''}`}
-                disabled={taken.has(c)}
-                onClick={() => onColor(c)}
-                title={taken.has(c) ? 'taken' : `colour ${c + 1}`}
-              />
-            ))}
-          </div>
-        )}
       </section>
 
       <section className="card">
