@@ -3,15 +3,12 @@
 // every function that needs "now" takes it as an argument, which is also what makes
 // swapping the in-memory store for a database a contained change later.
 
-import { drawLetter, WEIGHTS } from './letters';
+import { drawLetter } from './letters';
 import {
   MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MAX_TARGET, MEDALS,
   MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS, MIN_TARGET,
 } from './types';
-import { MAX_TIED_AWARDS, REPEAT_THRESHOLD, THIEF_THRESHOLD } from './types';
-import type {
-  Award, BreakNote, Claim, ClaimRecord, EndMode, GameState, MatchStats, Medal, Settings, Tile,
-} from './types';
+import type { Claim, EndMode, GameState, Medal, Settings, Tile } from './types';
 
 export type AllocId = () => number;
 
@@ -164,166 +161,6 @@ export function bankClaim(game: GameState, claim: Claim, allocId: AllocId): Bank
   }
 
   return { points: claim.tileIds.length, idx, letters };
-}
-
-/**
- * A crude stand-in for how obscure a word is: rarer letters score higher, using the
- * same weights the bag is drawn from. It is not corpus frequency — it cannot tell a
- * common word from an odd one — but it reliably surfaces the JAZZY over the RATES,
- * which is what the write-up is for.
- */
-export function rarity(word: string): number {
-  let total = 0;
-  for (const ch of word.toUpperCase()) total += 1 / (WEIGHTS[ch] ?? 1);
-  return total;
-}
-
-/**
- * The end-of-match write-up: one holder per award, plus the biggest thefts.
- *
- * `corpusRank` places a word in everyday English, most common first, and returns
- * null for anything rarer than the corpus has seen. It is injected rather than
- * imported so these rules stay pure and testable.
- */
-export interface StatLookups {
-  /** Position in everyday English, most common first; null if rarer than the corpus. */
-  rank?: (word: string) => number | null;
-  define?: (word: string) => string | null;
-}
-
-export function computeStats(log: ClaimRecord[], lookups: StatLookups = {}): MatchStats {
-  const corpusRank = lookups.rank ?? (() => null);
-  const define = lookups.define ?? (() => null);
-  const awards: Award[] = [];
-
-  /** One winner across the whole table. */
-  const award = (
-    kind: Award['kind'],
-    pool: ClaimRecord[],
-    better: (a: ClaimRecord, b: ClaimRecord) => boolean,
-  ) => {
-    if (pool.length === 0) return;
-    const winner = pool.reduce((a, b) => (better(a, b) ? b : a));
-    awards.push({ kind, playerId: winner.playerId, word: winner.word });
-  };
-
-  /** One line each, for everyone who claimed anything — a personal highlight rather
-   *  than a competition, so a quiet player still has something to look at. */
-  const perPlayer = (
-    kind: Award['kind'],
-    better: (a: ClaimRecord, b: ClaimRecord) => boolean,
-  ) => {
-    const best = new Map<string, ClaimRecord>();
-    for (const c of log) {
-      const cur = best.get(c.playerId);
-      if (!cur || better(cur, c)) best.set(c.playerId, c);
-    }
-    for (const [playerId, c] of best) awards.push({ kind, playerId, word: c.word });
-  };
-
-  // Beyond the end of the corpus everything is equally unheard-of, so fall back to
-  // letter rarity to separate them.
-  const obscurity = (w: string) => {
-    const r = corpusRank(w);
-    return r === null ? 1e6 + rarity(w) : r;
-  };
-
-  perPlayer('longest', (a, b) => b.word.length > a.word.length);
-  perPlayer('obscure', (a, b) => obscurity(b.word) > obscurity(a.word));
-
-  // With one claim, or a long word that is also your rarest, both awards land on the
-  // same word — one line saying it twice. Keep the longest and let it carry the
-  // definition, which is the part worth reading either way.
-  for (const ob of awards.filter((a) => a.kind === 'obscure')) {
-    const longest = awards.find((a) => a.kind === 'longest' && a.playerId === ob.playerId);
-    if (longest && longest.word === ob.word) ob.kind = 'duplicate';
-  }
-  for (const a of awards) {
-    if (a.kind !== 'obscure' && a.kind !== 'duplicate') continue;
-    const meaning = define(a.word);
-    if (!meaning) continue;
-    // The definition follows the word, so a suppressed one hands it to the longest.
-    const target =
-      a.kind === 'duplicate'
-        ? awards.find((x) => x.kind === 'longest' && x.playerId === a.playerId)
-        : a;
-    if (target) target.definition = meaning;
-  }
-  const kept = awards.filter((a) => a.kind !== 'duplicate');
-  awards.length = 0;
-  awards.push(...kept);
-
-  award('shortest', log, (a, b) => b.word.length < a.word.length);
-  award('hardest', log, (a, b) => rarity(b.word) > rarity(a.word));
-
-  // Going back to the same word again and again is worth calling out; ties all place.
-  const tally = new Map<string, number>();
-  for (const c of log) {
-    const key = `${c.playerId}\u0000${c.word}`;
-    tally.set(key, (tally.get(key) ?? 0) + 1);
-  }
-  const most = Math.max(0, ...tally.values());
-  if (most >= REPEAT_THRESHOLD) {
-    let placed = 0;
-    for (const [key, n] of tally) {
-      if (n !== most || placed >= MAX_TIED_AWARDS) continue;
-      const [playerId, word] = key.split('\u0000');
-      awards.push({ kind: 'repeat', playerId, word });
-      placed++;
-    }
-  }
-
-  /**
-   * Awards decided by counting rather than by comparing single claims. Everyone on
-   * the top count places, because splitting a genuine tie by a technicality reads as
-   * a bug; past MAX_TIED_AWARDS the earliest to reach the number keep it, which falls
-   * out of tallying in log order.
-   */
-  const countAward = (
-    kind: Award['kind'],
-    counts: Map<string, number>,
-    floor: number,
-    word: (playerId: string) => string,
-  ) => {
-    let best = 0;
-    for (const n of counts.values()) best = Math.max(best, n);
-    if (best < floor) return;
-    for (const [id, n] of counts) {
-      if (n !== best) continue;
-      if (awards.filter((a) => a.kind === kind).length >= MAX_TIED_AWARDS) break;
-      awards.push({ kind, playerId: id, word: word(id) });
-    }
-  };
-
-  const bump = (m: Map<string, number>, id: string) => m.set(id, (m.get(id) ?? 0) + 1);
-
-  const steals = new Map<string, number>();
-  for (const c of log) if (c.broke) bump(steals, c.playerId);
-
-  /** The theft that gained the most letters, which is the one worth showing. */
-  const bestSteal = (playerId: string) =>
-    log
-      .filter((c) => c.playerId === playerId && c.broke)
-      .reduce((a, b) =>
-        b.word.length - b.broke!.word.length > a.word.length - a.broke!.word.length ? b : a,
-      ).word;
-
-  countAward('thief', steals, THIEF_THRESHOLD, bestSteal);
-
-  type Broke = ClaimRecord & { broke: { playerId: string; word: string } };
-  const breaks: BreakNote[] = log
-    .filter((c): c is Broke => c.broke !== null)
-    // Biggest jump in length first: taking a 3 with an 8 is the story, a 3 with a 4 is not.
-    .sort((a, b) => b.word.length - b.broke.word.length - (a.word.length - a.broke.word.length))
-    .slice(0, 4)
-    .map((c) => ({
-      byPlayerId: c.playerId,
-      word: c.word,
-      overPlayerId: c.broke.playerId,
-      overWord: c.broke.word,
-    }));
-
-  return { awards, breaks };
 }
 
 /**

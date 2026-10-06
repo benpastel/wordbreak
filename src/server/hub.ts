@@ -12,7 +12,6 @@ import type {
 import * as R from '../shared/rules';
 import { isWord } from './dictionary';
 import { define } from './definitions';
-import { corpusRank } from './frequency';
 import { MemoryStore } from './store';
 import type { PlayerRecord, Store, TableRecord } from './store';
 
@@ -128,8 +127,9 @@ export class Hub {
       claimSeq: 1,
       createdAt: Date.now(),
       chat: [],
-      log: [],
-      stats: null,
+      startedAt: 0,
+      log: new Map(),
+      recap: null,
       startsAt: null,
       countdownMs: null,
     };
@@ -288,8 +288,9 @@ export class Hub {
     t.startsAt = null;
     t.countdownMs = null;
     t.phase = 'playing';
-    t.log = [];
-    t.stats = null;
+    t.startedAt = Date.now();
+    t.log = new Map();
+    t.recap = null;
     // Only a timed match carries a deadline; the other two end on a score or not at all.
     t.game = R.newGame(
       t.settings.gridSize,
@@ -359,7 +360,14 @@ export class Hub {
       this.store.putPlayer(p);
     }
 
-    t.stats = R.computeStats(t.log, { rank: corpusRank, define });
+    t.recap = {
+      words: [...t.log.values()].map((w) => {
+        const definition = define(w.word);
+        return definition ? { ...w, definition } : w;
+      }),
+      durationMs: Date.now() - t.startedAt,
+    };
+    t.log = new Map();
     this.store.putTable(t);
     this.pushTable(t.id, [{ k: 'ended', medals }]);
     this.pushLobby();
@@ -402,13 +410,11 @@ export class Hub {
       t.settings.holdMs,
       `${t.id}-${t.claimSeq++}`,
     );
-    const stolen = broken.find((b) => b.playerId !== playerId) ?? null;
-    t.log.push({
-      playerId,
-      word,
-      at: now,
-      broke: stolen ? { playerId: stolen.playerId, word: stolen.word } : null,
-    });
+    for (const b of broken) {
+      const was = t.log.get(b.id);
+      if (was) was.brokenBy = playerId;
+    }
+    t.log.set(claim.id, { playerId, word, at: now - t.startedAt, brokenBy: null });
 
     const fx: Fx[] = [];
     // Breaking is breaking, whoever held the claim — including you extending your
@@ -514,7 +520,7 @@ export class Hub {
       players: t.playerIds.map((id) => this.playerView(id)).filter((x): x is Player => !!x),
       game: t.game,
       chat: t.chat,
-      stats: t.stats,
+      recap: t.recap,
       startsAt: t.startsAt,
       countdownMs: t.countdownMs,
     };

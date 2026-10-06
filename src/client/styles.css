@@ -426,72 +426,72 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   color: var(--ink-soft); font-size: 0.76rem; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
 }
-.clock.done {
-  color: var(--ink-soft); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.74rem;
-}
 
 /* -------------------------------------------------------- between matches
-   The board is put away here, so this screen can use the whole column: the
-   standings, what happened in them, and the table talking about it. */
+   The board is put away and the match is replayed as a timeline beside the chat,
+   with the ready button pinned along the bottom so it never scrolls away. */
 .results {
-  width: min(100%, 620px); margin: 0 auto; padding: 12px 16px 60px;
-  display: flex; flex-direction: column; gap: 18px;
+  --readybar: 76px;
+  height: 100dvh; width: min(100%, 1080px); margin: 0 auto;
+  padding: 12px 16px calc(var(--readybar) + 16px);
+  display: grid; grid-template-columns: 1fr 300px; grid-template-rows: minmax(0, 1fr); gap: 16px;
 }
-
-.standings { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.standing {
-  display: flex; align-items: flex-start; gap: 14px;
-  background: var(--tile-face); border-radius: 14px; padding: 14px 18px;
-  box-shadow: var(--shadow-1), var(--shadow-2);
+.recap {
+  background: var(--tile-face); border-radius: 14px; box-shadow: var(--shadow-1), var(--shadow-2);
+  overflow: hidden; display: flex; flex-direction: column; min-height: 0;
 }
-.standing .place {
-  font-weight: 800; font-size: 1.05rem; color: var(--ink-mute);
-  font-variant-numeric: tabular-nums; min-width: 1.2ch; padding-top: 1px;
+/* Heads and columns share one padding and one flex split, so each name sits over
+   its own column of words. */
+.recaphead, .recaptrack { display: flex; gap: 12px; }
+.recaphead { padding: 14px 16px 12px; border-bottom: 1px solid var(--hairline); }
+.recapwho { flex: 1; min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
+.recapwho .name { font-weight: 700; color: var(--pc); }
+.recapwho .pts {
+  font-weight: 800; font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums;
 }
-.standing .who { flex: 1; min-width: 0; }
-.standing.isme { box-shadow: var(--shadow-1), var(--shadow-2), inset 0 0 0 2px var(--pc); }
-.standing.setgo .name::after {
+.recapwho.isme .name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.recapwho.setgo .name::after {
   content: '✓'; margin-left: 6px; font-size: 0.8em; color: oklch(0.55 0.13 148);
 }
-
-/* Two columns: the award and its word on the left, what the word means on the
-   right, so the definitions line up down the list instead of interrupting it. */
-.awards {
-  list-style: none; margin: 8px 0 0; padding: 0;
-  display: grid; grid-template-columns: max-content 1fr;
-  column-gap: 20px; row-gap: 5px; align-items: baseline;
-}
-.awards li { display: contents; }
-.awards .head { display: flex; align-items: baseline; gap: 8px; }
-.awards .lab {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-mute);
-}
-.awards .word {
+.recapscroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.recaptrack { margin: 14px 16px 24px; }
+.recapcol { flex: 1; min-width: 0; position: relative; }
+.recapword {
+  position: absolute; left: 0; white-space: nowrap; line-height: 1; padding: 2px 0;
   font-size: 0.86rem; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--pc);
+  letter-spacing: 0.06em; color: var(--pc); cursor: default;
 }
-.awards .def {
-  font-size: 0.76rem; line-height: 1.35; color: var(--ink-soft); font-style: italic;
+/* The word keeps its player's colour; the line through it is the breaker's. */
+.recapword .strike {
+  position: absolute; left: -2px; right: -2px; top: calc(50% - 1px); height: 2px;
+  border-radius: 1px; background: var(--pc);
 }
-/* Too narrow for two columns: let the definition drop under its word. */
-@media (max-width: 560px) {
-  .awards { grid-template-columns: 1fr; row-gap: 2px; }
-  .awards li { display: block; margin-bottom: 5px; }
-  .awards .def { display: block; }
-}
+.recapword .strike.gone { background: var(--ink-mute); }
 
-.breaks h2 { margin-bottom: 10px; }
-.breaks ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
-.breaks li { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-.breaks .bw {
-  font-size: 0.88rem; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--pc);
+.deftip {
+  position: fixed; z-index: 50; max-width: 280px; pointer-events: none;
+  background: var(--ink); color: var(--ground); border-radius: var(--r-ctl);
+  padding: 7px 11px; font-size: 0.78rem; line-height: 1.35; box-shadow: var(--shadow-2);
 }
-.breaks .arrow { color: var(--ink-mute); font-weight: 700; }
-.breaks .by { font-size: 0.74rem; color: var(--ink-mute); }
+.deftip.above { transform: translateY(-100%); }
 
-.readyrow { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.results .chat { min-height: 0; }
+.results .chatlog { height: auto; flex: 1; }
+
+.readybar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  height: calc(var(--readybar) + env(safe-area-inset-bottom, 0px));
+  padding: 0 16px env(safe-area-inset-bottom, 0px);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  background: var(--ground); border-top: 1px solid var(--hairline);
+}
+.readybar .leave { justify-self: start; }
+
+@media (max-width: 760px) {
+  .results { height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
+  .recap { height: 70dvh; }
+  .results .chatlog { height: 220px; }
+}
 
 /* ------------------------------------------------------------------- chat */
 .chat {
@@ -506,7 +506,8 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .chatline { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--ink); }
 .chatline b { color: var(--pc); font-weight: 700; margin-right: 8px; }
 .chatbox { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--hairline); }
-.chatbox input { flex: 1; width: auto; font-weight: 500; box-shadow: none; background: var(--ground); }
+.chatbox button { flex: none; }
+.chatbox input { flex: 1; width: auto; min-width: 0; font-weight: 500; box-shadow: none; background: var(--ground); }
 
 /* --------------------------------------------------------------- trophies
    Playing pieces rather than icons: a domed disc with a lit top edge and a
@@ -528,11 +529,6 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .trophy.gold   { --t-hi: oklch(0.93 0.10 95); --t-lo: oklch(0.70 0.14 78); }
 .trophy.silver { --t-hi: oklch(0.95 0.008 250); --t-lo: oklch(0.70 0.02 250); }
 .trophy.bronze { --t-hi: oklch(0.83 0.08 62); --t-lo: oklch(0.55 0.10 45); }
-
-/* Between matches, the score bar doubles as the ready list. */
-.player.setgo .name::after {
-  content: '✓'; margin-left: 6px; font-size: 0.8em; color: oklch(0.55 0.13 148);
-}
 
 .confetti { position: fixed; z-index: 70; pointer-events: none; will-change: transform, opacity; }
 

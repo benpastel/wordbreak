@@ -1,20 +1,15 @@
-import { useEffect, useRef } from 'react';
-import type { Award, AwardKind, Fx, TableView } from '../shared/types';
+import { useEffect, useRef, useState } from 'react';
+import type { Fx, TableView } from '../shared/types';
 import { burst } from './burst';
 import type { BurstKind } from './burst';
 import Chat from './Chat';
 import ReadyButton from './ReadyButton';
 import Trophies from './Trophies';
 
-const AWARD_LABEL: Record<AwardKind, string> = {
-  longest: 'longest word',
-  shortest: 'shortest word',
-  hardest: 'hardest letters',
-  obscure: 'most obscure',
-  repeat: 'kept going back to',
-  thief: 'thief',
-  duplicate: '',
-};
+/** Vertical pixels per second of play. */
+const PX_PER_S = 5;
+/** A word's line height; words closer in time than this get nudged apart. */
+const ROW = 20;
 
 interface Props {
   table: TableView;
@@ -25,16 +20,25 @@ interface Props {
   onLeave: () => void;
 }
 
+interface Tip {
+  text: string;
+  x: number;
+  y: number;
+  /** Low on the screen, so it opens upward instead of under the ready bar. */
+  above: boolean;
+}
+
 /**
- * Between matches. The board is gone — there is nothing live on it and it only
- * competes with the write-up — so the screen is the standings, what happened, and
- * the table talking about it.
+ * Between matches. The board is put away and the match is replayed as a timeline:
+ * a column per player, each word at the moment it was found, struck through in the
+ * colour of whoever broke it.
  */
 export default function Results({ table, meId, fx, onReady, onChat, onLeave }: Props) {
   const me = table.players.find((p) => p.id === meId);
   const ranked = [...table.players].sort((a, b) => b.score - a.score);
   const waiting = table.players.filter((p) => p.connected && !p.ready).length;
   const popped = useRef(-1);
+  const [tip, setTip] = useState<Tip | null>(null);
 
   // Everyone gets a pop, in their medal's colour if they placed. Fired off the
   // 'ended' event rather than the phase, so reconnecting later does not replay it.
@@ -48,75 +52,85 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
     );
   }, [fx.seq, fx.items, meId]);
 
-  const awardsFor = (id: string): Award[] =>
-    (table.stats?.awards ?? []).filter((a) => a.playerId === id);
-  const nameOf = (id: string) => table.players.find((p) => p.id === id)?.name ?? 'someone';
-  const colorOf = (id: string) => table.players.find((p) => p.id === id)?.color ?? 0;
+  const recap = table.recap;
+  const colorOf = (id: string) => table.players.find((p) => p.id === id)?.color;
+
+  // Each word sits at the moment it was found. Two found close together by the same
+  // player would collide, so a later one slides down just far enough to clear.
+  const columns = ranked.map((p) => {
+    let floor = -Infinity;
+    return (recap?.words ?? [])
+      .filter((w) => w.playerId === p.id)
+      .map((w) => {
+        const top = Math.max((w.at / 1000) * PX_PER_S, floor);
+        floor = top + ROW;
+        return { ...w, top };
+      });
+  });
+
+  const height = Math.max(
+    ((recap?.durationMs ?? 0) / 1000) * PX_PER_S,
+    ...columns.map((c) => (c.length ? c[c.length - 1].top + ROW : 0)),
+  );
+
+  const showTip = (e: React.PointerEvent<HTMLElement>, text: string | undefined) => {
+    if (!text) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const above = r.bottom > window.innerHeight * 0.6;
+    setTip({ text, x: r.left, y: above ? r.top - 6 : r.bottom + 6, above });
+  };
 
   return (
     <div className="results">
-      <div className="playtop">
-        <span className="clock done">match over</span>
-        <button className="leave" onClick={onLeave}>
-          leave
-        </button>
-      </div>
-
-      <ol className="standings">
-        {ranked.map((p, i) => (
-          <li
-            key={p.id}
-            className={`standing c${p.color}${p.id === meId ? ' isme' : ''}${
-              p.ready ? ' setgo' : ''
-            }`}
-            data-player={p.id}
-          >
-            <span className="place">{i + 1}</span>
-            <div className="who">
-              <div className="playerhead">
-                <span className="name">{p.name}</span>
-                <span className="pts">{p.score}</span>
-                <Trophies trophies={p.trophies} />
-              </div>
-              {awardsFor(p.id).length > 0 && (
-                <ul className="awards">
-                  {awardsFor(p.id).map((a) => (
-                    // display: contents, so the label and the definition land in the
-                    // two columns of the parent grid and stay aligned down the list.
-                    <li key={a.kind}>
-                      <span className="head">
-                        <span className="lab">{AWARD_LABEL[a.kind]}</span>
-                        <b className="word">{a.word}</b>
-                      </span>
-                      <span className="def">{a.definition ?? ''}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+      <section className="recap">
+        <div className="recaphead">
+          {ranked.map((p) => (
+            <div
+              key={p.id}
+              className={`recapwho c${p.color}${p.id === meId ? ' isme' : ''}${
+                p.ready ? ' setgo' : ''
+              }`}
+              data-player={p.id}
+            >
+              <span className="name">{p.name}</span>
+              <span className="pts">{p.score}</span>
+              <Trophies trophies={p.trophies} />
             </div>
-          </li>
-        ))}
-      </ol>
-
-      {table.stats && table.stats.breaks.length > 0 && (
-        <section className="breaks">
-          <h2>biggest breaks</h2>
-          <ul>
-            {table.stats.breaks.map((b, i) => (
-              <li key={i}>
-                <span className={`bw c${colorOf(b.overPlayerId)}`}>{b.overWord}</span>
-                <span className="arrow">→</span>
-                <span className={`bw c${colorOf(b.byPlayerId)}`}>{b.word}</span>
-                <span className="by">{nameOf(b.byPlayerId)}</span>
-              </li>
+          ))}
+        </div>
+        <div className="recapscroll" onScroll={() => setTip(null)}>
+          <div className="recaptrack" style={{ height }}>
+            {columns.map((words, i) => (
+              <div key={ranked[i].id} className="recapcol">
+                {words.map((w, j) => {
+                  const by = w.brokenBy === null ? undefined : colorOf(w.brokenBy);
+                  return (
+                    <span
+                      key={j}
+                      className={`recapword c${ranked[i].color}`}
+                      style={{ top: w.top }}
+                      onPointerEnter={(e) => showTip(e, w.definition)}
+                      onPointerLeave={() => setTip(null)}
+                    >
+                      {w.word}
+                      {w.brokenBy !== null && (
+                        <i className={`strike${by === undefined ? ' gone' : ` c${by}`}`} />
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
             ))}
-          </ul>
-        </section>
-      )}
+          </div>
+        </div>
+      </section>
 
       <Chat messages={table.chat} onSend={onChat} />
 
-      <div className="readyrow">
+      <div className="readybar">
+        <button className="leave" onClick={onLeave}>
+          leave
+        </button>
         <ReadyButton
           ready={!!me?.ready}
           waiting={waiting}
@@ -127,6 +141,15 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
           idleLabel="ready for the next game"
         />
       </div>
+
+      {tip && (
+        <div
+          className={`deftip${tip.above ? ' above' : ''}`}
+          style={{ left: Math.max(8, Math.min(tip.x, window.innerWidth - 288)), top: tip.y }}
+        >
+          {tip.text}
+        </div>
+      )}
     </div>
   );
 }

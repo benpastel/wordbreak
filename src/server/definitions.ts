@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Definitions for the "most obscure" award. Server-side only.
+// Definitions shown on the end-of-match timeline. Server-side only.
 //
 // WordNet 3.0 Copyright 2006 by Princeton University. All rights reserved.
 // Princeton University makes no representations or warranties, express or implied.
@@ -26,7 +26,7 @@ export function loadDefinitions(): number {
     }
     return glosses.size;
   }
-  // Not fatal: the award simply appears without a definition under it.
+  // Not fatal: the timeline simply shows words without definitions.
   console.warn(`definitions.txt not found; looked in:\n  ${CANDIDATES.join('\n  ')}`);
   return 0;
 }

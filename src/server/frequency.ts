@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Corpus rank for the "most obscure" award. Server-side only — the browser never
-// needs it, because the write-up is computed here.
+// Corpus rank: where a word sits in everyday English. Server-side only. Nothing
+// reads it at the moment; it is kept loaded for whatever wants it next.
 const CANDIDATES = [
   path.join(__dirname, '..', '..', 'data', 'word-frequency.txt'),
   path.join(process.cwd(), 'data', 'word-frequency.txt'),
@@ -21,7 +21,6 @@ export function loadFrequencies(): number {
     }
     return ranks.size;
   }
-  // Not fatal: without it the obscure award simply falls back to letter rarity.
   console.warn(`word-frequency.txt not found; looked in:\n  ${CANDIDATES.join('\n  ')}`);
   return 0;
 }

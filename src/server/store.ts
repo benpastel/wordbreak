@@ -4,7 +4,7 @@
 // a rewrite: the rules in src/shared stay pure, and the hub only ever talks to a Store.
 
 import type {
-  ChatMessage, ClaimRecord, GameState, MatchStats, Phase, Settings, Trophies,
+  ChatMessage, GameState, Phase, PlayedWord, Recap, Settings, Trophies,
 } from '../shared/types';
 
 export interface PlayerRecord {
@@ -32,10 +32,13 @@ export interface TableRecord {
   createdAt: number;
   /** Kept for the life of the table, across every match played at it. */
   chat: ChatMessage[];
-  /** Claims made in the match currently running, for the write-up at the end. */
-  log: ClaimRecord[];
-  /** The write-up for the last finished match. */
-  stats: MatchStats | null;
+  /** When the match currently running began. */
+  startedAt: number;
+  /** Claims made in the match currently running, keyed by claim id so a break can
+   *  find the word it took. Becomes the recap when the match ends. */
+  log: Map<string, PlayedWord>;
+  /** The last finished match. */
+  recap: Recap | null;
   /** When the agreed countdown fires, or null if nobody is waiting. */
   startsAt: number | null;
   /** The span that countdown covers, held so the clients can draw it. */

@@ -57,7 +57,7 @@ function findWord(game, { minLen = 2, maxLen = 9, mustInclude = null } = {}) {
   let best = null;
   const walk = (path, word) => {
     if (best) return;
-    if (word.length >= minLen && WORDS.has(word) && (!mustInclude || path.includes(mustInclude))) {
+    if (word.length >= minLen && WORDS.has(word) && (mustInclude === null || path.includes(mustInclude))) {
       best = [...path]; return;
     }
     if (word.length >= maxLen) return;
@@ -302,10 +302,17 @@ process.on('exit', stop);
       JSON.stringify(a2.table.players.map((p) => [p.name, p.trophies])));
     check('no claims survive into the ended state', a2.game.claims.length === 0);
     check('everyone is un-readied for the next one', a2.table.players.every((p) => !p.ready));
-    check('a write-up was produced', !!a2.table.stats && a2.table.stats.awards.length > 0,
-      JSON.stringify(a2.table.stats?.awards.map((x) => `${x.kind}:${x.word}`)));
-    check('awards name players actually at the table',
-      (a2.table.stats?.awards ?? []).every((x) => a2.table.players.some((p) => p.id === x.playerId)));
+    const recap = a2.table.recap;
+    check('a recap was produced', !!recap && recap.words.length > 0,
+      JSON.stringify(recap?.words.map((w) => w.word)));
+    check('the recap names players actually at the table',
+      (recap?.words ?? []).every((w) => a2.table.players.some((p) => p.id === w.playerId)));
+    check('recap words are in play order, within the match',
+      (recap?.words ?? []).every((w, i, ws) => w.at >= 0 && w.at <= recap.durationMs &&
+        (i === 0 || ws[i - 1].at <= w.at)));
+    if (longer) check('a broken word says who broke it',
+      (recap?.words ?? []).some((w) => w.brokenBy === b.id),
+      JSON.stringify(recap?.words.map((w) => `${w.word}:${w.brokenBy}`)));
     check('chat survived the match', a2.table.chat.length >= 2, String(a2.table.chat.length));
 
     section('rematch, on points this time');
@@ -329,7 +336,7 @@ process.on('exit', stop);
       JSON.stringify(kept));
     check('a points match carries no deadline', a2.game.endsAt === null, String(a2.game.endsAt));
     check('the board is fresh and empty of claims', a2.game.claims.length === 0);
-    check('the previous write-up was cleared', a2.table.stats === null);
+    check('the previous recap was cleared', a2.table.recap === null);
     check('chat still carries across into the new match', a2.table.chat.length >= 2);
   }
 

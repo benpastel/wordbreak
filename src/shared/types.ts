@@ -105,50 +105,21 @@ export function countdownFor(players: number): number {
   return players <= 1 ? 1_000 : 3_000;
 }
 
-export type AwardKind =
-  | 'longest'
-  | 'shortest'
-  | 'hardest'
-  | 'obscure'
-  | 'repeat'
-  /** Internal marker: an award suppressed for naming a word already shown. */
-  | 'duplicate'
-  | 'thief';
-
-/** Floors below which an award is not worth a line on the results screen. */
-export const REPEAT_THRESHOLD = 3;
-export const THIEF_THRESHOLD = 2;
-/** Tied holders all place, up to this many; past it the earliest to get there win. */
-export const MAX_TIED_AWARDS = 5;
-
-export interface Award {
-  kind: AwardKind;
+/** One claim as it happened, for the end-of-match timeline. */
+export interface PlayedWord {
   playerId: string;
   word: string;
-  /** What the word means, when we know it. The only thing shown beside an award
-   *  that the label and the word do not already say. */
+  /** Milliseconds after the match began. */
+  at: number;
+  /** Whoever broke it, which can be the player who claimed it. Null if it banked. */
+  brokenBy: string | null;
   definition?: string;
 }
 
-export interface BreakNote {
-  byPlayerId: string;
-  word: string;
-  overPlayerId: string;
-  overWord: string;
-}
-
-/** Everything worth saying about the match that just finished. */
-export interface MatchStats {
-  awards: Award[];
-  breaks: BreakNote[];
-}
-
-/** One claim as it happened, kept for the end-of-match write-up. */
-export interface ClaimRecord {
-  playerId: string;
-  word: string;
-  at: number;
-  broke: { playerId: string; word: string } | null;
+/** The match that just finished, word by word. */
+export interface Recap {
+  words: PlayedWord[];
+  durationMs: number;
 }
 
 export interface TableView {
@@ -160,8 +131,8 @@ export interface TableView {
   players: Player[];
   game: GameState | null;
   chat: ChatMessage[];
-  /** The write-up for the last finished match, kept until the next one starts. */
-  stats: MatchStats | null;
+  /** The last finished match, kept until the next one starts. */
+  recap: Recap | null;
   /** Set once the table has agreed to play; the board appears when it passes. */
   startsAt: number | null;
   /** How long that countdown runs in total, so the fill has a denominator. It
