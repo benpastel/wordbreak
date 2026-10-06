@@ -86,7 +86,10 @@ export class Hub {
       const id = rid(12);
       p = {
         id,
-        name: cleanName(name, 'player'),
+        // Nameless until they type one. The server inventing "player" here was
+        // what defeated the client's own requirement: it echoed that back in the
+        // welcome, which filled the field and satisfied the check guarding it.
+        name: cleanName(name, ''),
         color: 0,
         score: 0,
         trophies: noTrophies(),
@@ -132,7 +135,7 @@ export class Hub {
 
   createTable(playerId: string, name: string): void {
     const p = this.store.getPlayer(playerId);
-    if (!p) return;
+    if (!p || !p.name) return;
     this.leaveTable(playerId, { quiet: true });
 
     const t: TableRecord = {
@@ -162,10 +165,12 @@ export class Hub {
     this.joinTable(playerId, t.id);
   }
 
+  // Both ways in require a name. The client disables the controls too, but the rule
+  // belongs here: a seat with nobody's name on it is the thing we are preventing.
   joinTable(playerId: string, tableId: string): void {
     const p = this.store.getPlayer(playerId);
     const t = this.store.getTable(tableId);
-    if (!p) return;
+    if (!p || !p.name) return;
     if (!t) {
       this.send(playerId, { t: 'error', message: 'That table is gone.' });
       this.send(playerId, { t: 'left' });
