@@ -91,7 +91,7 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
           {ranked.map((p) => (
             <div
               key={p.id}
-              className={`recapwho c${p.color}${p.id === meId ? ' isme' : ''}${
+              className={`recapwho c${p.color}${
                 p.ready ? ' setgo' : ''
               }`}
               data-player={p.id}

@@ -14,13 +14,12 @@ const viewBoxOf = (size: number) => size + (size - 1) * GAP_RATIO;
 
 interface Props {
   table: TableView;
-  meId: string;
   fx: { seq: number; items: Fx[] };
   onClaim: (tileIds: number[]) => void;
   onLeave: () => void;
 }
 
-export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
+export default function Game({ table, fx, onClaim, onLeave }: Props) {
   const game = table.game!;
   const boardRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<number[]>([]);
@@ -257,7 +256,7 @@ export default function Game({ table, meId, fx, onClaim, onLeave }: Props) {
         {table.players.map((p) => (
           <div
             key={p.id}
-            className={`player c${p.color}${p.id === meId ? ' isme' : ''}${
+            className={`player c${p.color}${
               p.connected ? '' : ' gone'
             }`}
             data-player={p.id}
