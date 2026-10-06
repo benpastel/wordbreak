@@ -15,13 +15,11 @@ interface Props {
 }
 
 const GRID_CHOICES = Array.from({ length: MAX_GRID - MIN_GRID + 1 }, (_, k) => MIN_GRID + k);
-const HOLD_CHOICES = [10, 20, 30, 40, 60];
 const TIME_CHOICES = [3, 5, 10, 15];
 const POINT_CHOICES = [30, 50, 100, 200];
 const END_MODES: [EndMode, string][] = [
   ['time', 'by time'],
   ['points', 'by points'],
-  ['unlimited', 'unlimited'],
 ];
 
 /** One labelled row of mutually exclusive choices. Only the host can change them. */
@@ -234,13 +232,6 @@ export default function TableRoom({
             onPick={(targetScore) => onSettings({ targetScore })}
           />
         )}
-        <Setting
-          label="hold time"
-          value={s.holdMs}
-          choices={HOLD_CHOICES.map((sec): [number, string] => [sec * 1000, `${sec}s`])}
-          disabled={locked}
-          onPick={(holdMs) => onSettings({ holdMs })}
-        />
       </section>
 
       <section className="card linkrow">

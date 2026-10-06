@@ -11,13 +11,15 @@ export const MAX_GRID = 6;
 export const MAX_PLAYERS = 8;
 export const COLOR_COUNT = 8;
 
-export const MIN_HOLD_MS = 3_000;
-export const MAX_HOLD_MS = 60_000;
-export const DEFAULT_HOLD_MS = 30_000;
 export const DEFAULT_GRID = 5;
 
+/** How long a claim must survive to bank, by board size. Not a setting: a bigger
+ *  board has more letters to search for a word long enough to break with, so the
+ *  hold grows with it. */
+export const HOLD_MS: Record<number, number> = { 4: 13_000, 5: 18_000, 6: 26_000 };
+
 /** How a match finishes. */
-export type EndMode = 'time' | 'points' | 'unlimited';
+export type EndMode = 'time' | 'points';
 
 export const MIN_GAME_MS = 30_000;
 export const MAX_GAME_MS = 1_800_000;
@@ -63,7 +65,6 @@ export interface Player {
 
 export interface Settings {
   gridSize: number;
-  holdMs: number;
   endMode: EndMode;
   /** Used when endMode is 'time'. */
   gameMs: number;

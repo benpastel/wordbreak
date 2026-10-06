@@ -5,8 +5,8 @@
 
 import { drawLetter } from './letters';
 import {
-  MAX_GAME_MS, MAX_GRID, MAX_HOLD_MS, MAX_TARGET, MEDALS,
-  MIN_GAME_MS, MIN_GRID, MIN_HOLD_MS, MIN_TARGET,
+  DEFAULT_GRID, HOLD_MS, MAX_GAME_MS, MAX_GRID, MAX_TARGET, MEDALS,
+  MIN_GAME_MS, MIN_GRID, MIN_TARGET,
 } from './types';
 import type { Claim, EndMode, GameState, Medal, Settings, Tile } from './types';
 
@@ -181,14 +181,18 @@ export function claimsByPlayer(claims: Claim[]): Map<string, Claim[]> {
   return byPlayer;
 }
 
-const END_MODES: EndMode[] = ['time', 'points', 'unlimited'];
+const END_MODES: EndMode[] = ['time', 'points'];
+
+/** How long a claim on a board of this size must survive to bank. */
+export function holdMsFor(size: number): number {
+  return HOLD_MS[size] ?? HOLD_MS[DEFAULT_GRID];
+}
 
 /** The server's floor and ceiling on what a client may ask for. Bounds come from the
  *  shared constants so the lobby cannot offer a value this would reject, or vice versa. */
 export function clampSettings(s: Settings): Settings {
   return {
     gridSize: Math.max(MIN_GRID, Math.min(MAX_GRID, Math.round(s.gridSize))),
-    holdMs: Math.max(MIN_HOLD_MS, Math.min(MAX_HOLD_MS, Math.round(s.holdMs))),
     endMode: END_MODES.includes(s.endMode) ? s.endMode : 'points',
     gameMs: Math.max(MIN_GAME_MS, Math.min(MAX_GAME_MS, Math.round(s.gameMs))),
     targetScore: Math.max(MIN_TARGET, Math.min(MAX_TARGET, Math.round(s.targetScore))),

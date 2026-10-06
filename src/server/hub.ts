@@ -4,7 +4,7 @@
 
 import {
   COLOR_COUNT, countdownFor, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
-  DEFAULT_HOLD_MS, DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
+  DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
 } from '../shared/types';
 import type {
   Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
@@ -116,7 +116,6 @@ export class Hub {
       phase: 'lobby',
       settings: {
         gridSize: DEFAULT_GRID,
-        holdMs: DEFAULT_HOLD_MS,
         endMode: DEFAULT_END_MODE,
         gameMs: DEFAULT_GAME_MS,
         targetScore: DEFAULT_TARGET,
@@ -407,7 +406,7 @@ export class Hub {
       playerId,
       word,
       now,
-      t.settings.holdMs,
+      R.holdMsFor(game.size),
       `${t.id}-${t.claimSeq++}`,
     );
     for (const b of broken) {

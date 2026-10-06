@@ -380,7 +380,7 @@ function MatchStatus({ settings, endsAt }: { settings: Settings; endsAt: number 
   if (settings.endMode === 'points') {
     return <div className="clock target">first to {settings.targetScore}</div>;
   }
-  if (endsAt === null) return <div className="clock target">no limit</div>;
+  if (endsAt === null) return null;
 
   const total = Math.ceil(left / 1000);
   return (

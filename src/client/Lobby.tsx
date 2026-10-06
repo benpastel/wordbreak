@@ -53,10 +53,7 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
                   {t.playerCount}/8 · {t.settings.gridSize}×{t.settings.gridSize} ·{' '}
                   {t.settings.endMode === 'time'
                     ? `${Math.round(t.settings.gameMs / 60_000)} min`
-                    : t.settings.endMode === 'points'
-                      ? `${t.settings.targetScore} pts`
-                      : 'unlimited'}{' '}
-                  · {Math.round(t.settings.holdMs / 1000)}s hold
+                    : `${t.settings.targetScore} pts`}
                 </span>
                 <span className={`phase${t.phase === 'playing' ? ' on' : ''}`}>
                   {t.phase === 'playing' ? 'playing' : 'open'}
