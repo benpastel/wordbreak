@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
 import type { EndMode, Settings, TableView } from '../shared/types';
-import NameField from './NameField';
 import TableShell from './TableShell';
 
 interface Props {
@@ -15,14 +14,84 @@ interface Props {
   onLeave: () => void;
 }
 
+const GRID_CHOICES = Array.from({ length: MAX_GRID - MIN_GRID + 1 }, (_, k) => MIN_GRID + k);
 const HOLD_CHOICES = [10, 20, 30, 40, 60];
 const TIME_CHOICES = [3, 5, 10, 15];
 const POINT_CHOICES = [30, 50, 100, 200];
-const END_MODES: { mode: EndMode; label: string }[] = [
-  { mode: 'time', label: 'by time' },
-  { mode: 'points', label: 'by points' },
-  { mode: 'unlimited', label: 'unlimited' },
+const END_MODES: [EndMode, string][] = [
+  ['time', 'by time'],
+  ['points', 'by points'],
+  ['unlimited', 'unlimited'],
 ];
+
+/** One labelled row of mutually exclusive choices. Only the host can change them. */
+function Setting<T extends string | number>({
+  label,
+  value,
+  choices,
+  disabled,
+  onPick,
+}: {
+  label: string;
+  value: T;
+  choices: [T, string][];
+  disabled: boolean;
+  onPick: (v: T) => void;
+}) {
+  return (
+    <div className="setting">
+      <label>{label}</label>
+      <div className="segmented">
+        {choices.map(([v, text]) => (
+          <button
+            key={v}
+            className={value === v ? 'on' : ''}
+            disabled={disabled}
+            onClick={() => onPick(v)}
+          >
+            {text}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Your own name in the player list. Click it to rename yourself; Enter or leaving
+ *  the field keeps the change, Escape drops it. */
+function EditableName({ name, onSetName }: { name: string; onSetName: (n: string) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  if (draft === null) {
+    return (
+      <button className="name mine" onClick={() => setDraft(name)}>
+        {name}
+      </button>
+    );
+  }
+  const commit = () => {
+    const n = draft.trim();
+    if (n && n !== name) onSetName(n);
+    setDraft(null);
+  };
+  return (
+    <input
+      className="name"
+      value={draft}
+      autoFocus
+      maxLength={20}
+      spellCheck={false}
+      autoComplete="off"
+      aria-label="Your name"
+      onChange={(e) => setDraft(e.target.value)}
+      onFocus={(e) => e.currentTarget.select()}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') setDraft(null);
+      }}
+    />
+  );
+}
 
 export default function TableRoom({
   table,
@@ -36,7 +105,8 @@ export default function TableRoom({
 }: Props) {
   const [copied, setCopied] = useState(false);
   const me = table.players.find((p) => p.id === meId);
-  const isHost = table.hostId === meId;
+  const s = table.settings;
+  const locked = table.hostId !== meId;
   const taken = new Set(table.players.filter((p) => p.id !== meId).map((p) => p.color));
   const link = `${location.origin}${location.pathname}#/t/${table.id}`;
 
@@ -52,138 +122,86 @@ export default function TableRoom({
 
   return (
     <TableShell table={table} meId={meId} onReady={onReady} onChat={onChat} onLeave={onLeave}>
-      <h1 className="roomhead">{table.name}</h1>
-
       <section className="card">
-        <h2>players</h2>
         <ul className="seats">
           {table.players.map((p) => (
-            <li key={p.id} className={`seat c${p.color}${p.connected ? '' : ' gone'}`}>
+            <li
+              key={p.id}
+              className={`seat c${p.color}${p.connected ? '' : ' gone'}${p.ready ? ' setgo' : ''}`}
+            >
               <i className="dot" />
-              <span className="nm">{p.name}</span>
+              {p.id === meId ? (
+                <EditableName name={p.name} onSetName={onSetName} />
+              ) : (
+                <span className="name">{p.name}</span>
+              )}
               {p.id === table.hostId && <span className="badge">host</span>}
-              {p.ready && <span className="tick">ready</span>}
             </li>
           ))}
         </ul>
 
         {me && (
-          <div className="youare">
-            <NameField name={me.name} onSetName={onSetName} label="your name" />
-            <div className="colorpick">
-              <span>your colour</span>
-              <div className="swatches">
-                {Array.from({ length: COLOR_COUNT }, (_, c) => (
-                  <button
-                    key={c}
-                    className={`sw c${c}${me.color === c ? ' on' : ''}`}
-                    disabled={taken.has(c)}
-                    onClick={() => onColor(c)}
-                    title={taken.has(c) ? 'taken' : `colour ${c + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
+          <div className="swatches">
+            {Array.from({ length: COLOR_COUNT }, (_, c) => (
+              <button
+                key={c}
+                className={`sw c${c}${me.color === c ? ' on' : ''}`}
+                disabled={taken.has(c)}
+                onClick={() => onColor(c)}
+                title={taken.has(c) ? 'taken' : `colour ${c + 1}`}
+              />
+            ))}
           </div>
         )}
       </section>
 
       <section className="card">
-        <h2>settings {!isHost && <em>— host only</em>}</h2>
-
-        <div className="setting">
-          <label>board</label>
-          <div className="segmented">
-            {Array.from({ length: MAX_GRID - MIN_GRID + 1 }, (_, k) => MIN_GRID + k).map((n) => (
-              <button
-                key={n}
-                className={table.settings.gridSize === n ? 'on' : ''}
-                disabled={!isHost}
-                onClick={() => onSettings({ gridSize: n })}
-              >
-                {n}×{n}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="setting">
-          <label>ends</label>
-          <div className="segmented">
-            {END_MODES.map(({ mode, label }) => (
-              <button
-                key={mode}
-                className={table.settings.endMode === mode ? 'on' : ''}
-                disabled={!isHost}
-                onClick={() => onSettings({ endMode: mode })}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {table.settings.endMode === 'time' && (
-          <div className="setting">
-            <label>length</label>
-            <div className="segmented">
-              {TIME_CHOICES.map((m) => (
-                <button
-                  key={m}
-                  className={table.settings.gameMs === m * 60_000 ? 'on' : ''}
-                  disabled={!isHost}
-                  onClick={() => onSettings({ gameMs: m * 60_000 })}
-                >
-                  {m} min
-                </button>
-              ))}
-            </div>
-          </div>
+        <Setting
+          label="board"
+          value={s.gridSize}
+          choices={GRID_CHOICES.map((n): [number, string] => [n, `${n}×${n}`])}
+          disabled={locked}
+          onPick={(gridSize) => onSettings({ gridSize })}
+        />
+        <Setting
+          label="ends"
+          value={s.endMode}
+          choices={END_MODES}
+          disabled={locked}
+          onPick={(endMode) => onSettings({ endMode })}
+        />
+        {s.endMode === 'time' && (
+          <Setting
+            label="length"
+            value={s.gameMs}
+            choices={TIME_CHOICES.map((m): [number, string] => [m * 60_000, `${m} min`])}
+            disabled={locked}
+            onPick={(gameMs) => onSettings({ gameMs })}
+          />
         )}
-
-        {table.settings.endMode === 'points' && (
-          <div className="setting">
-            <label>target</label>
-            <div className="segmented">
-              {POINT_CHOICES.map((n) => (
-                <button
-                  key={n}
-                  className={table.settings.targetScore === n ? 'on' : ''}
-                  disabled={!isHost}
-                  onClick={() => onSettings({ targetScore: n })}
-                >
-                  {n} pts
-                </button>
-              ))}
-            </div>
-          </div>
+        {s.endMode === 'points' && (
+          <Setting
+            label="target"
+            value={s.targetScore}
+            choices={POINT_CHOICES.map((n): [number, string] => [n, `${n} pts`])}
+            disabled={locked}
+            onPick={(targetScore) => onSettings({ targetScore })}
+          />
         )}
-
-        <div className="setting">
-          <label>hold time</label>
-          <div className="segmented">
-            {HOLD_CHOICES.map((s) => (
-              <button
-                key={s}
-                className={table.settings.holdMs === s * 1000 ? 'on' : ''}
-                disabled={!isHost}
-                onClick={() => onSettings({ holdMs: s * 1000 })}
-              >
-                {s}s
-              </button>
-            ))}
-          </div>
-        </div>
+        <Setting
+          label="hold time"
+          value={s.holdMs}
+          choices={HOLD_CHOICES.map((sec): [number, string] => [sec * 1000, `${sec}s`])}
+          disabled={locked}
+          onPick={(holdMs) => onSettings({ holdMs })}
+        />
       </section>
 
-      <section className="card">
-        <h2>invite</h2>
-        <div className="linkrow">
-          <code>{link}</code>
-          <button className="ghost" onClick={copy}>
-            {copied ? 'copied' : 'copy'}
-          </button>
-        </div>
+      <section className="card linkrow">
+        <input readOnly value={link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} />
+        <button className="ghost" onClick={copy}>
+          {copied ? 'copied' : 'copy'}
+        </button>
       </section>
     </TableShell>
   );

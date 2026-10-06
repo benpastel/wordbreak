@@ -81,7 +81,6 @@ h2 {
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-soft); margin: 0 0 14px;
 }
-h2 em { font-style: normal; font-weight: 400; text-transform: none; letter-spacing: 0; }
 a { color: var(--ink-soft); text-underline-offset: 2px; }
 a:hover { color: var(--ink); }
 kbd {
@@ -97,7 +96,7 @@ code { font: 600 0.82em ui-monospace, SFMono-Regular, Menlo, monospace; }
    way a tile does, so the lobby and the board stop speaking different languages.
 
    Round still means something — it just no longer means "control". Pills are
-   passive labels (.phase, .badge, .tick, .toast) and circles are the colour dots
+   passive labels (.phase, .toast) and circles are the colour dots
    and the one deliberate round touch target, .readout .x. */
 button {
   font: inherit; cursor: pointer; border: 0; border-radius: var(--r-ctl);
@@ -219,31 +218,34 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .phase.playing { background: var(--ink); color: var(--ground); }
 
 /* ------------------------------------------------------------ table room */
-.roomhead { margin: 8px 0 20px; }
 .card {
   background: var(--tile-face); border-radius: 14px; padding: 20px 22px;
   box-shadow: var(--shadow-1), var(--shadow-2); margin-bottom: 16px;
 }
 .seats { list-style: none; padding: 0; margin: 0 0 4px; display: flex; flex-direction: column; gap: 9px; }
 .seat { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-.seat .nm { color: var(--pc); }
+.seat .name { color: var(--pc); }
 .seat.gone { opacity: 0.45; }
-.badge, .tick {
+/* A small tile rather than a pill, cut like every control on the page. */
+.badge {
   font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 2px 8px; border-radius: 999px; background: var(--tray); color: var(--ink-soft);
+  padding: 3px 8px; border-radius: var(--r-ctl); background: var(--tile-face); color: var(--ink-soft);
+  box-shadow: var(--shadow-1), var(--shadow-2);
 }
-.tick { background: oklch(0.9 0.06 148); color: oklch(0.45 0.12 148); }
 
-.youare {
-  display: flex; align-items: flex-end; gap: 30px; flex-wrap: wrap;
+/* Your own name: underlined as everywhere else it is you, and a click away from
+   being a field. The field keeps the same type so the row does not jump. */
+.seat .name.mine {
+  background: none; padding: 0; font-weight: 700; cursor: text; border-radius: 0;
+  text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px;
+}
+.seat .name.mine:active { transform: none; }
+.seat input.name { width: 15ch; font-weight: 700; padding: 2px 8px; margin: -3px 0 -3px -9px; }
+
+.swatches {
+  display: flex; flex-wrap: wrap; gap: 7px;
   margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline);
 }
-.colorpick { display: flex; flex-direction: column; gap: 9px; }
-.colorpick > span {
-  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-soft);
-}
-.swatches { display: flex; gap: 7px; padding-bottom: 9px; }
 .sw { width: 24px; height: 24px; border-radius: 50%; background: var(--pf); box-shadow: inset 0 0 0 2px var(--pc); }
 .sw.on { box-shadow: inset 0 0 0 3px var(--pc), 0 0 0 3px var(--ink); }
 
@@ -251,10 +253,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .setting label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); width: 82px; }
 
 .linkrow { display: flex; align-items: center; gap: 12px; }
-.linkrow code {
-  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  background: var(--tray); padding: 8px 13px; border-radius: 999px; color: var(--ink-soft);
-}
+.linkrow input { flex: 1; width: auto; min-width: 0; font-weight: 500; color: var(--ink-soft); text-overflow: ellipsis; }
 
 /* ------------------------------------------------------------ game */
 /* ---------------------------------------------------------------- play layout
@@ -471,7 +470,8 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   font-weight: 800; font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums;
 }
 .recapwho.isme .name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
-.recapwho.setgo .name::after {
+/* Ready, wherever a list of players is shown between matches. */
+.setgo > .name::after {
   content: '✓'; margin-left: 6px; font-size: 0.8em; color: oklch(0.55 0.13 148);
 }
 .recapscroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
