@@ -40,6 +40,20 @@
   --r-ctl: 7px;
   --r-ctl-lg: 9px;
 
+  /* Two type registers, because the same job was being done nine slightly
+     different ways — eight tracking values between 0.06em and 0.16em, at two
+     weights, all meaning "this is a label".
+
+       TILE   the letters and the words made of them. Heavy, upright, open.
+       LABEL  everything that names or frames something: headings, badges,
+              controls, players, settings.
+
+     Prose is the third register and has no token, because it takes the body
+     defaults untouched: chat, definitions and errors are the only text here a
+     person reads as sentences, and sentences are not shouted. */
+  --track-tile: 0.06em;
+  --track-label: 0.1em;
+
   /* "Yes, go" green — the ready button once you have said yes. */
   --go: oklch(0.55 0.12 148);
 
@@ -76,9 +90,12 @@ body {
 
 .app { min-height: 100%; display: flex; flex-direction: column; }
 
-h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+h1 {
+  font-size: 1.5rem; font-weight: 800; margin: 0;
+  text-transform: uppercase; letter-spacing: var(--track-tile);
+}
 h2 {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase;
   color: var(--ink-soft); margin: 0 0 14px;
 }
 a { color: var(--ink-soft); text-underline-offset: 2px; }
@@ -108,6 +125,7 @@ button:not(:disabled):active { transform: translateY(1px); }
 .primary {
   background: var(--ink); color: var(--ground);
   font-weight: 800; padding: 9px 20px; font-size: 0.9rem;
+  text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
 .primary.big { padding: 13px 28px; font-size: 1rem; border-radius: var(--r-ctl-lg); }
@@ -117,7 +135,8 @@ button:not(:disabled):active { transform: translateY(1px); }
 
 .ghost {
   background: var(--tile-face); color: var(--ink-soft);
-  font-weight: 600; padding: 8px 16px; font-size: 0.85rem;
+  font-weight: 700; padding: 8px 16px; font-size: 0.85rem;
+  text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
 .ghost:hover:not(:disabled) { color: var(--ink); box-shadow: var(--shadow-1), var(--shadow-lift); transform: translateY(-1px); }
@@ -135,6 +154,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .segmented button {
   background: var(--tile-face); color: var(--ink-soft);
   font-size: 0.82rem; font-weight: 700; padding: 6px 13px;
+  text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
 .segmented button.on { background: var(--ink); color: var(--ground); box-shadow: none; }
@@ -174,10 +194,13 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   display: flex; justify-content: space-between; align-items: flex-start;
   gap: 24px; flex-wrap: wrap; margin-bottom: 40px;
 }
-.tag { color: var(--ink-soft); font-size: 0.9rem; margin: 6px 0 0; max-width: 46ch; }
+.tag {
+  color: var(--ink-soft); font-size: 0.74rem; margin: 8px 0 0; max-width: 46ch;
+  font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label);
+}
 .namefield { display: flex; flex-direction: column; gap: 7px; align-items: flex-start; }
 .namefield span {
-  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: var(--track-label);
   text-transform: uppercase; color: var(--ink-soft);
 }
 .namefield input { width: 15ch; }
@@ -207,11 +230,14 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   box-shadow: var(--shadow-1), var(--shadow-2); color: var(--ink);
 }
 .tablerow:hover { box-shadow: var(--shadow-1), 0 4px 12px oklch(0.3 0.02 70 / 0.14); }
-.tname { font-weight: 700; flex: 1; }
+.tname { font-weight: 700; flex: 1; text-transform: uppercase; letter-spacing: var(--track-label); }
 .dots { display: flex; gap: 4px; }
-.meta { font-size: 0.78rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.meta {
+  font-size: 0.78rem; color: var(--ink-soft); font-variant-numeric: tabular-nums;
+  text-transform: uppercase; letter-spacing: var(--track-label);
+}
 .phase {
-  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 0.66rem; font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase;
   padding: 3px 9px; border-radius: 999px; background: var(--tray); color: var(--ink-soft);
 }
 /* Not `.phase.playing`: the other phase value is "lobby", and `class="phase lobby"`
@@ -229,7 +255,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .seat.gone { opacity: 0.45; }
 /* A small tile rather than a pill, cut like every control on the page. */
 .badge {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 0.64rem; font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase;
   padding: 3px 8px; border-radius: var(--r-ctl); background: var(--tile-face); color: var(--ink-soft);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
@@ -251,7 +277,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .sw.on { box-shadow: inset 0 0 0 3px var(--pc), 0 0 0 3px var(--ink); }
 
 .setting { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
-.setting label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); width: 82px; }
+.setting label { font-size: 0.72rem; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-soft); width: 82px; }
 
 .linkrow { display: flex; align-items: center; gap: 12px; }
 .linkrow input { flex: 1; width: auto; min-width: 0; font-weight: 500; color: var(--ink-soft); text-overflow: ellipsis; }
@@ -276,7 +302,8 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .leave {
   background: var(--tile-face); color: var(--ink-soft);
-  font-size: 0.78rem; font-weight: 600; padding: 6px 13px;
+  font-size: 0.78rem; font-weight: 700; padding: 6px 13px;
+  text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1); flex: none;
 }
 .leave:hover { color: var(--ink); }
@@ -368,14 +395,18 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   margin: 12px 0 0;
 }
 .readout .word {
-  font-weight: 800; font-size: calc(var(--cell) * 0.46); letter-spacing: 0.06em;
+  font-weight: 800; font-size: calc(var(--cell) * 0.46); letter-spacing: var(--track-tile);
   color: var(--ink-mute); line-height: 1;
 }
 .readout .word.real { color: var(--ink); }
-.readout .needs { font-size: 0.74rem; font-weight: 700; color: var(--ink-mute); }
+.readout .needs {
+  font-size: 0.74rem; font-weight: 700; color: var(--ink-mute);
+  text-transform: uppercase; letter-spacing: var(--track-label);
+}
 .readout .claim {
   background: var(--ink); color: var(--ground);
-  font-size: 0.82rem; font-weight: 700; padding: 7px 15px;
+  font-size: 0.82rem; font-weight: 800; padding: 7px 15px;
+  text-transform: uppercase; letter-spacing: var(--track-label);
   display: inline-flex; align-items: center; gap: 7px;
 }
 .readout .claim kbd { background: oklch(1 0 0 / 0.18); color: inherit; }
@@ -406,7 +437,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .claims { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
 .claims li {
   font-size: 0.78rem; font-weight: 800; line-height: 1.35;
-  text-transform: uppercase; letter-spacing: 0.07em; color: var(--pc);
+  text-transform: uppercase; letter-spacing: var(--track-tile); color: var(--pc);
 }
 .claims li.more { color: var(--ink-mute); letter-spacing: 0.16em; }
 .player .name { font-weight: 700; color: var(--pc); }
@@ -416,13 +447,13 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 
 /* ----------------------------------------------------- match clock & result */
 .clock {
-  font-size: 0.9rem; font-weight: 800; letter-spacing: 0.06em;
+  font-size: 0.9rem; font-weight: 800; letter-spacing: var(--track-tile);
   color: var(--ink-mute); font-variant-numeric: tabular-nums;
 }
 .clock.low { color: oklch(0.58 0.17 28); }
 .clock.target {
   color: var(--ink-soft); font-size: 0.76rem; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
+  letter-spacing: var(--track-label); text-transform: uppercase;
 }
 
 /* ------------------------------------------------------------ table shell
@@ -481,7 +512,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .recapword {
   position: absolute; left: 0; white-space: nowrap; line-height: 1; padding: 2px 0;
   font-size: 0.86rem; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--pc); cursor: default;
+  letter-spacing: var(--track-tile); color: var(--pc); cursor: default;
 }
 /* The word keeps its player's colour; the line through it is the breaker's. */
 .recapword .strike {
@@ -540,11 +571,24 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 
 .confetti { position: fixed; z-index: 70; pointer-events: none; will-change: transform, opacity; }
 
+/* Players read as labels wherever they are named — scoreboard, seats, timeline,
+   and the speaker on a chat line. The message beside that speaker does not: it is
+   the one thing here a person wrote to be read, so it keeps the prose register. */
+.seat .name,
+.player .name,
+.recapwho .name,
+.chatline b,
+.namefield input,
+.seat input.name {
+  text-transform: uppercase; letter-spacing: var(--track-label);
+}
+
 /* ------------------------------------------------------------ overlays */
 .netbar {
   position: fixed; top: 0; left: 0; right: 0; text-align: center;
   background: oklch(0.75 0.14 55); color: oklch(0.25 0.05 55);
-  font-size: 0.78rem; font-weight: 700; padding: 5px; z-index: 60;
+  font-size: 0.72rem; font-weight: 700; padding: 5px; z-index: 60;
+  text-transform: uppercase; letter-spacing: var(--track-label);
 }
 .toast {
   position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
