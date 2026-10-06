@@ -129,7 +129,6 @@ export default function TableRoom({
               key={p.id}
               className={`seat c${p.color}${p.connected ? '' : ' gone'}${p.ready ? ' setgo' : ''}`}
             >
-              <i className="dot" />
               {p.id === meId ? (
                 <EditableName name={p.name} onSetName={onSetName} />
               ) : (
