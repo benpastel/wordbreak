@@ -95,8 +95,15 @@ export interface ChatMessage {
 export const MAX_CHAT = 200;
 export const MAX_CHAT_LEN = 240;
 
-/** Seconds of warning between the table agreeing and the board appearing. */
-export const COUNTDOWN_MS = 5_000;
+/**
+ * Warning between the table agreeing and the board appearing.
+ *
+ * Playing alone there is nobody to wait for and nothing to brace against, so it is
+ * barely a pause. With company it is long enough to look up, and no longer.
+ */
+export function countdownFor(players: number): number {
+  return players <= 1 ? 1_000 : 3_000;
+}
 
 export type AwardKind =
   | 'longest'
@@ -157,6 +164,10 @@ export interface TableView {
   stats: MatchStats | null;
   /** Set once the table has agreed to play; the board appears when it passes. */
   startsAt: number | null;
+  /** How long that countdown runs in total, so the fill has a denominator. It
+   *  varies with the table size and cannot be re-derived once players come and go
+   *  mid-countdown, so it travels with startsAt rather than being recomputed. */
+  countdownMs: number | null;
 }
 
 export interface TableSummary {

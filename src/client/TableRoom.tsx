@@ -200,6 +200,7 @@ export default function TableRoom({
           waiting={table.players.filter((p) => p.connected && !p.ready).length}
           color={me?.color ?? 0}
           startsAt={table.startsAt}
+          countdownMs={table.countdownMs}
           onReady={onReady}
         />
       </div>

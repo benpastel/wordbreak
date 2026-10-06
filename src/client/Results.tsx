@@ -122,6 +122,7 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
           waiting={waiting}
           color={me?.color ?? 0}
           startsAt={table.startsAt}
+          countdownMs={table.countdownMs}
           onReady={onReady}
           idleLabel="ready for the next game"
         />

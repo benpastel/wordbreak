@@ -38,6 +38,8 @@ export interface TableRecord {
   stats: MatchStats | null;
   /** When the agreed countdown fires, or null if nobody is waiting. */
   startsAt: number | null;
+  /** The span that countdown covers, held so the clients can draw it. */
+  countdownMs: number | null;
 }
 
 export interface Store {

@@ -3,7 +3,7 @@
 // a fresh snapshot plus a few animation hints.
 
 import {
-  COLOR_COUNT, COUNTDOWN_MS, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
+  COLOR_COUNT, countdownFor, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
   DEFAULT_HOLD_MS, DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
 } from '../shared/types';
 import type {
@@ -131,6 +131,7 @@ export class Hub {
       log: [],
       stats: null,
       startsAt: null,
+      countdownMs: null,
     };
     this.store.putTable(t);
     this.joinTable(playerId, t.id);
@@ -239,11 +240,14 @@ export class Hub {
     const present = t.playerIds.map((id) => this.store.getPlayer(id)!).filter((x) => x?.connected);
     const agreed = present.length > 0 && present.every((x) => x.ready);
     if (agreed && t.startsAt === null) {
-      t.startsAt = Date.now() + COUNTDOWN_MS;
+      const ms = countdownFor(present.length);
+      t.startsAt = Date.now() + ms;
+      t.countdownMs = ms;
       this.clearStartTimer(t.id);
-      this.startTimers.set(t.id, setTimeout(() => this.start(t.hostId), COUNTDOWN_MS));
+      this.startTimers.set(t.id, setTimeout(() => this.start(t.hostId), ms));
     } else if (!agreed && t.startsAt !== null) {
       t.startsAt = null;
+      t.countdownMs = null;
       this.clearStartTimer(t.id);
     }
     this.store.putTable(t);
@@ -282,6 +286,7 @@ export class Hub {
     if (!t || t.phase === 'playing' || t.playerIds.length === 0) return;
     this.clearStartTimer(t.id);
     t.startsAt = null;
+    t.countdownMs = null;
     t.phase = 'playing';
     t.log = [];
     t.stats = null;
@@ -511,6 +516,7 @@ export class Hub {
       chat: t.chat,
       stats: t.stats,
       startsAt: t.startsAt,
+      countdownMs: t.countdownMs,
     };
   }
 

@@ -148,8 +148,10 @@ process.on('exit', stop);
   b.send({ t: 'setReady', ready: true });
   await sleep(150);
   check('all ready arms a countdown rather than starting', a.table.startsAt !== null);
-  check('the countdown is about five seconds',
-    Math.abs(a.table.startsAt - Date.now() - 5000) < 900, String(a.table.startsAt - Date.now()));
+  check('a two-player countdown is about three seconds',
+    Math.abs(a.table.startsAt - Date.now() - 3000) < 900, String(a.table.startsAt - Date.now()));
+  check('the span travels with it, so the fill has a denominator',
+    a.table.countdownMs === 3000, String(a.table.countdownMs));
   check('the board is not up yet', a.table.phase === 'lobby');
 
   b.send({ t: 'setReady', ready: false });
@@ -158,9 +160,10 @@ process.on('exit', stop);
   check('still not started', a.table.phase === 'lobby');
 
   b.send({ t: 'setReady', ready: true });
-  await sleep(5600);
+  await sleep(3600);
   check('the countdown starts the match', a.table.phase === 'playing');
   check('startsAt is cleared once it fires', a.table.startsAt === null);
+  check('and so is its span', a.table.countdownMs === null);
   check('board is 5x5', a.game?.grid.length === 25);
   check('a timed match carries a deadline', a.game.endsAt !== null && a.game.endsAt - Date.now() > 20_000);
   check('tile ids are unique', new Set(a.game.grid.map((t) => t.id)).size === 25);
@@ -318,7 +321,7 @@ process.on('exit', stop);
 
     a2.send({ t: 'setReady', ready: true });
     b.send({ t: 'setReady', ready: true });
-    await sleep(5600);
+    await sleep(3600);
     check('a new match started', a2.table.phase === 'playing', a2.table.phase);
     check('scores are back to zero', a2.table.players.every((p) => p.score === 0));
     check('trophies carried over',
@@ -353,7 +356,7 @@ process.on('exit', stop);
     check('the table switched to unlimited', a2.table.settings.endMode === 'unlimited');
     a2.send({ t: 'setReady', ready: true });
     b.send({ t: 'setReady', ready: true });
-    await sleep(5600);
+    await sleep(3600);
     check('an unlimited match started', a2.table.phase === 'playing', a2.table.phase);
     check('no deadline at all', a2.game.endsAt === null, String(a2.game.endsAt));
 
