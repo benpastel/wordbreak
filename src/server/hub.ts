@@ -125,7 +125,11 @@ export class Hub {
   setName(playerId: string, name: string): void {
     const p = this.store.getPlayer(playerId);
     if (!p) return;
-    p.name = cleanName(name, p.name);
+    // The field reports every keystroke so the lobby's controls can react to what
+    // is actually in the box, so most of what arrives here says nothing new.
+    const next = cleanName(name, p.name);
+    if (next === p.name) return;
+    p.name = next;
     this.store.putPlayer(p);
     if (p.tableId) this.pushTable(p.tableId, []);
     this.pushLobby();
