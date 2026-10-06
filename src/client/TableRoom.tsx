@@ -175,12 +175,17 @@ export default function TableRoom({
 
   return (
     <TableShell table={table} meId={meId} onReady={onReady} onChat={onChat} onLeave={onLeave}>
-      <section className="card">
-        <ul className="seats">
+      {/* Same frame the timeline uses: the people at this table across the top, the
+          match below it. Before the match that is the settings, after it is every
+          word played — so the two screens are one shape with different contents. */}
+      <section className="setup">
+        <div className="setuphead">
           {table.players.map((p) => (
-            <li
+            <div
               key={p.id}
-              className={`seat c${p.color}${p.connected ? '' : ' gone'}${p.ready ? ' setgo' : ''}`}
+              className={`setupwho c${p.color}${p.connected ? '' : ' gone'}${
+                p.ready ? ' setgo' : ''
+              }`}
             >
               {p.id === meId ? (
                 <>
@@ -194,51 +199,51 @@ export default function TableRoom({
                 </>
               )}
               {p.id === table.hostId && <span className="badge">host</span>}
-            </li>
+            </div>
           ))}
-        </ul>
-      </section>
+        </div>
 
-      <section className="card">
-        <Setting
-          label="board"
-          value={s.gridSize}
-          choices={GRID_CHOICES.map((n): [number, string] => [n, `${n}×${n}`])}
-          disabled={locked}
-          onPick={(gridSize) => onSettings({ gridSize })}
-        />
-        <Setting
-          label="ends"
-          value={s.endMode}
-          choices={END_MODES}
-          disabled={locked}
-          onPick={(endMode) => onSettings({ endMode })}
-        />
-        {s.endMode === 'time' && (
+        <div className="setupbody">
           <Setting
-            label="length"
-            value={s.gameMs}
-            choices={TIME_CHOICES.map((m): [number, string] => [m * 60_000, `${m} min`])}
+            label="board"
+            value={s.gridSize}
+            choices={GRID_CHOICES.map((n): [number, string] => [n, `${n}\u00d7${n}`])}
             disabled={locked}
-            onPick={(gameMs) => onSettings({ gameMs })}
+            onPick={(gridSize) => onSettings({ gridSize })}
           />
-        )}
-        {s.endMode === 'points' && (
           <Setting
-            label="target"
-            value={s.targetScore}
-            choices={POINT_CHOICES.map((n): [number, string] => [n, `${n} pts`])}
+            label="ends"
+            value={s.endMode}
+            choices={END_MODES}
             disabled={locked}
-            onPick={(targetScore) => onSettings({ targetScore })}
+            onPick={(endMode) => onSettings({ endMode })}
           />
-        )}
-      </section>
+          {s.endMode === 'time' && (
+            <Setting
+              label="length"
+              value={s.gameMs}
+              choices={TIME_CHOICES.map((m): [number, string] => [m * 60_000, `${m} min`])}
+              disabled={locked}
+              onPick={(gameMs) => onSettings({ gameMs })}
+            />
+          )}
+          {s.endMode === 'points' && (
+            <Setting
+              label="target"
+              value={s.targetScore}
+              choices={POINT_CHOICES.map((n): [number, string] => [n, `${n} pts`])}
+              disabled={locked}
+              onPick={(targetScore) => onSettings({ targetScore })}
+            />
+          )}
 
-      <section className="card linkrow">
-        <code>{link}</code>
-        <button className="ghost" onClick={copy}>
-          {copied ? 'copied' : 'copy'}
-        </button>
+          <div className="linkrow">
+            <code>{link}</code>
+            <button className="ghost" onClick={copy}>
+              {copied ? 'copied' : 'copy'}
+            </button>
+          </div>
+        </div>
       </section>
     </TableShell>
   );
