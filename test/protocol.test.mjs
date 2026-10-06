@@ -43,10 +43,13 @@ class Client {
 }
 
 /** Depth-first hunt for a real word on the board, optionally through a given cell. */
-/** The hold on the 4x4 board these tests play on. */
-const HOLD = 13_000;
+/** The server runs on its fast clock (see FAST_TIMING), so these are read off it
+ *  rather than assumed: the hold from the first claim, the countdown from the first
+ *  start. Nothing here should depend on the game's real durations. */
+let HOLD = 0;
+let COUNTDOWN = 0;
 /** Sleep until a claim has had time to bank, by its own clock. */
-const untilBanked = (claim) => sleep(Math.max(0, claim.banksAt - Date.now()) + 500);
+const untilBanked = (claim) => sleep(Math.max(0, claim.banksAt - Date.now()) + 200);
 
 function findWord(game, { minLen = 2, maxLen = 9, mustInclude = null } = {}) {
   const n = game.size;
@@ -78,7 +81,7 @@ function findWord(game, { minLen = 2, maxLen = 9, mustInclude = null } = {}) {
 const wordOf = (game, ids) => ids.map((id) => game.grid.find((t) => t.id === id).letter).join('');
 
 const server = spawn('node', ['dist/server/index.js'], {
-  env: { ...process.env, PORT: String(PORT) },
+  env: { ...process.env, PORT: String(PORT), WORDBREAK_FAST_CLOCK: '1' },
   stdio: 'ignore',
 });
 const stop = () => { try { server.kill(); } catch {} };
@@ -137,11 +140,11 @@ process.on('exit', stop);
   }
 
   section('settings and start');
-  // The smallest board, because it has the shortest hold and so the quickest banks.
-  a.send({ t: 'setSettings', settings: { gridSize: 4, endMode: 'time', gameMs: 45_000 } });
+  // Five minutes on the fast clock is five seconds.
+  a.send({ t: 'setSettings', settings: { gridSize: 4, endMode: 'time', gameMs: 300_000 } });
   await sleep(120);
   check('host can change settings', a.table.settings.gridSize === 4);
-  check('match length was accepted', a.table.settings.gameMs === 45_000);
+  check('match length was accepted', a.table.settings.gameMs === 300_000);
   check('end mode was accepted', a.table.settings.endMode === 'time');
   check('a fresh table defaults to points', b.lobby === undefined || true);
   b.send({ t: 'setSettings', settings: { gridSize: 6 } });
@@ -154,10 +157,10 @@ process.on('exit', stop);
   b.send({ t: 'setReady', ready: true });
   await sleep(150);
   check('all ready arms a countdown rather than starting', a.table.startsAt !== null);
-  check('a two-player countdown is about three seconds',
-    Math.abs(a.table.startsAt - Date.now() - 3000) < 900, String(a.table.startsAt - Date.now()));
-  check('the span travels with it, so the fill has a denominator',
-    a.table.countdownMs === 3000, String(a.table.countdownMs));
+  COUNTDOWN = a.table.countdownMs;
+  check('the span travels with it, so the fill has a denominator', COUNTDOWN > 0, String(COUNTDOWN));
+  check('startsAt is that span from when it armed',
+    a.table.startsAt - Date.now() <= COUNTDOWN, String(a.table.startsAt - Date.now()));
   check('the board is not up yet', a.table.phase === 'lobby');
 
   b.send({ t: 'setReady', ready: false });
@@ -166,12 +169,12 @@ process.on('exit', stop);
   check('still not started', a.table.phase === 'lobby');
 
   b.send({ t: 'setReady', ready: true });
-  await sleep(3600);
+  await sleep(COUNTDOWN + 200);
   check('the countdown starts the match', a.table.phase === 'playing');
   check('startsAt is cleared once it fires', a.table.startsAt === null);
   check('and so is its span', a.table.countdownMs === null);
   check('board is 4x4', a.game?.grid.length === 16);
-  check('a timed match carries a deadline', a.game.endsAt !== null && a.game.endsAt - Date.now() > 20_000);
+  check('a timed match carries a deadline', a.game.endsAt !== null && a.game.endsAt - Date.now() > 2_000);
   check('tile ids are unique', new Set(a.game.grid.map((t) => t.id)).size === 16);
 
   section('claiming and breaking');
@@ -182,7 +185,8 @@ process.on('exit', stop);
   check('claim registered', a.game.claims.length === 1);
   check('opponent sees it too', b.game.claims.length === 1);
   const claim = a.game.claims[0];
-  check('hold window follows the board size', claim.banksAt - claim.claimedAt === HOLD);
+  HOLD = claim.banksAt - claim.claimedAt;
+  check('a claim carries a hold', HOLD > 0, String(HOLD));
 
   b.send({ t: 'claim', tileIds: [claim.tileIds[0]] });
   await sleep(150);
@@ -242,18 +246,18 @@ process.on('exit', stop);
   {
     a2.send({ t: 'setSettings', settings: { gameMs: 600_000 } });
     await sleep(120);
-    check('settings cannot be changed mid-match', a2.table.settings.gameMs === 45_000);
+    check('settings cannot be changed mid-match', a2.table.settings.gameMs === 300_000);
     a2.send({ t: 'setReady', ready: true });
     await sleep(120);
     check('ready is ignored mid-match', a2.table.players.every((p) => !p.ready));
 
     // Give the trailing player something too, so the standings are not a walkover.
     const w = findWord(a2.game, { minLen: 3, maxLen: 5 });
-    if (w) { a2.send({ t: 'claim', tileIds: w }); await sleep(HOLD + 500); }
+    if (w) { a2.send({ t: 'claim', tileIds: w }); await sleep(HOLD + 200); }
 
     // Claim again with less than a hold time left, so it cannot possibly bank on its
     // own — the only way it can score is if the buzzer pays it out.
-    const untilLate = Math.max(0, a2.game.endsAt - Date.now() - 2500);
+    const untilLate = Math.max(0, a2.game.endsAt - Date.now() - HOLD / 2);
     if (untilLate > 0) {
       console.log(`  ..    waiting ${(untilLate / 1000).toFixed(1)}s to claim late`);
       await sleep(untilLate);
@@ -264,7 +268,7 @@ process.on('exit', stop);
     let lateWorth = 0;
     if (late) {
       a2.send({ t: 'claim', tileIds: late });
-      await sleep(250);
+      await sleep(100);
       const live = a2.game.claims.find((c) => c.playerId === savedId);
       if (live) {
         lateOwner = savedId;
@@ -274,7 +278,7 @@ process.on('exit', stop);
       }
     }
 
-    const waitMs = Math.max(0, a2.game.endsAt - Date.now()) + 1500;
+    const waitMs = Math.max(0, a2.game.endsAt - Date.now()) + 300;
     console.log(`  ..    waiting ${(waitMs / 1000).toFixed(1)}s for the clock`);
     await sleep(waitMs);
 
@@ -334,7 +338,7 @@ process.on('exit', stop);
 
     a2.send({ t: 'setReady', ready: true });
     b.send({ t: 'setReady', ready: true });
-    await sleep(3600);
+    await sleep(COUNTDOWN + 200);
     check('a new match started', a2.table.phase === 'playing', a2.table.phase);
     check('scores are back to zero', a2.table.players.every((p) => p.score === 0));
     check('trophies carried over',
@@ -352,7 +356,7 @@ process.on('exit', stop);
       const w = findWord(a2.game, { minLen: 3, maxLen: 6 });
       if (!w) break;
       a2.send({ t: 'claim', tileIds: w });
-      await sleep(HOLD + 400);
+      await sleep(HOLD + 200);
     }
     const top = Math.max(...a2.table.players.map((p) => p.score));
     check('someone reached the target', top >= 10, `top score ${top}`);

@@ -8,7 +8,7 @@ import type { WebSocket } from 'ws';
 import { loadDictionary } from './dictionary';
 import { loadDefinitions } from './definitions';
 import { loadFrequencies } from './frequency';
-import { Hub } from './hub';
+import { FAST_TIMING, Hub, REAL_TIMING } from './hub';
 import type { ClientMsg, ServerMsg } from '../shared/types';
 
 const PORT = Number(process.env.PORT) || 8080;
@@ -37,10 +37,13 @@ const wss = new WebSocketServer({ server, path: '/ws' });
 
 const sockets = new Map<string, WebSocket>();
 
+// Set only by the end-to-end test, so it can play whole matches in seconds.
+const timing = process.env.WORDBREAK_FAST_CLOCK === '1' ? FAST_TIMING : REAL_TIMING;
+
 const hub = new Hub((playerId, msg: ServerMsg) => {
   const ws = sockets.get(playerId);
   if (ws && ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
-});
+}, timing);
 
 wss.on('connection', (ws: WebSocket) => {
   let playerId: string | null = null;

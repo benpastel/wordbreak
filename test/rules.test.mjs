@@ -2,6 +2,7 @@
 import { createRequire } from 'node:module';
 import { section, check, equal, done } from './harness.mjs';
 const R = createRequire(import.meta.url)('../dist/shared/rules.js');
+const T = createRequire(import.meta.url)('../dist/shared/types.js');
 
 //   1 2 3      C A T
 //   4 5 6      S E D
@@ -80,6 +81,7 @@ section('settings are clamped to the offered range');
     clamp({ endMode: 'whenever' }).endMode === 'points');
   check('unlimited is no longer an end mode', clamp({ endMode: 'unlimited' }).endMode === 'points');
   equal('hold grows with the board', [4, 5, 6].map(R.holdMsFor), [13_000, 18_000, 26_000]);
+  equal('the countdown is a beat alone and longer with company', [1, 2, 8].map(T.countdownFor), [1_000, 3_000, 3_000]);
 }
 
 section('medals: standard competition ranking, and nothing for nothing');

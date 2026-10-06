@@ -33,6 +33,29 @@ function cleanName(raw: string, fallback: string): string {
   return n.length ? n : fallback;
 }
 
+/** Every real duration the hub waits on. */
+export interface Timing {
+  holdMs: (gridSize: number) => number;
+  countdownMs: (players: number) => number;
+  /** The real length of a timed match, given the length its settings ask for. */
+  gameMs: (asked: number) => number;
+}
+
+export const REAL_TIMING: Timing = {
+  holdMs: R.holdMsFor,
+  countdownMs: countdownFor,
+  gameMs: (asked) => asked,
+};
+
+/** For the end-to-end test, which would otherwise sit through real holds and real
+ *  match clocks. Every wait shrinks, but stays long enough for a websocket round
+ *  trip, so a hold is still something a second message can land inside. */
+export const FAST_TIMING: Timing = {
+  holdMs: () => 800,
+  countdownMs: () => 400,
+  gameMs: (asked) => asked / 60, // a minute of settings is a second of play
+};
+
 export class Hub {
   private store: Store = new MemoryStore();
   /** claimId -> pending bank. Cleared the moment a claim is broken, so a broken
@@ -43,7 +66,10 @@ export class Hub {
   /** tableId -> the pre-match countdown. */
   private startTimers = new Map<string, NodeJS.Timeout>();
 
-  constructor(private send: Send) {
+  constructor(
+    private send: Send,
+    private timing: Timing = REAL_TIMING,
+  ) {
     setInterval(() => this.reap(), 30_000).unref();
   }
 
@@ -239,7 +265,7 @@ export class Hub {
     const present = t.playerIds.map((id) => this.store.getPlayer(id)!).filter((x) => x?.connected);
     const agreed = present.length > 0 && present.every((x) => x.ready);
     if (agreed && t.startsAt === null) {
-      const ms = countdownFor(present.length);
+      const ms = this.timing.countdownMs(present.length);
       t.startsAt = Date.now() + ms;
       t.countdownMs = ms;
       this.clearStartTimer(t.id);
@@ -294,7 +320,7 @@ export class Hub {
     t.game = R.newGame(
       t.settings.gridSize,
       () => t.nextTileId++,
-      t.settings.endMode === 'time' ? Date.now() + t.settings.gameMs : null,
+      t.settings.endMode === 'time' ? Date.now() + this.timing.gameMs(t.settings.gameMs) : null,
     );
     for (const id of t.playerIds) {
       const p = this.store.getPlayer(id);
@@ -406,7 +432,7 @@ export class Hub {
       playerId,
       word,
       now,
-      R.holdMsFor(game.size),
+      this.timing.holdMs(game.size),
       `${t.id}-${t.claimSeq++}`,
     );
     for (const b of broken) {
