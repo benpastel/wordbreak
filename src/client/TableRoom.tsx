@@ -235,7 +235,7 @@ export default function TableRoom({
       </section>
 
       <section className="card linkrow">
-        <input readOnly value={link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} />
+        <code>{link}</code>
         <button className="ghost" onClick={copy}>
           {copied ? 'copied' : 'copy'}
         </button>
