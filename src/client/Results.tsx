@@ -3,7 +3,7 @@ import type { Award, AwardKind, Fx, TableView } from '../shared/types';
 import { burst } from './burst';
 import type { BurstKind } from './burst';
 import Chat from './Chat';
-import Countdown from './Countdown';
+import ReadyButton from './ReadyButton';
 import Trophies from './Trophies';
 
 const AWARD_LABEL: Record<AwardKind, string> = {
@@ -117,21 +117,14 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
       <Chat messages={table.chat} onSend={onChat} />
 
       <div className="readyrow">
-        {table.startsAt !== null ? (
-          <Countdown startsAt={table.startsAt} />
-        ) : (
-          <>
-            <span className="readystate">
-              {waiting === 1 ? '1 still deciding' : `${waiting} still deciding`}
-            </span>
-            <button
-              className={`primary big${me?.ready ? ' on' : ''}`}
-              onClick={() => onReady(!me?.ready)}
-            >
-              {me?.ready ? 'ready — waiting' : 'ready for the next game'}
-            </button>
-          </>
-        )}
+        <ReadyButton
+          ready={!!me?.ready}
+          waiting={waiting}
+          color={me?.color ?? 0}
+          startsAt={table.startsAt}
+          onReady={onReady}
+          idleLabel="ready for the next game"
+        />
       </div>
     </div>
   );

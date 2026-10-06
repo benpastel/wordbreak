@@ -6,6 +6,8 @@ interface Props {
   ready: boolean;
   /** Connected players who have not said yes yet. */
   waiting: number;
+  /** Your seat colour — the countdown fills the button in it, as if banking a tile. */
+  color: number;
   startsAt: number | null;
   onReady: (ready: boolean) => void;
   /** The table room asks you to start; the results screen asks you to go again. */
@@ -16,15 +18,22 @@ interface Props {
  * One control for the whole agreement, rather than a button that disappears and is
  * replaced by a countdown widget. It carries three states in place:
  *
- *   not ready        →  "I'm ready"
- *   ready, others not→  "waiting for 2 others"      (green)
- *   everyone agreed  →  "starting…" filling over 5s (green, sweeping)
+ *   not ready         →  "I'm ready"
+ *   ready, others not →  "waiting for 2 others"  (green)
+ *   everyone agreed   →  "starting…"             (a tile of yours, banking)
  *
  * It deliberately stays clickable while it fills. The server has always cancelled a
  * pending start when someone un-readies; swapping the button out for a countdown was
  * the only reason that was unreachable.
  */
-export default function ReadyButton({ ready, waiting, startsAt, onReady, idleLabel = "I'm ready" }: Props) {
+export default function ReadyButton({
+  ready,
+  waiting,
+  color,
+  startsAt,
+  onReady,
+  idleLabel = "I'm ready",
+}: Props) {
   const ref = useRef<HTMLButtonElement>(null);
   const counting = startsAt !== null;
 
@@ -57,7 +66,7 @@ export default function ReadyButton({ ready, waiting, startsAt, onReady, idleLab
   return (
     <button
       ref={ref}
-      className={`primary big${ready ? ' on' : ''}${counting ? ' filling' : ''}`}
+      className={`primary big c${color}${ready ? ' on' : ''}${counting ? ' filling' : ''}`}
       onClick={() => onReady(!ready)}
     >
       {label}

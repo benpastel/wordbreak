@@ -198,6 +198,7 @@ export default function TableRoom({
         <ReadyButton
           ready={!!me?.ready}
           waiting={table.players.filter((p) => p.connected && !p.ready).length}
+          color={me?.color ?? 0}
           startsAt={table.startsAt}
           onReady={onReady}
         />

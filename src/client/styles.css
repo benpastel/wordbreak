@@ -40,9 +40,8 @@
   --r-ctl: 7px;
   --r-ctl-lg: 9px;
 
-  /* "Yes, go" green — the ready button, and the countdown sweeping across it. */
+  /* "Yes, go" green — the ready button once you have said yes. */
   --go: oklch(0.55 0.12 148);
-  --go-deep: oklch(0.44 0.15 148);
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color-scheme: light;
@@ -141,21 +140,28 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .segmented button.on { background: var(--ink); color: var(--ground); box-shadow: none; }
 
-/* The start countdown runs inside the ready button instead of beside it, driven by
-   the same --p the board uses for a banking tile: a filling surface already means
-   "a timer is running, and when it lands this commits".
+/* The start countdown runs inside the ready button instead of beside it, and while
+   it runs the button IS a tile being banked: your own hue ring, your own fill
+   rising from the bottom over the paper face, the same --p and the same 1.5% soft
+   edge as .tile.claimed. Only the duration differs — five seconds here against the
+   table's hold time on the board.
 
-   Swept left to right rather than bottom to top. A tile is square and has the
-   height to read a rising fill; a 46px button does not, and across its width the
-   same five seconds are unmistakable. */
+   Set out exactly as .tile.claimed rather than shared with it, because the two will
+   not stay the same shape: a tile is square and sized off --cell, this is a control. */
 .primary.filling {
+  --ring: inset 0 0 0 3px var(--pc);
+  color: var(--ink);
   background:
-    linear-gradient(to right, var(--go-deep) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
-    var(--go);
+    linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    var(--tile-face);
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
 }
 /* It stays live while it fills — the server cancels the start if anyone un-readies,
    and this is the control that does it. */
-.primary.filling:hover:not(:disabled) { transform: none; box-shadow: var(--shadow-1), var(--shadow-2); }
+.primary.filling:hover:not(:disabled) {
+  transform: none;
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
+}
 
 .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--pc); display: inline-block; }
 
@@ -486,7 +492,6 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .breaks .by { font-size: 0.74rem; color: var(--ink-mute); }
 
 .readyrow { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
-.readystate { font-size: 0.78rem; color: var(--ink-mute); }
 
 /* ------------------------------------------------------------------- chat */
 .chat {
@@ -502,23 +507,6 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .chatline b { color: var(--pc); font-weight: 700; margin-right: 8px; }
 .chatbox { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--hairline); }
 .chatbox input { flex: 1; width: auto; font-weight: 500; box-shadow: none; background: var(--ground); }
-
-/* -------------------------------------------------------------- countdown */
-.countdown { display: flex; align-items: baseline; gap: 10px; }
-.countdown .num {
-  font-size: 2.1rem; font-weight: 800; color: var(--ink);
-  font-variant-numeric: tabular-nums; line-height: 1;
-  animation: tick 240ms cubic-bezier(.2,.9,.3,1);
-}
-.countdown .lab {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-mute);
-}
-@keyframes tick {
-  from { transform: scale(1.45); opacity: 0.35; }
-  to { transform: scale(1); opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) { .countdown .num { animation: none; } }
 
 /* --------------------------------------------------------------- trophies
    Playing pieces rather than icons: a domed disc with a lit top edge and a
