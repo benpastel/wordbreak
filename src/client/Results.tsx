@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Fx, TableView } from '../shared/types';
 import { burst } from './burst';
 import type { BurstKind } from './burst';
-import Chat from './Chat';
-import ReadyButton from './ReadyButton';
+import TableShell from './TableShell';
 import Trophies from './Trophies';
 
 /** Vertical pixels per second of play. */
@@ -34,9 +33,7 @@ interface Tip {
  * colour of whoever broke it.
  */
 export default function Results({ table, meId, fx, onReady, onChat, onLeave }: Props) {
-  const me = table.players.find((p) => p.id === meId);
   const ranked = [...table.players].sort((a, b) => b.score - a.score);
-  const waiting = table.players.filter((p) => p.connected && !p.ready).length;
   const popped = useRef(-1);
   const [tip, setTip] = useState<Tip | null>(null);
 
@@ -81,7 +78,14 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
   };
 
   return (
-    <div className="results">
+    <TableShell
+      table={table}
+      meId={meId}
+      onReady={onReady}
+      onChat={onChat}
+      onLeave={onLeave}
+      readyLabel="ready for the next game"
+    >
       <section className="recap">
         <div className="recaphead">
           {ranked.map((p) => (
@@ -125,23 +129,6 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
         </div>
       </section>
 
-      <Chat messages={table.chat} onSend={onChat} />
-
-      <div className="readybar">
-        <button className="leave" onClick={onLeave}>
-          leave
-        </button>
-        <ReadyButton
-          ready={!!me?.ready}
-          waiting={waiting}
-          color={me?.color ?? 0}
-          startsAt={table.startsAt}
-          countdownMs={table.countdownMs}
-          onReady={onReady}
-          idleLabel="ready for the next game"
-        />
-      </div>
-
       {tip && (
         <div
           className={`deftip${tip.above ? ' above' : ''}`}
@@ -150,6 +137,6 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
           {tip.text}
         </div>
       )}
-    </div>
+    </TableShell>
   );
 }

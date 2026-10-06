@@ -219,8 +219,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .phase.playing { background: var(--ink); color: var(--ground); }
 
 /* ------------------------------------------------------------ table room */
-.room { width: min(620px, 100%); margin: 0 auto; padding: 36px 24px 80px; }
-.roomhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+.roomhead { margin: 8px 0 20px; }
 .card {
   background: var(--tile-face); border-radius: 14px; padding: 20px 22px;
   box-shadow: var(--shadow-1), var(--shadow-2); margin-bottom: 16px;
@@ -256,7 +255,6 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   background: var(--tray); padding: 8px 13px; border-radius: 999px; color: var(--ink-soft);
 }
-.startrow { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 24px; }
 
 /* ------------------------------------------------------------ game */
 /* ---------------------------------------------------------------- play layout
@@ -427,17 +425,40 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   letter-spacing: 0.1em; text-transform: uppercase;
 }
 
-/* -------------------------------------------------------- between matches
-   The board is put away and the match is replayed as a timeline beside the chat,
-   with the ready button pinned along the bottom so it never scrolls away. */
-.results {
-  --readybar: 76px;
+/* ------------------------------------------------------------ table shell
+   Every screen at a table but the board: its own content, chat down the right,
+   and leave and ready pinned along the bottom so they never scroll away. */
+.shell {
+  --shellbar: 76px;
   height: 100dvh; width: min(100%, 1080px); margin: 0 auto;
-  padding: 12px 16px calc(var(--readybar) + 16px);
+  padding: 12px 16px calc(var(--shellbar) + 16px);
   display: grid; grid-template-columns: 1fr 300px; grid-template-rows: minmax(0, 1fr); gap: 16px;
 }
+/* Padded so the cards' shadows are not clipped by the scroll edge. */
+.shellmain {
+  min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; padding: 2px 6px 8px; margin: -2px -6px 0;
+}
+.shellbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  height: calc(var(--shellbar) + env(safe-area-inset-bottom, 0px));
+  padding: 0 16px env(safe-area-inset-bottom, 0px);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  background: var(--ground); border-top: 1px solid var(--hairline);
+}
+.shellbar .leave { justify-self: start; }
+
+@media (max-width: 760px) {
+  .shell { height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
+  .shellmain { overflow: visible; }
+  .shell .chatlog { flex: none; height: 220px; }
+}
+
+/* -------------------------------------------------------- between matches
+   The board is put away and the match is replayed as a timeline: a column per
+   player, each word at the moment it was found. */
 .recap {
-  background: var(--tile-face); border-radius: 14px; box-shadow: var(--shadow-1), var(--shadow-2);
+  flex: 1; background: var(--tile-face); border-radius: 14px; box-shadow: var(--shadow-1), var(--shadow-2);
   overflow: hidden; display: flex; flex-direction: column; min-height: 0;
 }
 /* Heads and columns share one padding and one flex split, so each name sits over
@@ -475,33 +496,19 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .deftip.above { transform: translateY(-100%); }
 
-.results .chat { min-height: 0; }
-.results .chatlog { height: auto; flex: 1; }
-
-.readybar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  height: calc(var(--readybar) + env(safe-area-inset-bottom, 0px));
-  padding: 0 16px env(safe-area-inset-bottom, 0px);
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-  background: var(--ground); border-top: 1px solid var(--hairline);
-}
-.readybar .leave { justify-self: start; }
-
 @media (max-width: 760px) {
-  .results { height: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
-  .recap { height: 70dvh; }
-  .results .chatlog { height: 220px; }
+  .recap { flex: none; height: 70dvh; }
 }
 
 /* ------------------------------------------------------------------- chat */
 .chat {
   background: var(--tile-face); border-radius: 14px;
   box-shadow: var(--shadow-1), var(--shadow-2); overflow: hidden;
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; min-height: 0;
 }
 .chatlog {
   padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain;
-  height: 168px; display: flex; flex-direction: column; gap: 5px;
+  flex: 1; display: flex; flex-direction: column; gap: 5px;
 }
 .chatline { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--ink); }
 .chatline b { color: var(--pc); font-weight: 700; margin-right: 8px; }

@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
 import type { EndMode, Settings, TableView } from '../shared/types';
 import NameField from './NameField';
-import Chat from './Chat';
-import ReadyButton from './ReadyButton';
+import TableShell from './TableShell';
 
 interface Props {
   table: TableView;
@@ -52,13 +51,8 @@ export default function TableRoom({
   };
 
   return (
-    <div className="room">
-      <header className="roomhead">
-        <h1>{table.name}</h1>
-        <button className="ghost" onClick={onLeave}>
-          leave
-        </button>
-      </header>
+    <TableShell table={table} meId={meId} onReady={onReady} onChat={onChat} onLeave={onLeave}>
+      <h1 className="roomhead">{table.name}</h1>
 
       <section className="card">
         <h2>players</h2>
@@ -191,19 +185,6 @@ export default function TableRoom({
           </button>
         </div>
       </section>
-
-      <Chat messages={table.chat} onSend={onChat} />
-
-      <div className="startrow">
-        <ReadyButton
-          ready={!!me?.ready}
-          waiting={table.players.filter((p) => p.connected && !p.ready).length}
-          color={me?.color ?? 0}
-          startsAt={table.startsAt}
-          countdownMs={table.countdownMs}
-          onReady={onReady}
-        />
-      </div>
-    </div>
+    </TableShell>
   );
 }
