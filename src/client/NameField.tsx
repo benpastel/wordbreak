@@ -32,6 +32,8 @@ export default function NameField({ name, onSetName, label = 'Name', big }: Prop
       <span>{label}</span>
       <input
         value={draft}
+        // Nothing can be done until this is filled, so it takes the caret.
+        autoFocus={!name}
         maxLength={20}
         spellCheck={false}
         autoComplete="off"

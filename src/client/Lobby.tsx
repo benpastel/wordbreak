@@ -10,6 +10,9 @@ interface Props {
 }
 
 export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Props) {
+  // Nothing at a table happens anonymously, so the name gates both ways in.
+  const named = name.trim().length > 0;
+
   return (
     <div className="lobby">
       <header className="lobbyhead">
@@ -26,18 +29,20 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
 
       <div className="tablehead">
         <h2>tables</h2>
-        <button className="primary" onClick={() => onCreate(`${name}'s table`)}>
+        <button
+          className="primary"
+          disabled={!named}
+          onClick={() => onCreate(`${name}'s table`)}
+        >
           new table
         </button>
       </div>
 
-      {tables.length === 0 ? (
-        <p className="empty">No tables yet — make one and send someone the link.</p>
-      ) : (
+      {tables.length > 0 && (
         <ul className="tablelist">
           {tables.map((t) => (
             <li key={t.id}>
-              <button className="tablerow" onClick={() => onJoin(t.id)}>
+              <button className="tablerow" disabled={!named} onClick={() => onJoin(t.id)}>
                 <span className="tname">{t.name}</span>
                 <span className="dots">
                   {t.players.map((p, i) => (
@@ -53,7 +58,9 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
                       : 'unlimited'}{' '}
                   · {Math.round(t.settings.holdMs / 1000)}s hold
                 </span>
-                <span className={`phase ${t.phase}`}>{t.phase === 'playing' ? 'playing' : 'open'}</span>
+                <span className={`phase${t.phase === 'playing' ? ' on' : ''}`}>
+                  {t.phase === 'playing' ? 'playing' : 'open'}
+                </span>
               </button>
             </li>
           ))}
