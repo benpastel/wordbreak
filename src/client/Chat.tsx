@@ -47,7 +47,6 @@ export default function Chat({
         <input
           value={draft}
           maxLength={MAX_CHAT_LEN}
-          placeholder="message the table"
           aria-label="Chat message"
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {

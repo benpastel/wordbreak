@@ -84,7 +84,6 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
       onReady={onReady}
       onChat={onChat}
       onLeave={onLeave}
-      readyLabel="ready for the next game"
     >
       <section className="recap">
         <div className="recaphead">

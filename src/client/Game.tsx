@@ -5,6 +5,7 @@ import * as S from '../shared/selection';
 import { isWord } from './dict';
 import { playBankFx } from './fx';
 import { serverTime } from './net';
+import { FLUSH } from './TableShell';
 import Trophies from './Trophies';
 
 const GAP_RATIO = 0.1; // must match --gap in styles.css
@@ -169,9 +170,6 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
     <div className="play">
       <div className="playtop">
         <MatchStatus settings={table.settings} endsAt={game.endsAt} />
-        <button className="leave" onClick={onLeave}>
-          leave
-        </button>
       </div>
 
       <div className="boardwrap" style={{ '--n': game.size } as React.CSSProperties}>
@@ -269,6 +267,13 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
             <ClaimList claims={claimsByPlayer.get(p.id) ?? []} max={maxWords} />
           </div>
         ))}
+      </div>
+
+      {/* The table screens' bar, with nothing to ready for mid-match. */}
+      <div className={FLUSH ? 'shellbar flush' : 'shellbar'}>
+        <button className="leave" onClick={onLeave}>
+          leave
+        </button>
       </div>
     </div>
   );

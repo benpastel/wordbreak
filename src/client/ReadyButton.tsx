@@ -11,8 +11,6 @@ interface Props {
   /** The span startsAt closes, sent by the server so the fill never guesses it. */
   countdownMs: number | null;
   onReady: (ready: boolean) => void;
-  /** The table room asks you to start; the results screen asks you to go again. */
-  idleLabel?: string;
 }
 
 /**
@@ -37,7 +35,6 @@ export default function ReadyButton({
   startsAt,
   countdownMs,
   onReady,
-  idleLabel = 'ready',
 }: Props) {
   const ref = useRef<HTMLButtonElement>(null);
   const counting = startsAt !== null;
@@ -62,11 +59,9 @@ export default function ReadyButton({
   // others" would flash there.
   const label = counting
     ? 'starting…'
-    : ready
-      ? waiting > 0
-        ? `waiting for ${waiting} ${waiting === 1 ? 'other' : 'others'}`
-        : 'ready'
-      : idleLabel;
+    : ready && waiting > 0
+      ? `waiting for ${waiting} ${waiting === 1 ? 'other' : 'others'}`
+      : 'ready';
 
   return (
     <button

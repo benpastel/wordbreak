@@ -3,14 +3,16 @@ import type { TableView } from '../shared/types';
 import Chat from './Chat';
 import ReadyButton from './ReadyButton';
 
+// EXPERIMENT: true lays the content and chat edge to edge, split by a rule, instead
+// of as two floating cards. Flip back to compare; the card styles are untouched.
+export const FLUSH = true;
+
 interface Props {
   table: TableView;
   meId: string;
   onReady: (r: boolean) => void;
   onChat: (text: string) => void;
   onLeave: () => void;
-  /** What the ready button says before you press it. */
-  readyLabel?: string;
   children: ReactNode;
 }
 
@@ -25,15 +27,14 @@ export default function TableShell({
   onReady,
   onChat,
   onLeave,
-  readyLabel,
   children,
 }: Props) {
   const me = table.players.find((p) => p.id === meId);
   return (
-    <div className="shell">
+    <div className={FLUSH ? 'shell flush' : 'shell'}>
       <div className="shellmain">{children}</div>
       <Chat messages={table.chat} onSend={onChat} />
-      <div className="shellbar">
+      <div className={FLUSH ? 'shellbar flush' : 'shellbar'}>
         <button className="leave" onClick={onLeave}>
           leave
         </button>
@@ -44,7 +45,6 @@ export default function TableShell({
           startsAt={table.startsAt}
           countdownMs={table.countdownMs}
           onReady={onReady}
-          idleLabel={readyLabel}
         />
       </div>
     </div>
