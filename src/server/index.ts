@@ -102,6 +102,15 @@ wss.on('connection', (ws: WebSocket) => {
       case 'chat':
         hub.chat(playerId, msg.text);
         break;
+      case 'addBot':
+        hub.addBot(playerId);
+        break;
+      case 'removeBot':
+        hub.removeBot(playerId, msg.botId);
+        break;
+      case 'setBotDifficulty':
+        hub.setBotDifficulty(playerId, msg.botId, msg.difficulty);
+        break;
     }
   });
 

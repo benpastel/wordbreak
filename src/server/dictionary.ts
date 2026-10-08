@@ -31,3 +31,8 @@ export function loadDictionary(): number {
 export function isWord(w: string): boolean {
   return words.has(w.toLowerCase());
 }
+
+/** Every word, lowercase. For the bots' word finder, which walks the board against it. */
+export function allWords(): ReadonlySet<string> {
+  return words;
+}

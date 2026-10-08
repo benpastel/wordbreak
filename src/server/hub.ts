@@ -10,6 +10,7 @@ import type {
   Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
 } from '../shared/types';
 import * as R from '../shared/rules';
+import { Brain } from './bot/brain';
 import { isWord } from './dictionary';
 import { define } from './definitions';
 import { MemoryStore } from './store';
@@ -18,6 +19,9 @@ import type { PlayerRecord, Store, TableRecord } from './store';
 type Send = (playerId: string, msg: ServerMsg) => void;
 
 const DISCONNECT_GRACE_MS = 120_000;
+/** How often the bots at a table look at the board. */
+const BOT_TICK_MS = 100;
+const DEFAULT_BOT_DIFFICULTY = 0.5;
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // no look-alikes, these end up in URLs
 
 function rid(n: number): string {
@@ -65,6 +69,9 @@ export class Hub {
   private endTimers = new Map<string, NodeJS.Timeout>();
   /** tableId -> the pre-match countdown. */
   private startTimers = new Map<string, NodeJS.Timeout>();
+  /** tableId -> the bots playing the current match, and what drives them. */
+  private brains = new Map<string, Map<string, Brain>>();
+  private botTickers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private send: Send,
@@ -82,6 +89,8 @@ export class Hub {
    *  wire up the socket in time to receive the welcome. */
   hello(existingId: string | null, name: string, bind: (playerId: string) => void): string {
     let p = existingId ? this.store.getPlayer(existingId) : undefined;
+    // Nobody signs in as a bot.
+    if (p?.bot) p = undefined;
     if (!p) {
       const id = rid(12);
       p = {
@@ -222,10 +231,12 @@ export class Hub {
         }
         t.game.claims = t.game.claims.filter((c) => c.playerId !== playerId);
       }
-      if (t.playerIds.length === 0) {
+      // Bots do not keep a table open, and never host one.
+      const humans = t.playerIds.filter((id) => !this.store.getPlayer(id)?.bot);
+      if (humans.length === 0) {
         this.destroyTable(t);
       } else {
-        if (t.hostId === playerId) t.hostId = t.playerIds[0];
+        if (t.hostId === playerId) t.hostId = humans[0];
         this.store.putTable(t);
         this.pushTable(t.id, []);
       }
@@ -246,6 +257,89 @@ export class Hub {
     this.store.putTable(t);
     this.pushTable(t.id, []);
     this.pushLobby();
+  }
+
+  // -------------------------------------------------------------------- bots
+
+  /** The host seats a bot. It is always ready, so it never holds up a start. */
+  addBot(playerId: string): void {
+    const t = this.tableOf(playerId);
+    if (!t || t.hostId !== playerId || t.phase === 'playing') return;
+    if (t.playerIds.length >= MAX_PLAYERS) return;
+    const others = t.playerIds.filter((id) => this.store.getPlayer(id)?.bot).length;
+    const bot: PlayerRecord = {
+      id: rid(12),
+      name: others ? `bot ${others + 1}` : 'bot',
+      color: this.freeColor(t),
+      score: 0,
+      trophies: noTrophies(),
+      connected: true,
+      ready: true,
+      tableId: t.id,
+      lastSeen: Date.now(),
+      bot: { difficulty: DEFAULT_BOT_DIFFICULTY, seed: Math.floor(Math.random() * 2 ** 31) },
+    };
+    this.store.putPlayer(bot);
+    t.playerIds.push(bot.id);
+    this.store.putTable(t);
+    this.pushTable(t.id, []);
+    this.pushLobby();
+  }
+
+  removeBot(playerId: string, botId: string): void {
+    const t = this.tableOf(playerId);
+    const bot = this.store.getPlayer(botId);
+    if (!t || t.hostId !== playerId || t.phase === 'playing') return;
+    if (!bot?.bot || bot.tableId !== t.id) return;
+    this.leaveTable(botId, { quiet: true });
+    this.store.deletePlayer(botId);
+    this.pushLobby();
+  }
+
+  setBotDifficulty(playerId: string, botId: string, difficulty: number): void {
+    const t = this.tableOf(playerId);
+    const bot = this.store.getPlayer(botId);
+    if (!t || t.hostId !== playerId || t.phase === 'playing') return;
+    if (!bot?.bot || bot.tableId !== t.id || !Number.isFinite(difficulty)) return;
+    bot.bot = { ...bot.bot, difficulty: Math.max(0, Math.min(1, difficulty)) };
+    this.store.putPlayer(bot);
+    this.pushTable(t.id, []);
+  }
+
+  /** A fresh mind for each bot at the start of every match, all driven by one timer. */
+  private startBots(t: TableRecord): void {
+    this.stopBots(t.id);
+    const brains = new Map<string, Brain>();
+    for (const id of t.playerIds) {
+      const p = this.store.getPlayer(id);
+      if (p?.bot) brains.set(id, new Brain(id, p.bot.difficulty, p.bot.seed));
+    }
+    if (!brains.size) return;
+    this.brains.set(t.id, brains);
+    let last = Date.now();
+    const ticker = setInterval(() => {
+      const now = Date.now();
+      const dt = now - last;
+      last = now;
+      const cur = this.store.getTable(t.id);
+      if (!cur || cur.phase !== 'playing' || !cur.game) {
+        this.stopBots(t.id);
+        return;
+      }
+      for (const [id, brain] of brains) {
+        if (cur.phase !== 'playing' || !cur.game) return;
+        const action = brain.tick(cur.game, now, dt);
+        if (action) this.claim(id, action.tileIds);
+      }
+    }, BOT_TICK_MS);
+    this.botTickers.set(t.id, ticker);
+  }
+
+  private stopBots(tableId: string): void {
+    const ticker = this.botTickers.get(tableId);
+    if (ticker) clearInterval(ticker);
+    this.botTickers.delete(tableId);
+    this.brains.delete(tableId);
   }
 
   setColor(playerId: string, color: number): void {
@@ -342,6 +436,7 @@ export class Hub {
     if (t.game.endsAt !== null) this.scheduleEnd(t.id, t.game.endsAt);
     else this.clearEndTimer(t.id);
     this.store.putTable(t);
+    this.startBots(t);
     this.pushTable(t.id, []);
     this.pushLobby();
   }
@@ -367,6 +462,7 @@ export class Hub {
     this.endTimers.delete(tableId);
     const t = this.store.getTable(tableId);
     if (!t || t.phase !== 'playing' || !t.game) return;
+    this.stopBots(tableId);
 
     for (const c of t.game.claims) {
       this.clearTimer(c.id);
@@ -390,7 +486,7 @@ export class Hub {
       if (!p) continue;
       const medal = medals[id];
       if (medal) p.trophies = { ...p.trophies, [medal]: p.trophies[medal] + 1 };
-      p.ready = false;
+      p.ready = !!p.bot;
       this.store.putPlayer(p);
     }
 
@@ -527,6 +623,9 @@ export class Hub {
     for (const c of t.game?.claims ?? []) this.clearTimer(c.id);
     this.clearEndTimer(t.id);
     this.clearStartTimer(t.id);
+    this.stopBots(t.id);
+    // Bots exist only at their table.
+    for (const id of t.playerIds) if (this.store.getPlayer(id)?.bot) this.store.deletePlayer(id);
     this.store.deleteTable(t.id);
   }
 
@@ -541,6 +640,7 @@ export class Hub {
       trophies: p.trophies,
       connected: p.connected,
       ready: p.ready,
+      ...(p.bot ? { bot: { difficulty: p.bot.difficulty } } : {}),
     };
   }
 

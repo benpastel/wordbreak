@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { COLOR_COUNT, MAX_GRID, MIN_GRID } from '../shared/types';
+import { COLOR_COUNT, MAX_GRID, MAX_PLAYERS, MIN_GRID } from '../shared/types';
 import type { EndMode, Settings, TableView } from '../shared/types';
 import TableShell from './TableShell';
 
@@ -9,6 +9,9 @@ interface Props {
   onSetName: (n: string) => void;
   onSettings: (s: Partial<Settings>) => void;
   onColor: (c: number) => void;
+  onAddBot: () => void;
+  onRemoveBot: (botId: string) => void;
+  onBotDifficulty: (botId: string, difficulty: number) => void;
   onReady: (r: boolean) => void;
   onChat: (text: string) => void;
   onLeave: () => void;
@@ -52,6 +55,39 @@ function Setting<T extends string | number>({
         ))}
       </div>
     </div>
+  );
+}
+
+/** A bot's difficulty, from extremely easy at the left to extremely hard at the right.
+ *  Held locally while dragging, so the thumb does not jump back between the server
+ *  echoing each step. */
+function BotLevel({
+  difficulty,
+  disabled,
+  onPick,
+}: {
+  difficulty: number;
+  disabled: boolean;
+  onPick: (d: number) => void;
+}) {
+  const [draft, setDraft] = useState<number | null>(null);
+  return (
+    <input
+      type="range"
+      className="botlevel"
+      min={0}
+      max={100}
+      value={draft ?? Math.round(difficulty * 100)}
+      disabled={disabled}
+      aria-label="Bot difficulty"
+      onChange={(e) => {
+        const v = Number(e.target.value);
+        setDraft(v);
+        onPick(v / 100);
+      }}
+      onPointerUp={() => setDraft(null)}
+      onBlur={() => setDraft(null)}
+    />
   );
 }
 
@@ -153,6 +189,9 @@ export default function TableRoom({
   onSetName,
   onSettings,
   onColor,
+  onAddBot,
+  onRemoveBot,
+  onBotDifficulty,
   onReady,
   onChat,
   onLeave,
@@ -199,8 +238,25 @@ export default function TableRoom({
                 </>
               )}
               {p.id === table.hostId && <span className="badge">host</span>}
+              {p.bot && (
+                <BotLevel
+                  difficulty={p.bot.difficulty}
+                  disabled={locked}
+                  onPick={(d) => onBotDifficulty(p.id, d)}
+                />
+              )}
+              {p.bot && !locked && (
+                <button className="botout" aria-label={`Remove `} onClick={() => onRemoveBot(p.id)}>
+                  ×
+                </button>
+              )}
             </div>
           ))}
+          {!locked && table.players.length < MAX_PLAYERS && (
+            <button className="ghost addbot" onClick={onAddBot}>
+              add bot
+            </button>
+          )}
         </div>
 
         <div className="setupbody">

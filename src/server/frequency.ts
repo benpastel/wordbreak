@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Corpus rank: where a word sits in everyday English. Server-side only. Nothing
-// reads it at the moment; it is kept loaded for whatever wants it next.
+// Corpus rank: where a word sits in everyday English. Server-side only. The bots use
+// it to decide which words they know and how quickly they spot them.
 const CANDIDATES = [
   path.join(__dirname, '..', '..', 'data', 'word-frequency.txt'),
   path.join(process.cwd(), 'data', 'word-frequency.txt'),

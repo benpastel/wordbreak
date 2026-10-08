@@ -61,6 +61,8 @@ export interface Player {
   trophies: Trophies;
   connected: boolean;
   ready: boolean;
+  /** Set only for a bot: how hard it plays, 0 (extremely easy) to 1 (extremely hard). */
+  bot?: { difficulty: number };
 }
 
 export interface Settings {
@@ -179,6 +181,9 @@ export type ClientMsg =
   | { t: 'setReady'; ready: boolean }
   | { t: 'start' }
   | { t: 'claim'; tileIds: number[] }
+  | { t: 'addBot' }
+  | { t: 'removeBot'; botId: string }
+  | { t: 'setBotDifficulty'; botId: string; difficulty: number }
   | { t: 'chat'; text: string };
 
 export type ServerMsg =

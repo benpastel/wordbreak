@@ -374,6 +374,66 @@ process.on('exit', stop);
   await sleep(250);
   check('the empty table is cleaned up', !a2.lobby.some((t) => t.id === tableId));
 
+  section('bots');
+  {
+    const h = new Client('host');
+    const g = new Client('guest');
+    await h.connect();
+    await g.connect();
+    h.send({ t: 'createTable', name: 'with bots' });
+    await sleep(150);
+    g.send({ t: 'joinTable', tableId: h.table.id });
+    await sleep(150);
+
+    h.send({ t: 'addBot' });
+    h.send({ t: 'addBot' });
+    g.send({ t: 'addBot' });
+    await sleep(200);
+    const bots = () => h.table.players.filter((p) => p.bot);
+    check('the host can seat bots, and only the host', bots().length === 2, String(bots().length));
+    check('a bot starts in the middle', bots().every((p) => p.bot.difficulty === 0.5));
+    check('a bot is ready from the start', bots().every((p) => p.ready));
+    check('bots take their own colours',
+      new Set(h.table.players.map((p) => p.color)).size === h.table.players.length);
+
+    const [hard, spare] = bots();
+    g.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 0 });
+    h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 7 });
+    h.send({ t: 'removeBot', botId: spare.id });
+    await sleep(200);
+    check('difficulty is clamped, and only the host sets it',
+      bots()[0].bot.difficulty === 1, JSON.stringify(bots().map((p) => p.bot)));
+    check('the host can remove a bot', bots().length === 1 && bots()[0].id === hard.id);
+
+    const asBot = new Client('impostor');
+    await asBot.connect(hard.id);
+    check('nobody can sign in as a bot', asBot.id !== hard.id);
+    asBot.close();
+
+    h.send({ t: 'setSettings', settings: { endMode: 'time', gameMs: 180_000 } });
+    await sleep(100);
+    h.send({ t: 'setReady', ready: true });
+    g.send({ t: 'setReady', ready: true });
+    await sleep(COUNTDOWN + 300);
+    check('the humans readying is enough to start', h.table.phase === 'playing', h.table.phase);
+    for (let i = 0; i < 50 && h.table.phase === 'playing'; i++) await sleep(100);
+    check('the match ended', h.table.phase === 'ended', h.table.phase);
+    const played = (h.table.recap?.words ?? []).filter((w) => w.playerId === hard.id);
+    check('the bot played real words', played.length > 0 && played.every((w) => WORDS.has(w.word)),
+      played.map((w) => w.word).join(' '));
+    check('the bot is ready again for the next match', bots()[0].ready);
+
+    const botTable = h.table.id;
+    h.send({ t: 'leaveTable' });
+    await sleep(150);
+    check('the host leaving hands the table to a human, not a bot',
+      g.table.hostId === g.id, g.table.hostId);
+    g.send({ t: 'leaveTable' });
+    await sleep(250);
+    check('bots alone do not keep a table open', !h.lobby.some((t) => t.id === botTable));
+    h.close(); g.close();
+  }
+
   a2.close(); b.close();
   done();
   stop();

@@ -98,3 +98,18 @@ BSD-style, commercial use permitted).
 Remaining entries are from Webster's Unabridged Dictionary (1913), which is in
 the public domain, via [ssvivian/WebstersDictionary](https://github.com/ssvivian/WebstersDictionary)
 (MIT).
+
+## `bot-short-words.txt`
+
+The two- and three-letter words an ordinary player would think of. The bots rank
+words by `word-frequency.txt`, but that corpus is film subtitles, where names
+(LEE, ANA), noises (UH, HMM) and abbreviations (SEC, BIO) rank alongside everyday
+words; short words are where those collect, and short words are what bots play
+most. A bot knows a short word off this list only rarely, and only near the top of
+the difficulty range. Hand-kept.
+
+## `bot-blocked-words.txt`
+
+Slurs and crude words no bot ever plays, whatever its vocabulary. ENABLE includes
+them, and players are still free to play them; a bot doing it would read as the
+game being rude. Hand-kept, with inflections spelled out.

@@ -17,6 +17,8 @@ export interface PlayerRecord {
   ready: boolean;
   tableId: string | null;
   lastSeen: number;
+  /** Set only for a bot. Its seed fixes its vocabulary for as long as it exists. */
+  bot?: { difficulty: number; seed: number };
 }
 
 export interface TableRecord {

@@ -1,0 +1,19 @@
+# Words a bot never plays, whatever its vocabulary: slurs, and crude words that would
+# read as the bot being rude. Players can still play anything in the dictionary.
+chink chinks coolie coolies coon coons dago dagos dagoes darkey darkeys darkie
+darkies darky fag fags faggot faggots fagot fagots gook gooks greaseball
+greaseballs gringo gringos gyp gyps gypped gypping honkey honkeys honkie honkies
+honky hymie hymies jap japs jigaboo jigaboos kike kikes kraut krauts negro negroes
+nigger niggers paddy paddies picaninny picaninnies pickaninny pickaninnies redskin
+redskins sheeny sheenies spic spics spick spicks spik spiks squaw squaws wetback
+wetbacks whitey whiteys wop wops yid yids homo homos dyke dykes poof poofs pouf
+poufs poove pooves nance nances retard retards retarded tranny trannies
+slut sluts slutty whore whores cunt cunts twat twats shit shits shat shitty shitted
+shitting bullshit horseshit crap craps crappy turd turds cock cocks pussy pussies
+tit tits titty titties cum cums ass asses arse arses piss pissed pisses pissing
+fuck fucks fucked fucker fuckers fucking dick dicks prick pricks wank wanks wanked
+wanker wankers bitch bitches bitchy bastard bastards dildo dildos pecker peckers
+boob boobs boobies booby
+bint bints heil heils boche boches mick micks papist papists shiksa shiksas shikse
+shikses shegetz marrano marranos mammy mammies pommy pommies greaser greasers
+paleface palefaces wog wogs golliwog golliwogs spaz spazzes

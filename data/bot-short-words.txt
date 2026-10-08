@@ -1,0 +1,30 @@
+# Two- and three-letter words an ordinary player would recognise and play. Bots know
+# short words outside this list only rarely, and only at high difficulty: the corpus
+# that ranks words by frequency is film subtitles, where names (LEE, ANA), noises
+# (UH, HMM) and abbreviations (SEC, BIO) rank as high as real everyday words.
+to it of is in we me he my on do no be so go if up at oh as an us or by am ok hi
+ah ma ha ya yo ow aw ho pa ex ye lo ox ax pi
+you the and for was not are can but all get she out him now one her how got see
+did who why let his yes had our man say hey has too way off any two sir day god won
+put new guy old big lot dad may bad ask own car son try mom boy job saw bit yet men
+use run end few ago die sit eat pay kid far its hit fun set cut war met wow bye buy
+gun bed dog six hot red top win air ten sex lie bet mad eye act law age bag ran sun
+box key bar sea fix tea ice sad fly mum art cry cop cat bus rid owe fat yep fit gay
+low arm gas leg sky ray pop van lay beg hat due cup nor doc bro oil dry lab tie joy
+fan add pig pal wet dig ill ate led map per odd sat rat rob ear tip egg cow cab eve
+row pie pot sin spy hug pen fed bay bow shy jay bud rip gym pee mix fox tax bat cap
+lad toy bug pet aim pit mud pat hid kit hop pin jet aid jam tap pro net raw pan bee
+lap rub hip log pub bid boo web nut zoo con tag ram ash fee gut ace nap ham lit hut
+mob gig lip inn bin gum rap era ton tin sum wee dug cam tub fry rod bra rot fur gin
+toe ego tan den ink fog flu jar ivy gal rig sub dot dip oak dam pad cue wig wax mug
+gap peg rum ski vet nun zip rug jaw vow sip lid ant ape tab hen hum gag wit sew rag
+tow rib ban ark app mat bun sly yum fin gem hog ale ups mop elf nod pow tad dye woe
+dim sod cub cod pry arc zen icy pep paw hag pea tee moo jab sow err mid foe nag jog
+tar awe nip par rim tug urn dew sap zap jug pup abs rye rut ore pun duo jag eel hub
+tux keg orb sob bog cot ref mow fig yak din amp fad coy apt elk wad ion ado vat dud
+pew fir lag lug elm lax bot oaf yam nil jig hem roe zed boa gab coo hoe yap hex sax
+sac hue dub oar dab fro vex wiz tot wag fib ohm cog ode wok sag zig opt imp ply wry
+ebb sty oat ewe nit emu ilk orc ire sop tun asp eke hew ail ism irk gnu awl kin doe
+hay spa pod owl fax sis wed goo gel pip aft mar bop rev vie pug baa tic mod pus nix
+koi caw cob jot zit mew lob bib fob lop lye lox nub yew fop zag jut yaw eon hob vim
+nib cud uke via rue soy nay wan loo rad maw pox

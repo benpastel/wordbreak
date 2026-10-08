@@ -127,6 +127,10 @@ export default function App() {
       ready: (r: boolean) => send({ t: 'setReady', ready: r }),
       claim: (tileIds: number[]) => send({ t: 'claim', tileIds }),
       chat: (text: string) => send({ t: 'chat', text }),
+      addBot: () => send({ t: 'addBot' }),
+      removeBot: (botId: string) => send({ t: 'removeBot', botId }),
+      botDifficulty: (botId: string, difficulty: number) =>
+        send({ t: 'setBotDifficulty', botId, difficulty }),
     }),
     [send],
   );
@@ -166,6 +170,9 @@ export default function App() {
         onSetName={actions.setName}
         onSettings={actions.settings}
         onColor={actions.color}
+        onAddBot={actions.addBot}
+        onRemoveBot={actions.removeBot}
+        onBotDifficulty={actions.botDifficulty}
         onReady={actions.ready}
         onChat={actions.chat}
         onLeave={actions.leave}
