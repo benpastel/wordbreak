@@ -2,12 +2,12 @@
 # https://benpastel.com/wordbreak/ (project sites inherit the custom domain from
 # the benpastel.github.io user site — this repo needs no CNAME of its own).
 #
-# The game server is NOT here; it runs on Heroku and this client opens a websocket
+# The game server is NOT here; it runs on Render and this client opens a websocket
 # to it. That cross-origin split is the only thing this file has to get right, and
 # it is the VITE_WS_URL below.
 #
-# Heroku keeps deploying itself from the same push, so `git push origin main` ends
-# up updating both halves.
+# Render deploys itself from the same push, so `git push origin main` ends up
+# updating both halves.
 
 name: Deploy client to Pages
 
@@ -31,27 +31,23 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # ─────────────────────────────────────────────────────────────────────
-      # The one line to keep in step with Heroku: the wss:// origin of the
-      # Heroku app, with the /ws path. If the app is ever renamed or recreated,
-      # its hostname changes and this must change with it.
+      # The one line to keep in step with Render: the wss:// origin of the
+      # Render service, with the /ws path. If the service is ever renamed or
+      # recreated, its hostname changes and this must change with it.
       # ─────────────────────────────────────────────────────────────────────
-      VITE_WS_URL: wss://wordbreak-f40cfb9ef5de.herokuapp.com/ws
+      VITE_WS_URL: wss://wordbreak.onrender.com/ws
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Check the server is reachable at that URL
         run: |
-          if [[ "$VITE_WS_URL" == *REPLACE-WITH-HEROKU-APP* ]]; then
-            echo "::error file=.github/workflows/pages.yml::VITE_WS_URL is still the placeholder. Set it to the Heroku app's wss:// URL, or the published page will load but never connect."
-            exit 1
-          fi
           # Publishing a client that points at a dead server is the failure mode
           # worth catching here, so check the origin actually answers first.
           health="$(echo "$VITE_WS_URL" | sed -e 's|^wss://|https://|' -e 's|/ws$|/healthz|')"
           echo "Building against $VITE_WS_URL"
           if ! curl -fsS --max-time 60 "$health"; then
-            echo "::error file=.github/workflows/pages.yml::$health did not respond. Check the Heroku app is up before publishing a client that points at it."
+            echo "::error file=.github/workflows/pages.yml::$health did not respond. Check the Render service is up before publishing a client that points at it."
             exit 1
           fi
 
@@ -62,7 +58,7 @@ jobs:
 
       - run: npm ci
 
-      # Client only — the server half is Heroku's job.
+      # Client only — the server half is Render's job.
       - run: npm run build:client
 
       - uses: actions/configure-pages@v5

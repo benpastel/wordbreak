@@ -113,7 +113,7 @@ wss.on('connection', (ws: WebSocket) => {
     }
   });
 
-  // Heroku drops connections idle for ~55s, so keep them warm.
+  // Proxies in front of the server drop websockets that sit idle, so keep them warm.
   const ping = setInterval(() => {
     if (!alive) {
       clearInterval(ping);

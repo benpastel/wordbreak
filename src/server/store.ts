@@ -1,4 +1,4 @@
-// Everything lives in memory on a single dyno, so a restart or a deploy ends every
+// Everything lives in memory on a single server, so a restart or a deploy ends every
 // game in progress. That is fine for a prototype, but all state access goes through
 // this interface so that adding a real store later is a contained change rather than
 // a rewrite: the rules in src/shared stay pure, and the hub only ever talks to a Store.

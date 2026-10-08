@@ -43,24 +43,23 @@ Two halves, both triggered by `git push origin main`:
 | half | where | what serves it |
 | --- | --- | --- |
 | static client | `https://benpastel.com/wordbreak/` | GitHub Pages, via `.github/workflows/pages.yml` |
-| game server | `https://<app>.herokuapp.com` | Heroku, via `Procfile` + `heroku-postbuild` |
+| game server | `https://wordbreak.onrender.com` | Render, as a web service |
 
-The client opens a websocket to the Heroku origin. That cross-origin URL is the only
+The client opens a websocket to the Render origin. That cross-origin URL is the only
 thing the two halves must agree on, and it lives in one place: `VITE_WS_URL` at the
-top of the Pages workflow. The build fails loudly if it is still the placeholder,
+top of the Pages workflow. The build checks that origin answers `/healthz` first,
 rather than publishing a page that loads but never connects.
 
 `benpastel.com` is the custom domain on the `benpastel.github.io` user site, and
 project sites inherit it — so this repo needs no `CNAME` of its own.
 
-### Heroku
+### Render
 
-Dashboard → new app → Deploy tab → connect this GitHub repo → enable automatic
-deploys from `main`. No CLI and no config: the buildpack reads `engines`, runs
-`heroku-postbuild`, and starts the `Procfile` process.
+A web service connected to this GitHub repo, auto-deploying from `main`. It builds
+with `npm ci && npm run build` and starts with `npm start`.
 
-Keep it at **exactly one web dyno** — all state is in memory, so a second dyno is a
-second, invisible lobby. Every deploy and every dyno cycle ends the games in progress.
+Keep it at **exactly one instance** — all state is in memory, so a second instance is
+a second, invisible lobby. Every deploy and every restart ends the games in progress.
 
 ### GitHub Pages
 
@@ -70,7 +69,7 @@ client (`npm run build:client`) and uploads `dist/client`.
 Vite is configured with `base: './'`, so the bundle is path-relative and works under
 `/wordbreak/` with no path baked in.
 
-### Running the whole thing from Heroku instead
+### Running the whole thing from one origin instead
 
 The server also hosts `dist/client` itself, so `npm run build && npm start` gives you
 both halves on one origin with no `VITE_WS_URL` at all — that is what local
@@ -86,7 +85,7 @@ production testing uses, and it stays a working fallback.
 | `public` | `tutorial.html`, `words.txt` |
 | `mockup` | the static design mockup the visual language came from |
 
-State is in memory on a single dyno: a restart or deploy ends every game. All access
+State is in memory on a single server: a restart or deploy ends every game. All access
 goes through the `Store` interface in `src/server/store.ts` so adding a real
 database later stays contained.
 
