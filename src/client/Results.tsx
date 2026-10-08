@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Fx, TableView } from '../shared/types';
-import { burst } from './burst';
+import { burst, rain } from './burst';
 import type { BurstKind } from './burst';
 import TableShell from './TableShell';
 import Trophies from './Trophies';
@@ -37,16 +37,18 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
   const popped = useRef(-1);
   const [tip, setTip] = useState<Tip | null>(null);
 
-  // Everyone gets a pop, in their medal's colour if they placed. Fired off the
-  // 'ended' event rather than the phase, so reconnecting later does not replay it.
+  // Confetti over the whole screen and a pop from your own name, in your medal's
+  // colours if you placed. Fired off the 'ended' event rather than the phase, so
+  // reconnecting later does not replay it.
   useEffect(() => {
     const ended = fx.items.find((f) => f.k === 'ended');
     if (!ended || popped.current === fx.seq) return;
     popped.current = fx.seq;
     const kind: BurstKind = (ended.medals[meId] as BurstKind) ?? 'none';
-    requestAnimationFrame(() =>
-      burst(kind, document.querySelector<HTMLElement>(`[data-player="${meId}"]`)),
-    );
+    requestAnimationFrame(() => {
+      rain(kind);
+      burst(kind, document.querySelector<HTMLElement>(`[data-player="${meId}"]`));
+    });
   }, [fx.seq, fx.items, meId]);
 
   const recap = table.recap;

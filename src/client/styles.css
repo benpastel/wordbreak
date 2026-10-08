@@ -559,10 +559,10 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .setupbody .setting { margin-bottom: 0; }
 .setupbody .linkrow { margin-top: auto; padding-top: var(--pad-frame); }
-.recaptrack { margin: 14px 16px 24px; }
+.recaptrack { margin: 14px var(--pad-frame) 24px; }
 .recapcol { flex: 1; min-width: 0; position: relative; }
 .recapword {
-  position: absolute; left: 0; white-space: nowrap; line-height: 1; padding: 2px 0;
+  position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; line-height: 1; padding: 2px 0;
   font-size: 0.86rem; font-weight: 800; text-transform: uppercase;
   letter-spacing: var(--track-tile); color: var(--pc); cursor: default;
 }
@@ -572,6 +572,15 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   border-radius: 1px; background: var(--pc);
 }
 .recapword .strike.gone { background: var(--ink-mute); }
+
+/* The standings, big. Each player is stacked and centred over their own column of
+   words, so a lone player sits in the middle rather than against the left edge. */
+.recapwho { flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.recapwho .name { font-size: clamp(1.1rem, 0.9vw + 0.85rem, 1.6rem); }
+.recapwho .pts { font-size: clamp(2.4rem, 2.6vw + 1.4rem, 3.8rem); line-height: 1.05; }
+.recapwho .trophies { margin: 6px 0 0; gap: 6px; justify-content: center; }
+.recapwho .trophy i { width: 24px; height: 24px; }
+.recapwho .trophies .more { font-size: 0.9rem; }
 
 .deftip {
   position: fixed; z-index: 50; max-width: 280px; pointer-events: none;

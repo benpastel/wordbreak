@@ -67,3 +67,48 @@ export function burst(kind: BurstKind, origin: HTMLElement | null): void {
     anim.oncancel = () => bit.remove();
   }
 }
+
+const RAIN = 140;
+
+/** The end of a match: confetti across the whole screen, falling from above the top
+ *  edge with a sway, so it is noticed wherever you were looking. */
+export function rain(kind: BurstKind): void {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const colors = PALETTE[kind];
+
+  for (let i = 0; i < RAIN; i++) {
+    const bit = document.createElement('i');
+    const round = i % 4 === 0;
+    const size = 6 + Math.random() * 5;
+    bit.className = 'confetti';
+    bit.style.left = `${Math.random() * w}px`;
+    bit.style.top = '-20px';
+    bit.style.width = `${size * (round ? 1 : 1.7)}px`;
+    bit.style.height = `${size}px`;
+    bit.style.background = colors[i % colors.length];
+    bit.style.borderRadius = round ? '50%' : '1px';
+    document.body.appendChild(bit);
+
+    const fall = h + 40;
+    const sway = (Math.random() - 0.5) * 160;
+    const spin = (Math.random() - 0.5) * 1080;
+    const anim = bit.animate(
+      [
+        { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${sway}px, ${fall * 0.5}px) rotate(${spin / 2}deg)`, opacity: 1, offset: 0.5 },
+        { transform: `translate(${-sway * 0.4}px, ${fall}px) rotate(${spin}deg)`, opacity: 0.85 },
+      ],
+      {
+        duration: 2200 + Math.random() * 1600,
+        delay: Math.random() * 700,
+        easing: 'cubic-bezier(.3,.1,.6,1)',
+        fill: 'backwards',
+      },
+    );
+    anim.onfinish = () => bit.remove();
+    anim.oncancel = () => bit.remove();
+  }
+}
