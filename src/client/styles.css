@@ -687,6 +687,12 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   border-top: 1px solid var(--hairline);
 }
 .shell.flush .chatbox, .shell.flush .setupbody .linkrow { flex: none; height: 64px; align-items: center; }
+/* Plain text on the surface, not a box that reads as a field or a link. Capitals
+   for display only: the path and the table code are case-sensitive, so the copy
+   button still copies the real link. */
+.shell.flush .linkrow code {
+  background: none; padding: 0; border-radius: 0; text-transform: uppercase;
+}
 
 @media (max-width: 760px) {
   .shell.flush > .chat { border-left: 0; border-top: 1px solid var(--hairline); }
