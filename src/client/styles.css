@@ -313,12 +313,14 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
    content-derived term anywhere in it. */
 .play {
   flex: 1;
+  /* Sized here rather than on .boardwrap so the status row above can match it. */
+  --board: min(calc(100vw - 14px), 56vh, 560px);
   display: flex; flex-direction: column; align-items: center;
   gap: 10px; padding: 10px 8px calc(var(--shellbar) + env(safe-area-inset-bottom, 0px) + 24px);
 }
 
 .playtop {
-  width: min(100%, 620px);
+  width: min(100%, var(--board));
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .leave {
@@ -333,13 +335,12 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   flex: none;
   display: flex; flex-direction: column; align-items: center;
   /* A whole board edge-to-edge, then back out the per-cell size from it. */
-  --board: min(calc(100vw - 14px), 56vh, 560px);
   --cell: calc(var(--board) / (1.1 * var(--n) + 0.1));
   --gap: calc(var(--cell) * 0.1);
 }
 
 @media (min-aspect-ratio: 1/1) and (min-width: 700px) {
-  .boardwrap { --board: min(calc(100vh - 270px), calc(100vw - 40px), 620px); }
+  .play { --board: min(calc(100vh - 270px), calc(100vw - 40px), 620px); }
 }
 
 .board {
@@ -677,8 +678,21 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .shell.flush > .chat { border-left: 1px solid var(--hairline); }
 /* The first chat line starts level with the names across the content's top. */
 .shell.flush .chatlog { padding: var(--pad-frame) var(--pad-frame) 12px; }
-.shell.flush .chatbox { padding: 12px var(--pad-frame); }
+.shell.flush .chatbox { padding: 0 var(--pad-frame); }
+/* The link row becomes the content's footer, the same strip as the chat's input, so
+   the rules above them run as one line across both panels. */
+.shell.flush .setupbody { padding-bottom: 0; }
+.shell.flush .setupbody .linkrow {
+  margin: auto calc(var(--pad-frame) * -1) 0; padding: 0 var(--pad-frame);
+  border-top: 1px solid var(--hairline);
+}
+.shell.flush .chatbox, .shell.flush .setupbody .linkrow { flex: none; height: 64px; align-items: center; }
 
 @media (max-width: 760px) {
   .shell.flush > .chat { border-left: 0; border-top: 1px solid var(--hairline); }
+  /* Stacked, the chat takes whatever the content leaves, so its input sits on the
+     bar instead of mid-screen. The history grows with what was played. */
+  .shell.flush { min-height: 100dvh; grid-template-rows: auto 1fr; }
+  .shell.flush .chatlog { flex: 1; height: auto; min-height: 160px; }
+  .shell.flush .recap { height: auto; }
 }
