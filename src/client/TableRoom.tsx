@@ -253,9 +253,11 @@ export default function TableRoom({
             </div>
           ))}
           {!locked && table.players.length < MAX_PLAYERS && (
-            <button className="ghost addbot" onClick={onAddBot}>
-              add bot
-            </button>
+            <div className="addbotrow">
+              <button className="ghost addbot" onClick={onAddBot}>
+                add bot
+              </button>
+            </div>
           )}
         </div>
 
