@@ -53,7 +53,7 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
                   {t.playerCount}/8 · {t.settings.gridSize}×{t.settings.gridSize} ·{' '}
                   {t.settings.endMode === 'time'
                     ? `${Math.round(t.settings.gameMs / 60_000)} min`
-                    : `${t.settings.targetScore} pts`}
+                    : `${t.settings.targetScore} points`}
                 </span>
                 <span className={`phase${t.phase === 'playing' ? ' on' : ''}`}>
                   {t.phase === 'playing' ? 'playing' : 'open'}

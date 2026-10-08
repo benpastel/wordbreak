@@ -11,7 +11,7 @@ export const MAX_GRID = 6;
 export const MAX_PLAYERS = 8;
 export const COLOR_COUNT = 8;
 
-export const DEFAULT_GRID = 5;
+export const DEFAULT_GRID = 4;
 
 /** How long a claim must survive to bank, by board size. Not a setting: a bigger
  *  board has more letters to search for a word long enough to break with, so the
@@ -27,7 +27,7 @@ export const DEFAULT_GAME_MS = 300_000;
 
 export const MIN_TARGET = 10;
 export const MAX_TARGET = 1_000;
-export const DEFAULT_TARGET = 50;
+export const DEFAULT_TARGET = 30;
 
 export const DEFAULT_END_MODE: EndMode = 'points';
 

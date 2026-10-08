@@ -231,7 +231,7 @@ export default function TableRoom({
             <Setting
               label="target"
               value={s.targetScore}
-              choices={POINT_CHOICES.map((n): [number, string] => [n, `${n} pts`])}
+              choices={POINT_CHOICES.map((n): [number, string] => [n, `${n} points`])}
               disabled={locked}
               onPick={(targetScore) => onSettings({ targetScore })}
             />

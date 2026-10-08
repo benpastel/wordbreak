@@ -19,7 +19,7 @@ interface Props {
  * One control for the whole agreement, rather than a button that disappears and is
  * replaced by a countdown widget. It carries three states in place:
  *
- *   not ready         →  "I'm ready"
+ *   not ready         →  "ready"
  *   ready, others not →  "waiting for 2 others"  (green)
  *   everyone agreed   →  "starting…"             (a tile of yours, banking)
  *
@@ -37,7 +37,7 @@ export default function ReadyButton({
   startsAt,
   countdownMs,
   onReady,
-  idleLabel = "I'm ready",
+  idleLabel = 'ready',
 }: Props) {
   const ref = useRef<HTMLButtonElement>(null);
   const counting = startsAt !== null;
