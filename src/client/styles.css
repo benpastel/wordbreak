@@ -11,9 +11,8 @@
                *whose*, so it never competes with the colour)
 
    Light by default, because the aesthetic is a physical board of
-   lettered tiles; dark is a per-device preference (Prefs.tsx), as is
-   the typeface. Both are attributes on <html>, and everything below
-   reads them through tokens.
+   lettered tiles; dark is a per-device preference (Prefs.tsx), set as
+   an attribute on <html> and read below through tokens.
    ============================================================ */
 
 @property --p {
@@ -54,22 +53,20 @@
      Prose is the third register and has no token, because it takes the body
      defaults untouched: chat, definitions and errors are the only text here a
      person reads as sentences, and sentences are not shouted. */
-  --track-tile: 0.06em;
-  --track-label: 0.1em;
+  --track-tile: 0.04em;
+  --track-label: 0.08em;
 
-  /* The typeface, per register. Fell has one weight and draws its capitals small, so
-     it comes with a scale (tiles size off --cell, everything else off the root size)
-     and synthesis is off: a faked bold of a letterpress face is mud. The weights are
-     only ever asked of Besley. */
-  --font-tile: 'IM Fell English SC', Georgia, serif;
-  --font-label: 'IM Fell English SC', Georgia, serif;
-  --font-prose: 'IM Fell English', Georgia, serif;
-  --tile-scale: 1.12;
-  --w-tile: 400;
-  --w-label: 400;
-  --w-label-strong: 400;
-  font-size: 110%;
-  font-synthesis: none;
+  /* Besley, a Clarendon: the bold that dictionaries set their headwords in. One
+     family for every register, told apart by weight. It is variable, so these are
+     points on a dial rather than separate fonts. --tile-scale corrects for its
+     capitals against the cell-relative sizes the board was tuned with. */
+  --font-tile: 'Besley', Georgia, serif;
+  --font-label: 'Besley', Georgia, serif;
+  --font-prose: 'Besley', Georgia, serif;
+  --tile-scale: 0.98;
+  --w-tile: 650;
+  --w-label: 550;
+  --w-label-strong: 700;
 
   /* The one fluid value in the app. A setup screen has little to say and a tall
      monitor to say it in, so the frame breathes with the viewport instead of
@@ -87,19 +84,6 @@
 
   font-family: var(--font-label);
   color-scheme: light;
-}
-
-:root[data-face='besley'] {
-  --font-tile: 'Besley', Georgia, serif;
-  --font-label: 'Besley', Georgia, serif;
-  --font-prose: 'Besley', Georgia, serif;
-  --tile-scale: 0.98;
-  --track-tile: 0.04em;
-  --track-label: 0.08em;
-  --w-tile: 650;
-  --w-label: 550;
-  --w-label-strong: 700;
-  font-size: 100%;
 }
 
 /* Same surfaces, lit from the same place: the tray is still the lowest thing and the
@@ -432,8 +416,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .tile > span {
   position: relative; z-index: 1; pointer-events: none;
-  /* Centred on the capital itself, not the font's line box, which every face pads
-     differently. */
+  /* Centred on the capital itself, not the font's line box. */
   line-height: 1; text-box: trim-both cap alphabetic;
 }
 

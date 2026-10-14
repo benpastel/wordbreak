@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * Per-device preferences: the typeface and the theme. Each is an attribute on <html>
- * and the stylesheet does the rest. index.html applies the stored values before first
- * paint, so a dark-mode player never sees a light flash; this keeps them in step after.
+ * Per-device preferences. Each is an attribute on <html> and the stylesheet does the
+ * rest. index.html applies the stored values before first paint, so a dark-mode player
+ * never sees a light flash; this keeps them in step after. The first choice is the
+ * default.
  */
 const PREFS = {
-  face: { key: 'wordbreak.face', choices: ['fell', 'besley'] },
   theme: { key: 'wordbreak.theme', choices: ['light', 'dark'] },
 } as const;
 type Pref = keyof typeof PREFS;
@@ -24,12 +24,11 @@ function stored(p: Pref): string {
 
 export default function Prefs() {
   const [open, setOpen] = useState(false);
-  const [values, setValues] = useState(() => ({ face: stored('face'), theme: stored('theme') }));
+  const [values, setValues] = useState(() => ({ theme: stored('theme') }));
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const root = document.documentElement;
-    root.dataset.face = values.face;
     root.dataset.theme = values.theme;
   }, [values]);
 
@@ -72,9 +71,9 @@ export default function Prefs() {
       </button>
       {open && (
         <div className="prefspop">
-          {(['face', 'theme'] as const).map((p) => (
+          {(Object.keys(PREFS) as Pref[]).map((p) => (
             <div className="setting" key={p}>
-              <label>{p === 'face' ? 'type' : 'theme'}</label>
+              <label>{p}</label>
               <div className="segmented">
                 {PREFS[p].choices.map((c) => (
                   <button key={c} className={values[p] === c ? 'on' : ''} onClick={() => pick(p, c)}>

@@ -10,15 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Besley:wght@400..700&family=IM+Fell+English+SC&family=IM+Fell+English&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Besley:wght@400..700&display=swap"
     />
     <script>
       // Preferences from src/client/Prefs.tsx, applied before first paint so a dark
-      // theme never flashes light. Same keys, same defaults.
+      // theme never flashes light. Same key, same default.
       try {
-        const face = localStorage.getItem('wordbreak.face');
         const theme = localStorage.getItem('wordbreak.theme');
-        if (face === 'besley') document.documentElement.dataset.face = face;
         if (theme === 'dark') document.documentElement.dataset.theme = theme;
       } catch {}
     </script>
