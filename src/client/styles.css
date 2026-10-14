@@ -10,8 +10,10 @@
               (a debossed disc; selection never needs to say
                *whose*, so it never competes with the colour)
 
-   Deliberately light-only: the aesthetic is a physical board of
-   lettered tiles, so there is no dark variant.
+   Light by default, because the aesthetic is a physical board of
+   lettered tiles; dark is a per-device preference (Prefs.tsx), as is
+   the typeface. Both are attributes on <html>, and everything below
+   reads them through tokens.
    ============================================================ */
 
 @property --p {
@@ -55,6 +57,20 @@
   --track-tile: 0.06em;
   --track-label: 0.1em;
 
+  /* The typeface, per register. Fell has one weight and draws its capitals small, so
+     it comes with a scale (tiles size off --cell, everything else off the root size)
+     and synthesis is off: a faked bold of a letterpress face is mud. The weights are
+     only ever asked of Besley. */
+  --font-tile: 'IM Fell English SC', Georgia, serif;
+  --font-label: 'IM Fell English SC', Georgia, serif;
+  --font-prose: 'IM Fell English', Georgia, serif;
+  --tile-scale: 1.12;
+  --w-tile: 400;
+  --w-label: 400;
+  --w-label-strong: 400;
+  font-size: 110%;
+  font-synthesis: none;
+
   /* The one fluid value in the app. A setup screen has little to say and a tall
      monitor to say it in, so the frame breathes with the viewport instead of
      stacking tight at the top. Type is left alone: scaling it would have bought
@@ -64,8 +80,47 @@
   /* "Yes, go" green — the ready button once you have said yes. */
   --go: oklch(0.55 0.12 148);
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --warn: oklch(0.58 0.17 28);
+  /* The debossed selection disc: a well slightly darker than the tile, lit from below. */
+  --disc: oklch(0.885 0.008 75);
+  --disc-lip: oklch(1 0 0 / 0.7);
+
+  font-family: var(--font-label);
   color-scheme: light;
+}
+
+:root[data-face='besley'] {
+  --font-tile: 'Besley', Georgia, serif;
+  --font-label: 'Besley', Georgia, serif;
+  --font-prose: 'Besley', Georgia, serif;
+  --tile-scale: 0.98;
+  --track-tile: 0.04em;
+  --track-label: 0.08em;
+  --w-tile: 650;
+  --w-label: 550;
+  --w-label-strong: 700;
+  font-size: 100%;
+}
+
+/* Same surfaces, lit from the same place: the tray is still the lowest thing and the
+   tile face the highest, so the board reads as a recess with tiles standing in it. */
+:root[data-theme='dark'] {
+  --ground: oklch(0.215 0.006 70);
+  --tray: oklch(0.175 0.006 70);
+  --tile-face: oklch(0.275 0.008 75);
+  --ink: oklch(0.93 0.01 85);
+  --ink-soft: oklch(0.72 0.01 80);
+  --ink-mute: oklch(0.52 0.01 75);
+  --hairline: oklch(0.33 0.008 75);
+  --selink: oklch(0.72 0.01 80);
+  --shadow-1: 0 1px 1px oklch(0 0 0 / 0.35);
+  --shadow-2: 0 2px 5px oklch(0 0 0 / 0.3);
+  --shadow-lift: 0 4px 9px oklch(0 0 0 / 0.4);
+  --go: oklch(0.6 0.12 148);
+  --warn: oklch(0.7 0.16 28);
+  --disc: oklch(0.21 0.006 70);
+  --disc-lip: oklch(1 0 0 / 0.07);
+  color-scheme: dark;
 }
 
 /* Dealt in this order so small tables get the most separated hues first.
@@ -83,6 +138,12 @@
   --pf: oklch(var(--lf) var(--cf) var(--hue));
   --pc: oklch(0.55 var(--ci) var(--hue));
 }
+/* Dark: the fill sinks to a deep tint the light ink still reads on, and the ring and
+   names lift so they hold against the dark ground. */
+:root[data-theme='dark'] :is(.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7) {
+  --pf: oklch(calc(var(--lf) - 0.44) calc(var(--cf) * 0.9) var(--hue));
+  --pc: oklch(0.72 var(--ci) var(--hue));
+}
 
 * { box-sizing: border-box; }
 
@@ -98,11 +159,11 @@ body {
 .app { min-height: 100%; display: flex; flex-direction: column; }
 
 h1 {
-  font-size: 1.5rem; font-weight: 800; margin: 0;
+  font-size: 1.5rem; font-family: var(--font-tile); font-weight: var(--w-tile); margin: 0;
   text-transform: uppercase; letter-spacing: var(--track-tile);
 }
 h2 {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase;
+  font-size: 0.72rem; font-weight: var(--w-label); letter-spacing: var(--track-label); text-transform: uppercase;
   color: var(--ink-soft); margin: 0 0 14px;
 }
 a { color: var(--ink-soft); text-underline-offset: 2px; }
@@ -131,7 +192,7 @@ button:not(:disabled):active { transform: translateY(1px); }
 
 .primary {
   background: var(--ink); color: var(--ground);
-  font-weight: 800; padding: 9px 20px; font-size: 0.9rem;
+  font-weight: var(--w-label-strong); padding: 9px 20px; font-size: 0.9rem;
   text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
@@ -142,7 +203,7 @@ button:not(:disabled):active { transform: translateY(1px); }
 
 .ghost {
   background: var(--tile-face); color: var(--ink-soft);
-  font-weight: 700; padding: 8px 16px; font-size: 0.85rem;
+  font-weight: var(--w-label); padding: 8px 16px; font-size: 0.85rem;
   text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
@@ -150,7 +211,7 @@ button:not(:disabled):active { transform: translateY(1px); }
 .ghost:not(:disabled):active { box-shadow: var(--shadow-1); }
 
 input {
-  font: inherit; font-weight: 800; color: var(--ink);
+  font: inherit; font-weight: var(--w-label-strong); color: var(--ink);
   background: var(--tile-face); border: 0; border-radius: var(--r-ctl);
   padding: 8px 16px; box-shadow: var(--shadow-1), var(--shadow-2); outline: none; width: 10ch;
 }
@@ -160,7 +221,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .segmented { display: flex; flex-wrap: wrap; gap: 6px; }
 .segmented button {
   background: var(--tile-face); color: var(--ink-soft);
-  font-size: 0.82rem; font-weight: 700; padding: 6px 13px;
+  font-size: 0.82rem; font-weight: var(--w-label); padding: 6px 13px;
   text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
@@ -193,7 +254,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 
 /* ------------------------------------------------------------ splash */
 .splash { margin: auto; text-align: center; padding: 40px; }
-.splash p { color: var(--ink-soft); }
+.splash p { color: var(--ink-soft); font-family: var(--font-prose); }
 
 /* ------------------------------------------------------------ lobby */
 .lobby { width: min(760px, 100%); margin: 0 auto; padding: 40px 24px 80px; }
@@ -203,13 +264,13 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .tag {
   color: var(--ink-soft); font-size: 0.74rem; margin: 8px 0 0; max-width: 46ch;
-  font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-label);
+  font-weight: var(--w-label); text-transform: uppercase; letter-spacing: var(--track-label);
 }
 /* No label above it: the placeholder already reads YOUR NAME, and the box stays
    empty until you fill it, so a second word saying the same thing is noise. */
 .namefield { display: flex; align-items: flex-start; }
 .namefield input { width: 15ch; }
-.namefield input::placeholder { color: var(--ink-mute); font-weight: 600; }
+.namefield input::placeholder { color: var(--ink-mute); font-weight: var(--w-label); }
 /* Lobby: nothing else can happen until this is filled, so it is the biggest
    thing on the page after the wordmark. */
 .namefield.big input {
@@ -235,14 +296,14 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   box-shadow: var(--shadow-1), var(--shadow-2); color: var(--ink);
 }
 .tablerow:hover { box-shadow: var(--shadow-1), 0 4px 12px oklch(0.3 0.02 70 / 0.14); }
-.tname { font-weight: 700; flex: 1; text-transform: uppercase; letter-spacing: var(--track-label); }
+.tname { font-weight: var(--w-label); flex: 1; text-transform: uppercase; letter-spacing: var(--track-label); }
 .dots { display: flex; gap: 4px; }
 .meta {
   font-size: 0.78rem; color: var(--ink-soft); font-variant-numeric: tabular-nums;
   text-transform: uppercase; letter-spacing: var(--track-label);
 }
 .phase {
-  font-size: 0.66rem; font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase;
+  font-size: 0.66rem; font-weight: var(--w-label); letter-spacing: var(--track-label); text-transform: uppercase;
   padding: 3px 9px; border-radius: 999px; background: var(--tray); color: var(--ink-soft);
 }
 /* Not `.phase.playing`: the other phase value is "lobby", and `class="phase lobby"`
@@ -258,7 +319,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
    player cells so both screens name people the same way. */
 /* A small tile rather than a pill, cut like every control on the page. */
 .badge {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: var(--track-label); text-transform: uppercase;
+  font-size: 0.64rem; font-weight: var(--w-label); letter-spacing: var(--track-label); text-transform: uppercase;
   padding: 3px 8px; border-radius: var(--r-ctl); background: var(--tile-face); color: var(--ink-soft);
   box-shadow: var(--shadow-1), var(--shadow-2);
 }
@@ -266,13 +327,13 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 /* Your own name, a click away from being a field. The field keeps the same type
    so the row does not jump. */
 .setupwho .name.mine {
-  background: none; padding: 0; font-weight: 700; cursor: text; border-radius: 0;
+  background: none; padding: 0; font-weight: var(--w-label); cursor: text; border-radius: 0;
 }
 .setupwho .name.mine:active { transform: none; }
 /* A soft tray behind it on hover marks it as something you can press, without
    moving the row the way padding would. */
 .setupwho .name.mine:hover { background: var(--tray); box-shadow: 0 0 0 4px var(--tray); border-radius: 2px; }
-.setupwho input.name { width: 15ch; font-weight: 700; padding: 2px 8px; margin: -3px 0 -3px -9px; }
+.setupwho input.name { width: 15ch; font-weight: var(--w-label); padding: 2px 8px; margin: -3px 0 -3px -9px; }
 
 /* Your own dot is the colour picker: it swells on hover like something to press,
    and opens the swatches in a small card beneath it. */
@@ -325,7 +386,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .leave {
   background: var(--tile-face); color: var(--ink-soft);
-  font-size: 0.78rem; font-weight: 700; padding: 6px 13px;
+  font-size: 0.78rem; font-weight: var(--w-label); padding: 6px 13px;
   text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--shadow-1); flex: none;
 }
@@ -363,12 +424,18 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .tile {
   position: relative; aspect-ratio: 1; border-radius: 13%;
   display: grid; place-items: center;
-  font-size: calc(var(--cell) * 0.46); font-weight: 800; letter-spacing: 0.01em;
+  font-size: calc(var(--cell) * 0.46 * var(--tile-scale));
+  font-family: var(--font-tile); font-weight: var(--w-tile); letter-spacing: 0.01em;
   color: var(--ink); background: var(--tile-face); cursor: pointer;
   --ring: inset 0 0 0 0 transparent;
   box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
 }
-.tile > span { position: relative; z-index: 1; pointer-events: none; }
+.tile > span {
+  position: relative; z-index: 1; pointer-events: none;
+  /* Centred on the capital itself, not the font's line box, which every face pads
+     differently. */
+  line-height: 1; text-box: trim-both cap alphabetic;
+}
 
 /* CHANNEL 1 — colour: whose claim, and how close to banking. */
 .tile.claimed {
@@ -382,8 +449,8 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
    into the tile rather than painted over it, and never hides the fill. */
 .tile.sel::before {
   content: ''; position: absolute; z-index: 0; inset: 17%; border-radius: 50%;
-  background: oklch(0.885 0.008 75);
-  box-shadow: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 oklch(1 0 0 / 0.7);
+  background: var(--disc);
+  box-shadow: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 var(--disc-lip);
 }
 
 .tile.reseed { animation: reseed 640ms ease-out; }
@@ -405,7 +472,9 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .flyer {
   position: fixed; z-index: 50; pointer-events: none;
   border-radius: 13%; display: grid; place-items: center;
-  font-weight: 800; color: var(--ink); background: var(--pf);
+  font-size: calc(var(--fly) * 0.46 * var(--tile-scale));
+  font-family: var(--font-tile); font-weight: var(--w-tile); line-height: 1; text-box: trim-both cap alphabetic;
+  color: var(--ink); background: var(--pf);
   box-shadow: inset 0 0 0 3px var(--pc), 0 3px 10px oklch(0.3 0.02 70 / 0.2);
 }
 
@@ -417,32 +486,33 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   margin: 12px 0 0;
 }
 .readout .word {
-  font-weight: 800; font-size: calc(var(--cell) * 0.46); letter-spacing: var(--track-tile);
+  font-family: var(--font-tile); font-weight: var(--w-tile);
+  font-size: calc(var(--cell) * 0.46 * var(--tile-scale)); letter-spacing: var(--track-tile);
   color: var(--ink-mute); line-height: 1;
 }
 .readout .word.real { color: var(--ink); }
 .readout .needs {
-  font-size: 0.74rem; font-weight: 700; color: var(--ink-mute);
+  font-size: 0.74rem; font-weight: var(--w-label); color: var(--ink-mute);
   text-transform: uppercase; letter-spacing: var(--track-label);
 }
 .readout .claim {
   background: var(--ink); color: var(--ground);
-  font-size: 0.82rem; font-weight: 800; padding: 7px 15px;
+  font-size: 0.82rem; font-weight: var(--w-label-strong); padding: 7px 15px;
   text-transform: uppercase; letter-spacing: var(--track-label);
   display: inline-flex; align-items: center; gap: 7px;
 }
-.readout .claim kbd { background: oklch(1 0 0 / 0.18); color: inherit; }
+.readout .claim kbd { background: color-mix(in oklch, var(--ground) 18%, transparent); color: inherit; }
 .readout .claim:disabled { background: var(--tray); color: var(--ink-mute); opacity: 1; }
-.readout .claim:disabled kbd { background: oklch(0.3 0.02 70 / 0.07); }
+.readout .claim:disabled kbd { background: color-mix(in oklch, var(--ink) 7%, transparent); }
 /* Sized as a real touch target: on a phone this is the button you hit most after
    the letters themselves, and it was a 20px hitbox. */
 .readout .x {
   background: var(--tray); color: var(--ink-soft);
   width: 46px; height: 46px; flex: none;
-  border-radius: 50%; font-size: 1.35rem; font-weight: 700; line-height: 1;
+  border-radius: 50%; font-size: 1.35rem; line-height: 1;
   display: grid; place-items: center; padding: 0;
 }
-.readout .x:hover { background: oklch(0.86 0.014 85); color: var(--ink); }
+.readout .x:hover { background: color-mix(in oklch, var(--tray), var(--ink) 7%); color: var(--ink); }
 .readout .x:active { transform: scale(0.94); }
 
 /* Beneath the board, players side by side with their words hanging below each.
@@ -458,22 +528,22 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 /* What each player is currently holding, in their own colour. */
 .claims { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
 .claims li {
-  font-size: 0.78rem; font-weight: 800; line-height: 1.35;
+  font-size: 0.78rem; font-family: var(--font-tile); font-weight: var(--w-tile); line-height: 1.35;
   text-transform: uppercase; letter-spacing: var(--track-tile); color: var(--pc);
 }
 .claims li.more { color: var(--ink-mute); letter-spacing: 0.16em; }
-.player .name { font-weight: 700; color: var(--pc); }
-.player .pts { font-weight: 800; font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums; }
+.player .name { font-weight: var(--w-label); color: var(--pc); }
+.player .pts { font-family: var(--font-tile); font-weight: var(--w-tile); font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums; }
 .player.gone { opacity: 0.4; }
 
 /* ----------------------------------------------------- match clock & result */
 .clock {
-  font-size: 0.9rem; font-weight: 800; letter-spacing: var(--track-tile);
+  font-size: 0.9rem; font-family: var(--font-tile); font-weight: var(--w-tile); letter-spacing: var(--track-tile);
   color: var(--ink-mute); font-variant-numeric: tabular-nums;
 }
-.clock.low { color: oklch(0.58 0.17 28); }
+.clock.low { color: var(--warn); }
 .clock.target {
-  color: var(--ink-soft); font-size: 0.76rem; font-weight: 700;
+  color: var(--ink-soft); font-size: 0.76rem; font-family: var(--font-label); font-weight: var(--w-label);
   letter-spacing: var(--track-label); text-transform: uppercase;
 }
 
@@ -537,15 +607,15 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .setuphead { flex-wrap: wrap; gap: 10px 18px; }
 .recapwho, .setupwho { flex: 1; min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
 /* A seat is read, not ranked, so it takes only the width of its own name. */
-.setupwho { flex: 0 1 auto; align-items: center; gap: 0 9px; font-weight: 700; }
+.setupwho { flex: 0 1 auto; align-items: center; gap: 0 9px; font-weight: var(--w-label); }
 .setupwho.gone { opacity: 0.45; }
-.recapwho .name, .setupwho .name { font-weight: 700; color: var(--pc); }
+.recapwho .name, .setupwho .name { font-weight: var(--w-label); color: var(--pc); }
 .recapwho .pts {
-  font-weight: 800; font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums;
+  font-family: var(--font-tile); font-weight: var(--w-tile); font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums;
 }
 /* Ready, wherever a list of players is shown between matches. */
 .setgo > .name::after {
-  content: '✓'; margin-left: 6px; font-size: 0.8em; color: oklch(0.55 0.13 148);
+  content: '✓'; margin-left: 6px; font-size: 0.8em; color: var(--go);
 }
 .recapscroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 
@@ -563,7 +633,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .recapcol { flex: 1; min-width: 0; position: relative; }
 .recapword {
   position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; line-height: 1; padding: 2px 0;
-  font-size: 0.86rem; font-weight: 800; text-transform: uppercase;
+  font-size: 0.86rem; font-family: var(--font-tile); font-weight: var(--w-tile); text-transform: uppercase;
   letter-spacing: var(--track-tile); color: var(--pc); cursor: default;
 }
 /* The word keeps its player's colour; the line through it is the breaker's. */
@@ -586,6 +656,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   position: fixed; z-index: 50; max-width: 280px; pointer-events: none;
   background: var(--ink); color: var(--ground); border-radius: var(--r-ctl);
   padding: 7px 11px; font-size: 0.78rem; line-height: 1.35; box-shadow: var(--shadow-2);
+  font-family: var(--font-prose);
 }
 .deftip.above { transform: translateY(-100%); }
 
@@ -603,11 +674,11 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain;
   flex: 1; display: flex; flex-direction: column; gap: 5px;
 }
-.chatline { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--ink); }
-.chatline b { color: var(--pc); font-weight: 700; margin-right: 8px; }
+.chatline { margin: 0; font-family: var(--font-prose); font-size: 0.86rem; line-height: 1.45; color: var(--ink); }
+.chatline b { font-family: var(--font-label); color: var(--pc); font-weight: var(--w-label); margin-right: 8px; }
 .chatbox { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--hairline); }
 .chatbox button { flex: none; }
-.chatbox input { flex: 1; width: auto; min-width: 0; font-weight: 500; box-shadow: none; background: var(--ground); }
+.chatbox input { flex: 1; width: auto; min-width: 0; font-family: var(--font-prose); font-weight: 400; box-shadow: none; background: var(--ground); }
 
 /* --------------------------------------------------------------- trophies
    Playing pieces rather than icons: a domed disc with a lit top edge and a
@@ -623,7 +694,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
     0 1px 1.5px oklch(0.3 0.02 70 / 0.3);
 }
 .trophies .more {
-  font-size: 0.66rem; font-weight: 800; color: var(--ink-soft);
+  font-size: 0.66rem; font-family: var(--font-tile); font-weight: var(--w-tile); color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
 }
 .trophy.gold   { --t-hi: oklch(0.93 0.10 95); --t-lo: oklch(0.70 0.14 78); }
@@ -648,12 +719,12 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .netbar {
   position: fixed; top: 0; left: 0; right: 0; text-align: center;
   background: oklch(0.75 0.14 55); color: oklch(0.25 0.05 55);
-  font-size: 0.72rem; font-weight: 700; padding: 5px; z-index: 60;
+  font-size: 0.72rem; font-weight: var(--w-label); padding: 5px; z-index: 60;
   text-transform: uppercase; letter-spacing: var(--track-label);
 }
 .toast {
   position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
-  background: var(--ink); color: var(--ground); font-size: 0.85rem; font-weight: 600;
+  background: var(--ink); color: var(--ground); font-size: 0.85rem; font-family: var(--font-prose);
   padding: 9px 18px; border-radius: 999px; z-index: 60;
 }
 
@@ -722,8 +793,26 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .setupwho input.botlevel:disabled { cursor: default; opacity: 0.6; }
 .botout {
   background: none; color: var(--ink-mute); font-size: 1.1rem; line-height: 1;
-  padding: 0 2px; font-weight: 700;
+  padding: 0 2px;
 }
 .botout:hover { color: var(--ink); }
 .setuphead .addbotrow { flex-basis: 100%; }
 .setuphead .addbot { padding: 4px 12px; font-size: 0.72rem; }
+
+/* ------------------------------------------------------------ preferences
+   One small control in the top-right corner of every screen, quiet until hovered. */
+.prefs { position: fixed; top: 8px; right: 8px; z-index: 30; }
+.prefsbtn {
+  width: 32px; height: 32px; padding: 0; display: grid; place-items: center;
+  background: none; color: var(--ink-mute);
+}
+.prefsbtn:hover, .prefsbtn[aria-expanded='true'] { color: var(--ink); }
+.prefsbtn:not(:disabled):active { transform: none; }
+.prefspop {
+  position: absolute; top: calc(100% + 4px); right: 0; width: max-content;
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px;
+  background: var(--tile-face); border-radius: var(--r-ctl-lg);
+  box-shadow: var(--shadow-1), var(--shadow-lift);
+}
+.prefspop .setting, .prefspop .segmented { margin: 0; flex-wrap: nowrap; }
+.prefspop .setting label { width: 52px; }

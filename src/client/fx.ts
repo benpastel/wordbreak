@@ -30,7 +30,7 @@ export function playBankFx(
     flyer.style.top = `${r.top}px`;
     flyer.style.width = `${r.width}px`;
     flyer.style.height = `${r.height}px`;
-    flyer.style.fontSize = `${r.width * 0.46}px`;
+    flyer.style.setProperty('--fly', `${r.width}px`);
     document.body.appendChild(flyer);
 
     const dx = tr ? tr.left + tr.width / 2 - (r.left + r.width / 2) : 0;

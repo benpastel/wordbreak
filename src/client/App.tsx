@@ -7,6 +7,7 @@ import Lobby from './Lobby';
 import TableRoom from './TableRoom';
 import Game from './Game';
 import Results from './Results';
+import Prefs from './Prefs';
 
 const ID_KEY = 'wordbreak.playerId';
 /** The name the player typed, remembered across visits. */
@@ -193,6 +194,7 @@ export default function App() {
   return (
     <div className="app">
       {body}
+      <Prefs />
       {status !== 'open' && meId && <div className="netbar">reconnecting…</div>}
       {toast && <div className="toast">{toast}</div>}
     </div>

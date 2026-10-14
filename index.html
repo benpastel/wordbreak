@@ -6,6 +6,22 @@
     <meta name="color-scheme" content="light" />
     <title>WordBreak</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Besley:wght@400..700&family=IM+Fell+English+SC&family=IM+Fell+English&display=swap"
+    />
+    <script>
+      // Preferences from src/client/Prefs.tsx, applied before first paint so a dark
+      // theme never flashes light. Same keys, same defaults.
+      try {
+        const face = localStorage.getItem('wordbreak.face');
+        const theme = localStorage.getItem('wordbreak.theme');
+        if (face === 'besley') document.documentElement.dataset.face = face;
+        if (theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
     <meta
       name="description"
       content="A multiplayer word game. Select adjacent letters to claim a word and lock them; only a strictly longer word can break the claim."
