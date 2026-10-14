@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>WordBreak type</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Arvo:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500&family=Besley:ital,wght@0,400..900;1,400&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400&family=Cinzel:wght@400..900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400..800;1,400&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,400,0..100,0..1&family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=Jost:ital,wght@0,400..900;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:ital,wght@0,400..900;1,400&family=Michroma&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Tokens copied from src/client/styles.css so every specimen is the real board,
+   with only the type swapped. Each direction sets three registers:
+     --T-*  TILE   letters, words, the wordmark, scores, the clock
+     --L-*  LABEL  buttons, headings, names, settings, badges
+     --P-*  PROSE  chat and definitions */
+@property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+
+:root {
+  --ground: oklch(0.94 0.008 85);
+  --tray: oklch(0.902 0.012 85);
+  --tile-face: oklch(0.985 0.004 85);
+  --ink: oklch(0.22 0.01 60);
+  --ink-soft: oklch(0.52 0.008 70);
+  --ink-mute: oklch(0.7 0.008 70);
+  --hairline: oklch(0.86 0.01 85);
+  --selink: oklch(0.55 0.01 70);
+  --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+  --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+  --r-ctl: 7px;
+  --r-ctl-lg: 9px;
+  --go: oklch(0.55 0.12 148);
+  --sys: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--sys);
+  color-scheme: light;
+}
+.c0 { --hue: 250; --cf: 0.085; --lf: 0.87;  --ci: 0.16; }
+.c1 { --hue: 25;  --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+.c2 { --hue: 148; --cf: 0.12;  --lf: 0.845; --ci: 0.14; }
+.c0, .c1, .c2 {
+  --pf: oklch(var(--lf) var(--cf) var(--hue));
+  --pc: oklch(0.55 var(--ci) var(--hue));
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+.page { width: min(1120px, 100%); margin: 0 auto; padding: 40px 24px 120px; }
+
+/* ---------------------------------------------------------------- line-up */
+.lineup { display: grid; grid-template-columns: max-content 1fr; gap: 10px 22px; align-items: center; }
+.lineup a { color: var(--ink-soft); text-decoration: none; font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; }
+.lineup a:hover { color: var(--ink); }
+.lineup .strip { --cell: 42px; }
+.strip { display: inline-flex; gap: calc(var(--cell) * 0.1); padding: calc(var(--cell) * 0.1);
+  border-radius: 10px; background: var(--tray);
+  box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13), inset 0 0 0 1px oklch(0.3 0.02 70 / 0.05); }
+.strip .tile { width: var(--cell); }
+
+/* --------------------------------------------------------------- direction */
+.dir { padding-top: 64px; margin-top: 64px; border-top: 1px solid var(--hairline); }
+.about { max-width: 68ch; margin-bottom: 28px; }
+.about h2 {
+  margin: 0; font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v);
+  font-size: calc(1.9rem * var(--T-s)); letter-spacing: var(--T-t); text-transform: uppercase; line-height: 1.1;
+}
+.about .fonts { margin: 6px 0 12px; font-size: 0.8rem; color: var(--ink-soft); }
+.about p { margin: 0 0 8px; font-size: 0.95rem; line-height: 1.55; }
+
+.spec { display: grid; grid-template-columns: auto 1fr; gap: 36px 48px; align-items: start; }
+@media (max-width: 860px) { .spec { grid-template-columns: 1fr; } }
+
+/* -------------------------------------------------------------- the board */
+.boardwrap { --n: 5; --cell: 56px; --gap: calc(var(--cell) * 0.1); }
+.board {
+  position: relative; display: grid; grid-template-columns: repeat(var(--n), var(--cell));
+  gap: var(--gap); padding: var(--gap); border-radius: 14px; background: var(--tray); width: max-content;
+  box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13), inset 0 0 0 1px oklch(0.3 0.02 70 / 0.05);
+}
+.trail { position: absolute; inset: var(--gap); pointer-events: none; overflow: visible; }
+.trail polyline { fill: none; stroke-width: 0.05; stroke-linecap: round; stroke-linejoin: round; opacity: 0.4; }
+.trail polyline.sel {
+  stroke: var(--selink); stroke-width: 0.062; opacity: 0.75;
+  stroke-dasharray: 0.17 0.13; animation: ants 1.1s linear infinite;
+}
+@keyframes ants { to { stroke-dashoffset: -0.6; } }
+
+.tile {
+  position: relative; aspect-ratio: 1; border-radius: 13%; display: grid; place-items: center;
+  font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v);
+  font-size: calc(var(--cell) * 0.46 * var(--T-s)); letter-spacing: 0;
+  color: var(--ink); background: var(--tile-face);
+  --ring: inset 0 0 0 0 transparent;
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
+}
+.tile > span {
+  position: relative; z-index: 1; line-height: 1;
+  text-box: trim-both cap alphabetic; translate: 0 var(--T-dy, 0);
+}
+.tile.claimed {
+  --ring: inset 0 0 0 3px var(--pc);
+  background:
+    linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    var(--tile-face);
+}
+.tile.sel::before {
+  content: ''; position: absolute; z-index: 0; inset: 17%; border-radius: 50%;
+  background: oklch(0.885 0.008 75);
+  box-shadow: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 oklch(1 0 0 / 0.7);
+}
+
+.readout { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 14px; }
+.readout .word {
+  font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v);
+  font-size: calc(var(--cell) * 0.46 * var(--T-s)); letter-spacing: var(--T-t); line-height: 1;
+}
+.readout .claim {
+  background: var(--ink); color: var(--ground); padding: 7px 15px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: calc(0.82rem * var(--L-s)); font-weight: var(--L-w2);
+}
+.readout .claim kbd { font: 700 0.82em var(--sys); padding: 1px 5px; border-radius: 4px;
+  background: oklch(1 0 0 / 0.18); color: inherit; }
+.readout .x {
+  background: var(--tray); color: var(--ink-soft); width: 46px; height: 46px; border-radius: 50%;
+  font-size: 1.35rem; font-weight: 700; line-height: 1; display: grid; place-items: center; padding: 0;
+  font-family: var(--sys);
+}
+
+/* --------------------------------------------------------------- the rest */
+.ui { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.row.split { justify-content: space-between; }
+
+.lbl, button, .tname, .meta, .phase, .badge, .setting label, .name, .chatline b, .h3 {
+  font-family: var(--L-font); font-weight: var(--L-w); font-variation-settings: var(--L-v);
+  letter-spacing: var(--L-t); text-transform: uppercase;
+}
+.tilefont, .pts, .clock, .claims li, .wordmark, .recappts {
+  font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.wordmark { font-size: calc(1.5rem * var(--T-s)); margin: 0; text-transform: uppercase;
+  letter-spacing: var(--T-t); line-height: 1.15; }
+.tag { margin: 6px 0 0; font-size: calc(0.74rem * var(--L-s)); }
+.tag a { color: var(--ink-soft); text-underline-offset: 2px; }
+
+.h3 { font-size: calc(0.72rem * var(--L-s)); color: var(--ink-soft); margin: 0; }
+
+button { border: 0; border-radius: var(--r-ctl); cursor: pointer; }
+.primary {
+  background: var(--ink); color: var(--ground); font-weight: var(--L-w2);
+  padding: 9px 20px; font-size: calc(0.9rem * var(--L-s));
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.primary.big { padding: 13px 28px; font-size: calc(1rem * var(--L-s)); border-radius: var(--r-ctl-lg); }
+.primary.on { background: var(--go); }
+.primary.filling {
+  --p: 46%; color: var(--ink);
+  background:
+    linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    var(--tile-face);
+  box-shadow: inset 0 0 0 3px var(--pc), var(--shadow-1), var(--shadow-2);
+}
+.ghost {
+  background: var(--tile-face); color: var(--ink-soft);
+  padding: 8px 16px; font-size: calc(0.85rem * var(--L-s));
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.ghost.big { padding: 13px 28px; font-size: calc(1rem * var(--L-s)); border-radius: var(--r-ctl-lg); }
+
+.setting { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.setting label { font-size: calc(0.72rem * var(--L-s)); color: var(--ink-soft); width: 82px; }
+.segmented { display: flex; gap: 6px; }
+.segmented button {
+  background: var(--tile-face); color: var(--ink-soft);
+  font-size: calc(0.82rem * var(--L-s)); padding: 6px 13px;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.segmented button.on { background: var(--ink); color: var(--ground); box-shadow: none; }
+
+.tablerow {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--tile-face); border-radius: 12px; padding: 13px 18px;
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.tname { flex: 1; font-size: calc(1rem * var(--L-s)); }
+.dots { display: flex; gap: 4px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: var(--pc); display: inline-block; }
+.meta { font-size: calc(0.78rem * var(--L-s)); color: var(--ink-soft); font-weight: inherit; font-variant-numeric: tabular-nums; }
+.phase {
+  font-size: calc(0.66rem * var(--L-s)); padding: 3px 9px; border-radius: 999px;
+  background: var(--ink); color: var(--ground);
+}
+.badge {
+  font-size: calc(0.64rem * var(--L-s)); padding: 3px 8px; border-radius: var(--r-ctl);
+  background: var(--tile-face); color: var(--ink-soft); box-shadow: var(--shadow-1), var(--shadow-2);
+}
+
+.scores { display: flex; gap: 16px 30px; flex-wrap: wrap; align-items: flex-start; }
+.player { display: flex; flex-direction: column; gap: 5px; }
+.playerhead { display: flex; align-items: baseline; gap: 8px; }
+.player .name { color: var(--pc); font-size: calc(1rem * var(--L-s)); }
+.player .pts { font-size: calc(1.2rem * var(--T-s)); color: var(--pc); }
+.claims { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.claims li { font-size: calc(0.78rem * var(--T-s)); line-height: 1.35; text-transform: uppercase; letter-spacing: var(--T-t); color: var(--pc); }
+
+.clock { font-size: calc(0.9rem * var(--T-s)); color: var(--ink-mute); letter-spacing: var(--T-t); }
+.clock.low { color: oklch(0.58 0.17 28); }
+
+.recapwho { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.recapwho .name { color: var(--pc); font-size: calc(1.4rem * var(--L-s)); }
+.recappts { color: var(--pc); font-size: calc(3.4rem * var(--T-s)); line-height: 1.05; }
+
+.chatline {
+  margin: 0; font-family: var(--P-font); font-size: calc(0.86rem * var(--P-s)); line-height: 1.45;
+}
+.chatline b { color: var(--pc); margin-right: 8px; font-size: calc(0.86rem * var(--L-s) / var(--P-s)); }
+.deftip {
+  max-width: 300px; background: var(--ink); color: var(--ground); border-radius: var(--r-ctl);
+  padding: 8px 12px; font-family: var(--P-font); font-size: calc(0.8rem * var(--P-s)); line-height: 1.4;
+}
+.deftip b {
+  font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v);
+  letter-spacing: var(--T-t); margin-right: 6px; text-transform: uppercase;
+}
+.recapword {
+  position: relative; font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v);
+  font-size: calc(0.86rem * var(--T-s)); letter-spacing: var(--T-t); text-transform: uppercase; color: var(--pc);
+}
+.recapword i { position: absolute; left: -2px; right: -2px; top: calc(50% - 1px); height: 2px; border-radius: 1px; background: var(--pc); }
+
+.panel { display: flex; gap: 40px; align-items: flex-end; flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="lineup" id="lineup"></div>
+  <div id="dirs"></div>
+</div>
+
+<script>
+/* T = tile register, L = label register, P = prose register.
+   f font, w weight (w2: primary buttons), t tracking, s size scale against the
+   current system-ui metrics, v variation settings, dy nudge for tile centring. */
+const D = [
+  {
+    id: 'today', name: 'Today', fonts: 'system-ui · 800 / 700',
+    idea: [
+      `Where the game is now: the platform's own sans at 800 on tiles and 700 on labels. It's sturdy and it reads well, but the game looks different on every device (San Francisco on a Mac, Segoe on Windows, Roboto on Android), and it has no period to it. Everything below is the same board and controls with only the type changed.`,
+    ],
+    T: { f: 'var(--sys)', w: 800, t: '0.06em', s: 1 },
+    L: { f: 'var(--sys)', w: 700, w2: 800, t: '0.1em', s: 1 },
+    P: { f: 'var(--sys)', s: 1 },
+  },
+  {
+    id: 'clarendon', name: 'Clarendon', fonts: 'Besley · 800 tiles · 600 labels · 400 prose',
+    idea: [
+      `The most literal "standard dictionary." Clarendon was cut in 1845 to be the bold that sat beside text in reference books, so it's the face of the headword: the word you look up, before the definition. It stayed a reference-book staple well into the twentieth century.`,
+      `The bracketed slabs make each tile look stamped and heavy, like a solid object. Besley is a careful revival with real black weights, and it holds up at label sizes, so the whole UI can be set in one family.`,
+    ],
+    T: { f: "'Besley', serif", w: 800, t: '0.04em', s: 0.98 },
+    L: { f: "'Besley', serif", w: 600, w2: 700, t: '0.08em', s: 1 },
+    P: { f: "'Besley', serif", s: 0.98 },
+  },
+  {
+    id: 'modern', name: 'Schoolbook', fonts: 'Old Standard TT · 700 · 400 prose',
+    idea: [
+      `The "Modern" book faces of 1880 to 1950 come from the same Scotch and Century line as school readers, desk dictionaries and the Times Literary Supplement. Old Standard TT is drawn from those faces: crisp vertical stress, thin hairlines and a slightly formal schoolroom primness.`,
+      `It only goes up to Bold, so the tiles are lighter than today's and read more like printed paper than game pieces. This is the "page of the dictionary" option, where Clarendon is the "headword" option.`,
+    ],
+    T: { f: "'Old Standard TT', serif", w: 700, t: '0.05em', s: 1.04 },
+    L: { f: "'Old Standard TT', serif", w: 700, w2: 700, t: '0.1em', s: 1.04 },
+    P: { f: "'Old Standard TT', serif", s: 1.06 },
+  },
+  {
+    id: 'caslon', name: 'Caslon', fonts: 'Libre Caslon Text · 700 · 400 prose',
+    idea: [
+      `Caslon set Johnson's era and the Declaration of Independence, and through the twentieth century it was the default for American books that wanted to look serious. It's two centuries older than 1960, but it's what a 1960 publisher would have reached for to suggest "old and trustworthy."`,
+      `It's warm and a little irregular. The caps are wide with generous brackets, so letters fill the square well. Libre Caslon Text is the screen-tuned cut, sturdier than the display cuts.`,
+    ],
+    T: { f: "'Libre Caslon Text', serif", w: 700, t: '0.05em', s: 0.96 },
+    L: { f: "'Libre Caslon Text', serif", w: 700, w2: 700, t: '0.1em', s: 0.94 },
+    P: { f: "'Libre Caslon Text', serif", s: 0.94 },
+  },
+  {
+    id: 'baskerville', name: 'Baskerville', fonts: 'Libre Baskerville · 700 · 400 prose',
+    idea: [
+      `Wide, rational, sharply cut: the university-press and Penguin-classic look. It sits between Caslon's warmth and the Moderns' crispness. Its caps are among the widest here, so a W or M owns its whole tile.`,
+      `This is the "Oxford" option. It's calm and authoritative, maybe a touch too polite for a game where you break other people's words.`,
+    ],
+    T: { f: "'Libre Baskerville', serif", w: 700, t: '0.04em', s: 0.94 },
+    L: { f: "'Libre Baskerville', serif", w: 700, w2: 700, t: '0.09em', s: 0.92 },
+    P: { f: "'Libre Baskerville', serif", s: 0.92 },
+  },
+  {
+    id: 'bodoni', name: 'Bodoni', fonts: 'Bodoni Moda · 800 · optical sizes on',
+    idea: [
+      `The Didone: fat stems, hairline serifs, all contrast. At tile size it's dramatic, the 1960 magazine masthead and the dictionary's title page rather than its entries.`,
+      `Bodoni Moda has optical sizes, so the small labels automatically get sturdier hairlines than the big tiles. Even so, the labels are the weak spot. The pairing further down (Bodoni with Futura) is probably the better way to use it.`,
+    ],
+    T: { f: "'Bodoni Moda', serif", w: 800, t: '0.04em', s: 1.04 },
+    L: { f: "'Bodoni Moda', serif", w: 700, w2: 800, t: '0.1em', s: 1.02 },
+    P: { f: "'Bodoni Moda', serif", s: 1.0 },
+  },
+  {
+    id: 'fraunces', name: 'Soft Old Style', fonts: 'Fraunces · 700 · SOFT 100 · 400 prose',
+    idea: [
+      `A modern face drawn after the soft, chubby "Old Style" display types of the 1900s to 1920s (Windsor, Cooper, Goudy Heavy) that came back hard in 1970s bookshops and record sleeves. The variable "softness" axis is turned all the way up here, so the tiles feel like warm, worn, slightly rounded wood.`,
+      `It has the most personality on this page. The risk is that it becomes the game's whole personality.`,
+    ],
+    T: { f: "'Fraunces', serif", w: 700, t: '0.04em', s: 1.0, v: "'SOFT' 100, 'WONK' 0" },
+    L: { f: "'Fraunces', serif", w: 600, w2: 700, t: '0.08em', s: 1.0, v: "'SOFT' 100, 'WONK' 0" },
+    P: { f: "'Fraunces', serif", s: 1.0 },
+  },
+  {
+    id: 'rockwell', name: 'Geometric Slab', fonts: 'Arvo · 700 · 400 prose',
+    idea: [
+      `The Rockwell and Memphis tradition: slab serifs on compass-drawn letters. In the 1930s to 1960s this was the face of ads, packaging, typewriter-repair signs and board-game boxes, and it's the most "game" of the serifs.`,
+      `It's monoline, so it stays even at small sizes and the labels hold together in the same family. It's friendlier and more mechanical than Clarendon, with less of the dictionary about it.`,
+    ],
+    T: { f: "'Arvo', serif", w: 700, t: '0.04em', s: 0.98 },
+    L: { f: "'Arvo', serif", w: 700, w2: 700, t: '0.08em', s: 0.94 },
+    P: { f: "'Arvo', serif", s: 0.92 },
+  },
+  {
+    id: 'woodtype', name: 'Wood Type', fonts: 'Alfa Slab One tiles · Arvo labels',
+    idea: [
+      `Fat slabs pulled on a proof press for auction bills and county-fair posters. This is letterpress, not the dictionary. It makes great loud tiles and comes in exactly one very heavy weight, so it can't do labels. Arvo does them here.`,
+      `It works if you want the board to feel like a stack of printer's blocks you're physically rearranging.`,
+    ],
+    T: { f: "'Alfa Slab One', serif", w: 400, t: '0.04em', s: 0.94 },
+    L: { f: "'Arvo', serif", w: 700, w2: 700, t: '0.08em', s: 0.94 },
+    P: { f: "'Arvo', serif", s: 0.92 },
+  },
+  {
+    id: 'franklin', name: 'Franklin Gothic', fonts: 'Libre Franklin · 800 / 600',
+    idea: [
+      `The American newspaper-headline sans of the century, and the smallest step from where you are now. It's still a heavy sans, but with the tighter caps and slightly irregular warmth of a 1900s American grotesque instead of a neutral system face.`,
+      `If the serifs feel like too much, this gets you a period without changing the game's voice. It would also be the same on every device.`,
+    ],
+    T: { f: "'Libre Franklin', sans-serif", w: 800, t: '0.05em', s: 0.98 },
+    L: { f: "'Libre Franklin', sans-serif", w: 600, w2: 800, t: '0.1em', s: 0.96 },
+    P: { f: "'Libre Franklin', sans-serif", s: 0.94 },
+  },
+  {
+    id: 'futura', name: 'Futura', fonts: 'Jost · 700 / 500',
+    idea: [
+      `Futura is from 1927, but it's everywhere in 1960s American print: ad copy, paperback covers, the plaque left on the moon. Jost is a faithful open revival. The O is a true circle, which echoes the circular selection disc nicely.`,
+      `The tiles are very clean and the labels are almost architectural. It's mid-century modern rather than mid-century reference.`,
+    ],
+    T: { f: "'Jost', sans-serif", w: 700, t: '0.05em', s: 1.04 },
+    L: { f: "'Jost', sans-serif", w: 500, w2: 600, t: '0.12em', s: 1.04 },
+    P: { f: "'Jost', sans-serif", s: 1.04 },
+  },
+  {
+    id: 'din', name: 'Signage', fonts: 'Barlow Condensed · 700 / 600 · Barlow prose',
+    idea: [
+      `DIN and the American highway gothics are engineered letters for signs, labels and filing systems. The condensed caps stand tall in the square with lots of air either side, and the labels can be set bigger without getting any wider. The phone layout would like that.`,
+      `The feel is the municipal library or the index drawer label rather than the book itself.`,
+    ],
+    T: { f: "'Barlow Condensed', sans-serif", w: 700, t: '0.05em', s: 1.14 },
+    L: { f: "'Barlow Condensed', sans-serif", w: 600, w2: 700, t: '0.1em', s: 1.2 },
+    P: { f: "'Barlow', sans-serif", s: 1.0 },
+  },
+  {
+    id: 'typewriter', name: 'Typewriter', fonts: 'Courier Prime · 700 · 400 prose',
+    idea: [
+      `The card catalog, the carbon-copy form, the typed index card stamped OVERDUE. Courier Prime is the most robust Courier and has a real bold.`,
+      `Monospace has a nice side effect: every claim list and the post-game timeline becomes a little ledger, with letters stacked in exact columns. The tiles are the thinnest of any option, but they read as a typewriter key, not as weak type.`,
+    ],
+    T: { f: "'Courier Prime', monospace", w: 700, t: '0.02em', s: 1.16 },
+    L: { f: "'Courier Prime', monospace", w: 700, w2: 700, t: '0.06em', s: 1.12 },
+    P: { f: "'Courier Prime', monospace", s: 1.04 },
+  },
+  {
+    id: 'fell', name: 'Antique Letterpress', fonts: 'IM Fell English SC · IM Fell English prose',
+    idea: [
+      `Digitised from the Fell types cut for Oxford in the 1670s, with the ink spread, wobbly edges and uneven weight left in. It's the most "old book" texture available. There's only one weight, so it's light on the tiles.`,
+      `It probably isn't the final face, but it's useful as the far end of "old." If you like it, the answer might be Caslon with a bit of this roughness.`,
+    ],
+    T: { f: "'IM Fell English SC', serif", w: 400, t: '0.04em', s: 1.12 },
+    L: { f: "'IM Fell English SC', serif", w: 400, w2: 400, t: '0.08em', s: 1.12 },
+    P: { f: "'IM Fell English', serif", s: 1.08 },
+  },
+  {
+    id: 'inscriptional', name: 'Inscriptional', fonts: 'Cinzel · 800 / 700 · EB Garamond prose',
+    idea: [
+      `Roman capitals in the Trajan tradition, and caps-only by design, which suits a game that never uses lowercase. It's stately and carved, like the lettering on a library's front steps, and its small-caps logic makes the wordmark and the tiles match.`,
+      `It's also the font of a thousand movie posters, and that's the danger.`,
+    ],
+    T: { f: "'Cinzel', serif", w: 800, t: '0.04em', s: 1.0 },
+    L: { f: "'Cinzel', serif", w: 700, w2: 800, t: '0.08em', s: 1.0 },
+    P: { f: "'EB Garamond', serif", s: 1.06 },
+  },
+  {
+    id: 'space', name: 'Space Age', fonts: 'Michroma · 400',
+    idea: [
+      `The outlier: Microgramma and Eurostile, 1952 to 1962, the other half of 1960. Wide squared letters fill the tile edge to edge. It's control panels and NASA rather than Webster's, and it's here to mark how far "mid-century" can stretch.`,
+    ],
+    T: { f: "'Michroma', sans-serif", w: 400, t: '0.02em', s: 0.78 },
+    L: { f: "'Michroma', sans-serif", w: 400, w2: 400, t: '0.06em', s: 0.8 },
+    P: { f: 'var(--sys)', s: 1.0 },
+  },
+  {
+    id: 'pair-headword', name: 'Headword & Running Head', fonts: 'Besley 800 tiles · Libre Franklin 600 labels · Besley prose',
+    idea: [
+      `A pairing that maps straight onto the TILE and LABEL split already in styles.css. Tiles, words and scores are the entries, so they're set in Clarendon. Every button, heading and name is the page furniture, so it gets Franklin Gothic, small and tracked, like the running heads and guide words at the top of a dictionary page.`,
+      `Of everything here, this is my pick for "standard dictionary, 1960."`,
+    ],
+    T: { f: "'Besley', serif", w: 800, t: '0.04em', s: 0.98 },
+    L: { f: "'Libre Franklin', sans-serif", w: 600, w2: 700, t: '0.11em', s: 0.94 },
+    P: { f: "'Besley', serif", s: 0.98 },
+  },
+  {
+    id: 'pair-magazine', name: 'Mid-Century Magazine', fonts: 'Bodoni Moda 800 tiles · Jost 500 labels · Jost prose',
+    idea: [
+      `The 1960 glossy-magazine pairing: Didone display with a geometric sans for everything small. Bodoni gets to be dramatic on the board, and Futura does the work Bodoni can't do at 11px.`,
+      `It's more glamorous than bookish.`,
+    ],
+    T: { f: "'Bodoni Moda', serif", w: 800, t: '0.04em', s: 1.04 },
+    L: { f: "'Jost', sans-serif", w: 500, w2: 600, t: '0.14em', s: 1.0 },
+    P: { f: "'Jost', sans-serif", s: 1.04 },
+  },
+  {
+    id: 'pair-catalog', name: 'Card Catalog', fonts: 'Libre Caslon 700 tiles · Courier Prime 700 labels · Caslon prose',
+    idea: [
+      `The book and the card that files it. Tiles and words are in Caslon, as if they came from the book. Labels, names and settings are in Courier, as if typed onto the catalog card.`,
+      `It's the most "library" of the options, and the typewriter labels make the settings feel like a form you're filling in.`,
+    ],
+    T: { f: "'Libre Caslon Text', serif", w: 700, t: '0.05em', s: 0.96 },
+    L: { f: "'Courier Prime', monospace", w: 700, w2: 700, t: '0.05em', s: 1.06 },
+    P: { f: "'Libre Caslon Text', serif", s: 0.94 },
+  },
+];
+
+function vars(d) {
+  const r = (k, o) => [
+    `--${k}-font:${o.f}`, `--${k}-w:${o.w ?? 400}`, `--${k}-t:${o.t ?? '0'}`,
+    `--${k}-s:${o.s ?? 1}`, `--${k}-v:${o.v ?? 'normal'}`,
+  ];
+  return [...r('T', d.T), ...r('L', d.L), `--L-w2:${d.L.w2 ?? d.L.w}`, ...r('P', d.P)].join(';');
+}
+
+const LETTERS = 'STRAPEINOLCAWEDORTHMBULKS';
+const CLAIMS = [
+  { c: 0, idx: [0, 1, 2, 3, 4], p: 62 },   // STRAP
+  { c: 1, idx: [12, 13, 14], p: 24 },      // WED
+  { c: 2, idx: [20, 21, 22, 23], p: 86 },  // BULK
+];
+const SEL = [10, 15, 11, 17];              // COAT
+const ctr = (i) => `${(i % 5) * 1.1 + 0.5},${Math.floor(i / 5) * 1.1 + 0.5}`;
+
+function board() {
+  const owner = {};
+  CLAIMS.forEach((k) => k.idx.forEach((i) => (owner[i] = k)));
+  const tiles = [...LETTERS].map((l, i) => {
+    const k = owner[i];
+    const cls = ['tile', k && `claimed c${k.c}`, SEL.includes(i) && 'sel'].filter(Boolean).join(' ');
+    return `<div class="${cls}"${k ? ` style="--p:${k.p}%"` : ''}><span>${l}</span></div>`;
+  }).join('');
+  const lines = CLAIMS.map((k) =>
+    `<polyline class="c${k.c}" stroke="var(--pc)" points="${k.idx.map(ctr).join(' ')}"/>`).join('');
+  return `
+    <div class="boardwrap">
+      <div class="board">
+        <svg class="trail" viewBox="0 0 5.4 5.4">${lines}<polyline class="sel" points="${SEL.map(ctr).join(' ')}"/></svg>
+        ${tiles}
+      </div>
+      <div class="readout">
+        <span class="word">COAT</span>
+        <button class="claim">claim <kbd>⏎</kbd></button>
+        <button class="x">✕</button>
+      </div>
+    </div>`;
+}
+
+function strip(word, claimFrom) {
+  return `<div class="strip">${[...word].map((l, i) =>
+    i >= claimFrom
+      ? `<div class="tile claimed c0" style="--p:55%"><span>${l}</span></div>`
+      : `<div class="tile"><span>${l}</span></div>`).join('')}</div>`;
+}
+
+function ui() {
+  return `
+    <div class="ui">
+      <div class="row split">
+        <div>
+          <h1 class="wordmark">WordBreak</h1>
+          <p class="tag lbl"><a href="#">how to play</a></p>
+        </div>
+        <button class="primary">new table</button>
+      </div>
+
+      <div class="tablerow">
+        <span class="tname">benji's table</span>
+        <span class="dots"><i class="dot c0"></i><i class="dot c1"></i><i class="dot c2"></i></span>
+        <span class="meta">3/8 · 5×5 · 3 min</span>
+        <span class="phase">playing</span>
+      </div>
+
+      <div class="stack">
+        <div class="setting"><label>board</label>
+          <div class="segmented"><button>4×4</button><button class="on">5×5</button><button>6×6</button></div></div>
+        <div class="setting"><label>ends</label>
+          <div class="segmented"><button class="on">time</button><button>points</button></div></div>
+        <div class="setting"><label>length</label>
+          <div class="segmented"><button>2 min</button><button class="on">3 min</button><button>5 min</button></div></div>
+      </div>
+
+      <div class="row">
+        <button class="ghost big">leave</button>
+        <button class="primary big">ready</button>
+        <button class="primary big c0 filling">starting…</button>
+        <button class="ghost">copy</button>
+        <span class="badge">host</span>
+      </div>
+
+      <div class="row split">
+        <div class="scores">
+          <div class="player c0"><div class="playerhead"><span class="name">benji</span><span class="pts">23</span></div>
+            <ul class="claims"><li>strap</li><li>planet</li></ul></div>
+          <div class="player c1"><div class="playerhead"><span class="name">rosa</span><span class="pts">17</span></div>
+            <ul class="claims"><li>thorn</li><li>wed</li></ul></div>
+          <div class="player c2"><div class="playerhead"><span class="name">margo</span><span class="pts">9</span></div>
+            <ul class="claims"><li>bulk</li></ul></div>
+        </div>
+        <div class="stack" style="align-items:flex-end">
+          <span class="clock">2:41</span>
+          <span class="clock low">0:24</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="recapwho c0"><span class="name">benji</span><span class="recappts">38</span></div>
+        <div class="recapwho c1"><span class="name">rosa</span><span class="recappts">31</span></div>
+        <div class="stack">
+          <span class="recapword c1">thorn<i class="c0"></i></span>
+          <span class="recapword c0">northern</span>
+        </div>
+        <div class="stack" style="flex:1; min-width:240px">
+          <p class="chatline c1"><b>rosa</b>you absolute vandal, that was my word</p>
+          <div class="deftip"><b>abash</b>cause to be embarrassed; cause to feel self-conscious</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+document.getElementById('lineup').innerHTML = D.map((d) => `
+  <a href="#${d.id}">${d.name}</a>
+  <div style="${vars(d)}">${strip('WORDBREAK', 4)}</div>`).join('');
+
+document.getElementById('dirs').innerHTML = D.map((d) => `
+  <section class="dir" id="${d.id}" style="${vars(d)}">
+    <div class="about">
+      <h2>${d.name}</h2>
+      <div class="fonts">${d.fonts}</div>
+      ${d.idea.map((p) => `<p>${p}</p>`).join('')}
+    </div>
+    <div class="spec">${board()}${ui()}</div>
+  </section>`).join('');
+</script>
+</body>
+</html>
