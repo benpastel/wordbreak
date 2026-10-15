@@ -353,8 +353,10 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 /* ------------------------------------------------------------ game */
 /* ---------------------------------------------------------------- play layout
    A single column: header, board, readout, scoreboard. The board sits above
-   everything that grows, so claims appearing under a name extend the page
-   downward and can never move the board itself.
+   everything that grows, so claims appearing under a name can never move the
+   board itself. Exactly one screen tall: the scoreboard takes what is left
+   under the board, and the word lists are cut to fit it (Game.tsx), so the page
+   never scrolls.
 
    Board size comes only from the viewport and the grid size — there is no
    content-derived term anywhere in it. */
@@ -362,8 +364,9 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   flex: 1;
   /* Sized here rather than on .boardwrap so the status row above can match it. */
   --board: min(calc(100vw - 14px), 56vh, 560px);
+  height: 100dvh; overflow: hidden;
   display: flex; flex-direction: column; align-items: center;
-  gap: 10px; padding: 10px 8px calc(var(--shellbar) + env(safe-area-inset-bottom, 0px) + 24px);
+  gap: 10px; padding: 10px 8px calc(var(--shellbar) + env(safe-area-inset-bottom, 0px) + 12px);
 }
 
 .playtop {
@@ -466,9 +469,10 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .readout {
   display: flex; align-items: center; justify-content: flex-end; gap: 14px;
   align-self: stretch; flex-wrap: wrap;
-  /* Reserved whether or not there is a word, so the scoreboard never jumps. */
-  min-height: calc(var(--cell) * 0.7);
-  margin: 12px 0 0;
+  /* Reserved whether or not there is a word, so the scoreboard never jumps. Just
+     the word's own height, or the clear button's, whichever is taller. */
+  min-height: max(46px, calc(var(--cell) * 0.46 * var(--tile-scale)));
+  margin: 6px 0 0;
 }
 .readout .word {
   font-family: var(--font-tile); font-weight: var(--w-tile);
@@ -501,11 +505,12 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .readout .x:active { transform: scale(0.94); }
 
 /* Beneath the board, players side by side with their words hanging below each.
-   Growth is downward only, which is why the board above never moves. */
+   Fills whatever height the board leaves and never grows past it. */
 .scores {
+  flex: 1 1 0; min-height: 0; overflow: hidden;
   display: flex; flex-wrap: wrap; gap: 16px 30px;
-  justify-content: center; align-items: flex-start;
-  width: min(100%, 760px); margin-top: 4px;
+  justify-content: center; align-content: flex-start; align-items: flex-start;
+  width: min(100%, 760px);
 }
 .player { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
 .playerhead { display: flex; align-items: baseline; gap: 8px; }
