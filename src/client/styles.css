@@ -53,20 +53,22 @@
      Prose is the third register and has no token, because it takes the body
      defaults untouched: chat, definitions and errors are the only text here a
      person reads as sentences, and sentences are not shouted. */
-  --track-tile: 0.04em;
+  --track-tile: 0.05em;
   --track-label: 0.08em;
 
-  /* Besley, a Clarendon: the bold that dictionaries set their headwords in. One
-     family for every register, told apart by weight. It is variable, so these are
-     points on a dial rather than separate fonts. --tile-scale corrects for its
-     capitals against the cell-relative sizes the board was tuned with. */
-  --font-tile: 'Besley', Georgia, serif;
-  --font-label: 'Besley', Georgia, serif;
-  --font-prose: 'Besley', Georgia, serif;
-  --tile-scale: 0.98;
-  --w-tile: 650;
-  --w-label: 550;
-  --w-label-strong: 700;
+  /* Archivo, after the late-1800s American grotesques: monoline and open, so each
+     capital is quick to find on a full board, with a little wood type in the
+     curves. One family for every register, told apart by weight. It is variable,
+     so these are points on a dial rather than separate fonts. --tile-scale
+     corrects for its capitals against the cell-relative sizes the board was tuned
+     with. */
+  --font-tile: 'Archivo', system-ui, sans-serif;
+  --font-label: 'Archivo', system-ui, sans-serif;
+  --font-prose: 'Archivo', system-ui, sans-serif;
+  --tile-scale: 1;
+  --w-tile: 700;
+  --w-label: 650;
+  --w-label-strong: 800;
 
   /* The one fluid value in the app. A setup screen has little to say and a tall
      monitor to say it in, so the frame breathes with the viewport instead of
