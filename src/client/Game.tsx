@@ -35,7 +35,15 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
     [table.players],
   );
 
-  const claimsByPlayer = useMemo(() => R.claimsByPlayer(game.claims), [game.claims]);
+  // The word each player claimed last and still holds: one line under each name.
+  const latestByPlayer = useMemo(() => {
+    const m = new Map<string, Claim>();
+    for (const c of game.claims) {
+      const cur = m.get(c.playerId);
+      if (!cur || c.claimedAt > cur.claimedAt) m.set(c.playerId, c);
+    }
+    return m;
+  }, [game.claims]);
 
   const claimByTile = useMemo(() => {
     const m = new Map<number, Claim>();
@@ -126,32 +134,6 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
     },
     [game],
   );
-
-  // The lists hang below the board in whatever height it leaves, so cut them to the
-  // lines that fit there. The scoreboard's height comes from the layout alone, never
-  // from its contents, so measuring it can't feed back into itself.
-  const scoresRef = useRef<HTMLDivElement>(null);
-  const [wordRows, setWordRows] = useState(6);
-  const playerCount = table.players.length;
-  useEffect(() => {
-    const el = scoresRef.current;
-    if (!el) return;
-    const measure = () => {
-      const players = [...el.querySelectorAll<HTMLElement>('.player')];
-      if (players.length === 0) return;
-      // Players wrap into rows on a narrow screen, and each row gets a share.
-      const lines = new Set(players.map((p) => p.offsetTop)).size;
-      const gap = parseFloat(getComputedStyle(el).rowGap) || 0;
-      const share = (el.clientHeight - gap * (lines - 1)) / lines;
-      const head = players[0].querySelector<HTMLElement>('.playerhead')?.offsetHeight ?? 24;
-      const rowH = el.querySelector<HTMLElement>('.claims li')?.offsetHeight ?? 17;
-      setWordRows(Math.max(1, Math.floor((share - head - 5) / (rowH + 1))));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [playerCount]);
 
   useEffect(() => {
     const up = () => {
@@ -265,7 +247,7 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
         </div>
       </div>
 
-      <div className="scores" ref={scoresRef}>
+      <div className="scores">
         {table.players.map((p) => (
           <div
             key={p.id}
@@ -279,7 +261,9 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
               <span className="pts">{p.score}</span>
               <Trophies trophies={p.trophies} />
             </div>
-            <ClaimList claims={claimsByPlayer.get(p.id) ?? []} rows={wordRows} />
+            {latestByPlayer.has(p.id) && (
+              <span className="latest">{latestByPlayer.get(p.id)!.word}</span>
+            )}
           </div>
         ))}
       </div>
@@ -358,27 +342,6 @@ function TileView({ idx, letter, claim, color, selected, reseeding, breaking, on
     >
       <span>{letter}</span>
     </div>
-  );
-}
-
-/** The words this player is currently holding, in at most `rows` lines. Truncates
- *  from the bottom, so what drops off is always the shortest and least consequential,
- *  and the last line becomes the ellipsis. */
-function ClaimList({ claims, rows }: { claims: Claim[]; rows: number }) {
-  if (claims.length === 0) return null;
-  const shown = claims.length <= rows ? claims : claims.slice(0, rows - 1);
-  const hidden = claims.length - shown.length;
-  return (
-    <ul className="claims">
-      {shown.map((c) => (
-        <li key={c.id}>{c.word}</li>
-      ))}
-      {hidden > 0 && (
-        <li className="more" title={`${hidden} shorter ${hidden === 1 ? 'word' : 'words'}`}>
-          …
-        </li>
-      )}
-    </ul>
   );
 }
 
