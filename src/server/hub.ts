@@ -11,6 +11,7 @@ import type {
 } from '../shared/types';
 import * as R from '../shared/rules';
 import { Brain } from './bot/brain';
+import { botName } from './bot/names';
 import { isWord } from './dictionary';
 import { define } from './definitions';
 import { MemoryStore } from './store';
@@ -266,10 +267,10 @@ export class Hub {
     const t = this.tableOf(playerId);
     if (!t || t.hostId !== playerId || t.phase === 'playing') return;
     if (t.playerIds.length >= MAX_PLAYERS) return;
-    const others = t.playerIds.filter((id) => this.store.getPlayer(id)?.bot).length;
+    const taken = new Set(t.playerIds.map((id) => this.store.getPlayer(id)?.name.toLowerCase() ?? ''));
     const bot: PlayerRecord = {
       id: rid(12),
-      name: others ? `bot ${others + 1}` : 'bot',
+      name: botName(taken),
       color: this.freeColor(t),
       score: 0,
       trophies: noTrophies(),

@@ -239,6 +239,7 @@ export default function TableRoom({
                 </>
               )}
               {p.id === table.hostId && <span className="badge">host</span>}
+              {p.bot && <span className="badge">bot</span>}
               {p.bot && (
                 <BotLevel
                   difficulty={p.bot.difficulty}
