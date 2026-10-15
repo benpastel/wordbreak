@@ -424,11 +424,16 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   line-height: 1; text-box: trim-both cap alphabetic;
 }
 
-/* CHANNEL 1 — colour: whose claim, and how close to banking. */
+/* CHANNEL 1 — colour: whose claim, and how close to banking. The ring and the trail
+   say whose; the fill only has to show how far it has risen, so it is the player's
+   colour cut well back towards the tile face: about 0.05 of lightness from it in
+   either theme, the least that still reads as a level to tired eyes. Mixed in
+   oklab, because oklch would swing the hue on its way to the near-grey face. */
 .tile.claimed {
   --ring: inset 0 0 0 3px var(--pc);
+  --pf-tile: color-mix(in oklab, var(--pf) 40%, var(--tile-face));
   background:
-    linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
+    linear-gradient(to top, var(--pf-tile) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%),
     var(--tile-face);
 }
 
