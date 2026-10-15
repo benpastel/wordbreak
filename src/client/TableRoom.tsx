@@ -69,18 +69,20 @@ function BotLevel({
   onPick: (d: number) => void;
 }) {
   return (
-    <div className="segmented botlevel" aria-label="Bot difficulty">
-      {BOT_LEVELS.map((l) => (
-        <button
-          key={l.name}
-          className={difficulty === l.difficulty ? 'on' : ''}
-          disabled={disabled}
-          onClick={() => onPick(l.difficulty)}
-        >
-          {l.name}
-        </button>
-      ))}
-    </div>
+    <span className="botlevel">
+      <select
+        value={difficulty}
+        disabled={disabled}
+        aria-label="Bot difficulty"
+        onChange={(e) => onPick(Number(e.target.value))}
+      >
+        {BOT_LEVELS.map((l) => (
+          <option key={l.name} value={l.difficulty}>
+            {l.name}
+          </option>
+        ))}
+      </select>
+    </span>
   );
 }
 
@@ -219,30 +221,38 @@ export default function TableRoom({
                 p.ready ? ' setgo' : ''
               }${p.bot ? ' isbot' : ''}`}
             >
-              {p.id === meId ? (
-                <>
-                  <ColorDot color={p.color} taken={taken} onColor={onColor} />
-                  <EditableName name={p.name} onSetName={onSetName} />
-                </>
-              ) : (
-                <>
-                  <i className="dot" />
-                  <span className="name">{p.name}</span>
-                </>
-              )}
-              {p.id === table.hostId && <span className="badge">host</span>}
-              {p.bot && <span className="badge">bot</span>}
-              {p.bot && (
+              <span className="who">
+                {p.id === meId ? (
+                  <>
+                    <ColorDot color={p.color} taken={taken} onColor={onColor} />
+                    <EditableName name={p.name} onSetName={onSetName} />
+                  </>
+                ) : (
+                  <>
+                    <i className="dot" />
+                    <span className="name">{p.name}</span>
+                  </>
+                )}
+              </span>
+              <span className="tags">
+                {p.id === table.hostId && <span className="badge">host</span>}
+                {p.bot && <span className="badge">bot</span>}
+              </span>
+              {p.bot ? (
                 <BotLevel
                   difficulty={p.bot.difficulty}
                   disabled={locked}
                   onPick={(d) => onBotDifficulty(p.id, d)}
                 />
+              ) : (
+                <span />
               )}
-              {p.bot && !locked && (
-                <button className="botout" aria-label={`Remove `} onClick={() => onRemoveBot(p.id)}>
+              {p.bot && !locked ? (
+                <button className="botout" aria-label={`Remove ${p.name}`} onClick={() => onRemoveBot(p.id)}>
                   ×
                 </button>
+              ) : (
+                <span />
               )}
             </div>
           ))}

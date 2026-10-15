@@ -596,7 +596,17 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   border-bottom: 1px solid var(--hairline);
 }
 /* Wraps rather than squeezes: eight players on a phone become rows, not slivers. */
-.setuphead { flex-wrap: wrap; gap: 10px 18px; }
+/* One seat per line, on shared columns — name, tags, difficulty, remove — so the
+   tags and controls stand in a column down the list whatever the names' lengths. */
+.setuphead {
+  display: grid; gap: 10px 12px; align-items: center;
+  grid-template-columns: minmax(0, max-content) max-content max-content max-content 1fr;
+}
+.setuphead .setupwho { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; column-gap: 12px; }
+.setupwho .who { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.setupwho .who > :not(.name) { flex: none; }
+.setupwho .who .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.setupwho .tags { display: flex; gap: 6px; }
 .recapwho, .setupwho { flex: 1; min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
 /* A seat is read, not ranked, so it takes only the width of its own name. */
 .setupwho { flex: 0 1 auto; align-items: center; gap: 0 9px; font-weight: var(--w-label); }
@@ -606,7 +616,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   font-family: var(--font-tile); font-weight: var(--w-tile); font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums;
 }
 /* Ready, wherever a list of players is shown between matches. */
-.setgo > .name::after {
+.setgo > .name::after, .setgo > .who > .name::after {
   content: '✓'; margin-left: 6px; font-size: 0.8em; color: var(--go);
 }
 .recapscroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
@@ -778,8 +788,22 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 /* ------------------------------------------------------------------- bots
    A bot's seat carries its difficulty as a slider in its own colour, where a
    person's seat would carry nothing. */
-.setupwho .botlevel { gap: 4px; }
-.setupwho .botlevel button { font-size: 0.68rem; padding: 4px 9px; }
+/* A select cut like the other controls, with its own small chevron in place of the
+   browser's. */
+.botlevel { position: relative; display: inline-flex; }
+.botlevel select {
+  appearance: none; border: 0; border-radius: var(--r-ctl); cursor: pointer;
+  font: inherit; font-size: 0.68rem; font-weight: var(--w-label);
+  text-transform: uppercase; letter-spacing: var(--track-label);
+  padding: 4px 24px 4px 9px; background: var(--tile-face); color: var(--ink-soft);
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.botlevel select:hover:not(:disabled) { color: var(--ink); }
+.botlevel select:disabled { cursor: default; opacity: 0.6; }
+.botlevel::after {
+  content: ''; position: absolute; right: 9px; top: calc(50% - 2px); pointer-events: none;
+  border: 4px solid transparent; border-bottom: 0; border-top-color: var(--ink-soft);
+}
 .botout {
   background: none; color: var(--ink-mute); font-size: 1.1rem; line-height: 1;
   padding: 0 2px;
@@ -787,8 +811,8 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .botout:hover { color: var(--ink); }
 /* People share the top line; each bot takes a line of its own beneath them, and add
    bot comes last. */
-.setuphead .setupwho.isbot { flex-basis: 100%; order: 1; }
-.setuphead .addbotrow { flex-basis: 100%; order: 2; }
+.setuphead .setupwho.isbot { order: 1; }
+.setuphead .addbotrow { grid-column: 1 / -1; order: 2; }
 .setuphead .addbot { padding: 4px 12px; font-size: 0.72rem; }
 
 /* ------------------------------------------------------------ preferences
