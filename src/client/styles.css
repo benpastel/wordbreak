@@ -410,7 +410,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .tile {
   position: relative; aspect-ratio: 1; border-radius: 13%;
   display: grid; place-items: center;
-  font-size: calc(var(--cell) * 0.46 * var(--tile-scale));
+  font-size: calc(var(--cell) * 0.52 * var(--tile-scale));
   font-family: var(--font-tile); font-weight: var(--w-tile); letter-spacing: 0.01em;
   color: var(--ink); background: var(--tile-face); cursor: pointer;
   --ring: inset 0 0 0 0 transparent;
@@ -457,7 +457,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .flyer {
   position: fixed; z-index: 50; pointer-events: none;
   border-radius: 13%; display: grid; place-items: center;
-  font-size: calc(var(--fly) * 0.46 * var(--tile-scale));
+  font-size: calc(var(--fly) * 0.52 * var(--tile-scale));
   font-family: var(--font-tile); font-weight: var(--w-tile); line-height: 1; text-box: trim-both cap alphabetic;
   color: var(--ink); background: var(--pf);
   box-shadow: inset 0 0 0 3px var(--pc), 0 3px 10px oklch(0.3 0.02 70 / 0.2);
