@@ -58,9 +58,7 @@ function Setting<T extends string | number>({
   );
 }
 
-/** A bot's difficulty, one of BOT_LEVELS, from extremely easy at the left to extremely
- *  hard at the right. Held locally while dragging, so the thumb does not jump back
- *  between the server echoing each step. */
+/** A bot's difficulty, picked from BOT_LEVELS. */
 function BotLevel({
   difficulty,
   disabled,
@@ -70,25 +68,19 @@ function BotLevel({
   disabled: boolean;
   onPick: (d: number) => void;
 }) {
-  const [draft, setDraft] = useState<number | null>(null);
   return (
-    <input
-      type="range"
-      className="botlevel"
-      min={0}
-      max={BOT_LEVELS.length - 1}
-      step={1}
-      value={draft ?? Math.round(difficulty * (BOT_LEVELS.length - 1))}
-      disabled={disabled}
-      aria-label="Bot difficulty"
-      onChange={(e) => {
-        const v = Number(e.target.value);
-        setDraft(v);
-        onPick(BOT_LEVELS[v]);
-      }}
-      onPointerUp={() => setDraft(null)}
-      onBlur={() => setDraft(null)}
-    />
+    <div className="segmented botlevel" aria-label="Bot difficulty">
+      {BOT_LEVELS.map((l) => (
+        <button
+          key={l.name}
+          className={difficulty === l.difficulty ? 'on' : ''}
+          disabled={disabled}
+          onClick={() => onPick(l.difficulty)}
+        >
+          {l.name}
+        </button>
+      ))}
+    </div>
   );
 }
 

@@ -302,7 +302,9 @@ export class Hub {
     const bot = this.store.getPlayer(botId);
     if (!t || t.hostId !== playerId || t.phase === 'playing') return;
     if (!bot?.bot || bot.tableId !== t.id || !Number.isFinite(difficulty)) return;
-    const level = BOT_LEVELS.reduce((a, b) => (Math.abs(b - difficulty) < Math.abs(a - difficulty) ? b : a));
+    const level = BOT_LEVELS.map((l) => l.difficulty).reduce((a, b) =>
+      Math.abs(b - difficulty) < Math.abs(a - difficulty) ? b : a,
+    );
     bot.bot = { ...bot.bot, difficulty: level };
     this.store.putPlayer(bot);
     this.pushTable(t.id, []);

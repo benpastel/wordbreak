@@ -402,7 +402,7 @@ process.on('exit', stop);
     h.send({ t: 'removeBot', botId: spare.id });
     await sleep(200);
     check('difficulty is clamped, and only the host sets it',
-      bots()[0].bot.difficulty === 1, JSON.stringify(bots().map((p) => p.bot)));
+      bots()[0].bot.difficulty === 0.75, JSON.stringify(bots().map((p) => p.bot)));
     check('the host can remove a bot', bots().length === 1 && bots()[0].id === hard.id);
     h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 0.6 });
     await sleep(100);

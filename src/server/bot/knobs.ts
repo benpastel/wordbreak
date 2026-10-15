@@ -6,8 +6,8 @@
 // is the step that feels even, not "200ms faster". The ends are deliberately far
 // from the middle three: those cover the human range in gentle steps, so they are
 // useful for picking a fair opponent, and the ends are there for trivial and
-// impossible. The five points are also the only levels a table offers (BOT_LEVELS);
-// in between is reachable only from the simulator.
+// impossible. The lower four points are the levels a table offers (BOT_LEVELS); the
+// top one and everything in between are reachable only from the simulator.
 
 /** Values at difficulty 0, 0.25, 0.5, 0.75 and 1. */
 type Anchor = [number, number, number, number, number];
