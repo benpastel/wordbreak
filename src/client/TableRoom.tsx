@@ -58,7 +58,8 @@ function Setting<T extends string | number>({
   );
 }
 
-/** A bot's difficulty, picked from BOT_LEVELS. */
+/** A bot's difficulty, picked from BOT_LEVELS in a small menu of our own: a native
+ *  select's list is drawn by the system and will not take the page's type. */
 function BotLevel({
   difficulty,
   disabled,
@@ -68,20 +69,61 @@ function BotLevel({
   disabled: boolean;
   onPick: (d: number) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open]);
+
   return (
-    <span className="botlevel">
-      <select
-        value={difficulty}
+    <span className="botlevel" ref={ref}>
+      <button
+        className="levelbtn"
         disabled={disabled}
         aria-label="Bot difficulty"
-        onChange={(e) => onPick(Number(e.target.value))}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
       >
-        {BOT_LEVELS.map((l) => (
-          <option key={l.name} value={l.difficulty}>
-            {l.name}
-          </option>
-        ))}
-      </select>
+        {/* Every name stacked in one cell, only the current one visible, so the
+            button is always as wide as the longest. */}
+        <span className="levelnames">
+          {BOT_LEVELS.map((l) => (
+            <span key={l.name} className={l.difficulty === difficulty ? 'on' : ''}>
+              {l.name}
+            </span>
+          ))}
+        </span>
+      </button>
+      {open && (
+        <span className="levelpop" role="listbox">
+          {BOT_LEVELS.map((l) => (
+            <button
+              key={l.name}
+              role="option"
+              aria-selected={l.difficulty === difficulty}
+              className={l.difficulty === difficulty ? 'on' : ''}
+              onClick={() => {
+                onPick(l.difficulty);
+                setOpen(false);
+              }}
+            >
+              {l.name}
+            </button>
+          ))}
+        </span>
+      )}
     </span>
   );
 }

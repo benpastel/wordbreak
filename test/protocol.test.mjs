@@ -410,19 +410,27 @@ process.on('exit', stop);
       JSON.stringify(bots()[0].bot));
     h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 1 });
     await sleep(100);
+    h.send({ t: 'addBot' });
+    await sleep(150);
+    check('a new bot copies the difficulty of the one above it',
+      bots().length === 2 && bots()[1].bot.difficulty === 0.75, JSON.stringify(bots().map((p) => p.bot)));
+    h.send({ t: 'removeBot', botId: bots()[1].id });
+    await sleep(100);
 
     const asBot = new Client('impostor');
     await asBot.connect(hard.id);
     check('nobody can sign in as a bot', asBot.id !== hard.id);
     asBot.close();
 
-    h.send({ t: 'setSettings', settings: { endMode: 'time', gameMs: 180_000 } });
+    h.send({ t: 'setSettings', settings: { endMode: 'time', gameMs: 360_000 } });
     await sleep(100);
     h.send({ t: 'setReady', ready: true });
     g.send({ t: 'setReady', ready: true });
     await sleep(COUNTDOWN + 300);
     check('the humans readying is enough to start', h.table.phase === 'playing', h.table.phase);
-    for (let i = 0; i < 50 && h.table.phase === 'playing'; i++) await sleep(100);
+    // Six seconds of play: enough for an expert, the strongest a table offers, to find
+    // something every time.
+    for (let i = 0; i < 90 && h.table.phase === 'playing'; i++) await sleep(100);
     check('the match ended', h.table.phase === 'ended', h.table.phase);
     const played = (h.table.recap?.words ?? []).filter((w) => w.playerId === hard.id);
     check('the bot played real words', played.length > 0 && played.every((w) => WORDS.has(w.word)),

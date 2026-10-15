@@ -268,6 +268,9 @@ export class Hub {
     if (!t || t.hostId !== playerId || t.phase === 'playing') return;
     if (t.playerIds.length >= MAX_PLAYERS) return;
     const taken = new Set(t.playerIds.map((id) => this.store.getPlayer(id)?.name.toLowerCase() ?? ''));
+    // A new bot plays like the one listed above it, so a table of five experts is one
+    // choice rather than five.
+    const above = t.playerIds.map((id) => this.store.getPlayer(id)?.bot).filter((b) => b).pop();
     const bot: PlayerRecord = {
       id: rid(12),
       name: botName(taken),
@@ -278,7 +281,7 @@ export class Hub {
       ready: true,
       tableId: t.id,
       lastSeen: Date.now(),
-      bot: { difficulty: DEFAULT_BOT_DIFFICULTY, seed: Math.floor(Math.random() * 2 ** 31) },
+      bot: { difficulty: above?.difficulty ?? DEFAULT_BOT_DIFFICULTY, seed: Math.floor(Math.random() * 2 ** 31) },
     };
     this.store.putPlayer(bot);
     t.playerIds.push(bot.id);
