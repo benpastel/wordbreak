@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordBreak middle ground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- One link per family, so a bad axis on one can't fail the whole request. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aleo:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:opsz,wght@18..144,400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gelasio:wght@400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Besley:wght@400..900&display=swap">
+<style>
+/* Tokens from src/client/styles.css, light and dark, so each board is the real
+   board with only the tile type swapped. */
+@property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+:root {
+  --ground: oklch(0.94 0.008 85);
+  --tray: oklch(0.902 0.012 85);
+  --tile-face: oklch(0.985 0.004 85);
+  --ink: oklch(0.22 0.01 60);
+  --ink-soft: oklch(0.52 0.008 70);
+  --ink-mute: oklch(0.7 0.008 70);
+  --hairline: oklch(0.86 0.01 85);
+  --selink: oklch(0.55 0.01 70);
+  --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+  --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+  --disc: oklch(0.885 0.008 75);
+  --disc-lip: oklch(1 0 0 / 0.7);
+  --sys: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--sys);
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --ground: oklch(0.215 0.006 70);
+  --tray: oklch(0.175 0.006 70);
+  --tile-face: oklch(0.275 0.008 75);
+  --ink: oklch(0.93 0.01 85);
+  --ink-soft: oklch(0.72 0.01 80);
+  --ink-mute: oklch(0.52 0.01 75);
+  --hairline: oklch(0.33 0.008 75);
+  --selink: oklch(0.72 0.01 80);
+  --shadow-1: 0 1px 1px oklch(0 0 0 / 0.35);
+  --shadow-2: 0 2px 5px oklch(0 0 0 / 0.3);
+  --disc: oklch(0.21 0.006 70);
+  --disc-lip: oklch(1 0 0 / 0.07);
+  color-scheme: dark;
+}
+.c0 { --hue: 250; --cf: 0.085; --lf: 0.87;  --ci: 0.16; }
+.c1 { --hue: 25;  --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+.c0, .c1 { --pf: oklch(var(--lf) var(--cf) var(--hue)); --pc: oklch(0.55 var(--ci) var(--hue)); }
+:root[data-theme='dark'] :is(.c0, .c1) {
+  --pf: oklch(calc(var(--lf) - 0.44) calc(var(--cf) * 0.9) var(--hue));
+  --pc: oklch(0.72 var(--ci) var(--hue));
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.page { width: min(1180px, 100%); margin: 0 auto; padding: 40px 24px 120px; }
+
+.theme { position: fixed; top: 14px; right: 16px; z-index: 5; display: flex; gap: 6px; }
+.theme button {
+  font: 700 0.72rem var(--sys); letter-spacing: 0.08em; text-transform: uppercase; border: 0; cursor: pointer;
+  border-radius: 7px; padding: 6px 12px; background: var(--tile-face); color: var(--ink-soft);
+  box-shadow: var(--shadow-1), var(--shadow-2);
+}
+.theme button.on { background: var(--ink); color: var(--ground); box-shadow: none; }
+
+/* --------------------------------------------------------- the line-up */
+.lineup { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; align-items: center; }
+.lineup a { color: var(--ink-soft); text-decoration: none; font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; }
+.lineup a:hover { color: var(--ink); }
+.lineup .grp { grid-column: 1 / -1; margin-top: 16px; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; }
+.lineup .grp:first-child { margin-top: 0; }
+.strip { --cell: 38px; display: inline-flex; gap: calc(var(--cell) * 0.1); padding: calc(var(--cell) * 0.1);
+  border-radius: 10px; background: var(--tray); width: max-content; max-width: 100%; overflow: hidden;
+  box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13), inset 0 0 0 1px oklch(0.3 0.02 70 / 0.05); }
+.strip .tile { width: var(--cell); flex: none; }
+
+/* ------------------------------------------------------------ options */
+.grp-h { margin: 96px 0 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+.grp-p { max-width: 68ch; font-size: 0.95rem; margin: 12px 0 0; }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); gap: 56px 48px; margin-top: 36px; }
+.opt h2 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+.opt .fonts { margin: 2px 0 8px; font-size: 0.78rem; color: var(--ink-soft); }
+.opt p { margin: 0 0 18px; font-size: 0.9rem; max-width: 60ch; }
+.spec { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+
+.board { --n: 5; --cell: 60px; --gap: calc(var(--cell) * 0.1);
+  display: grid; grid-template-columns: repeat(var(--n), var(--cell)); gap: var(--gap); padding: var(--gap);
+  border-radius: 14px; background: var(--tray); width: max-content;
+  box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13), inset 0 0 0 1px oklch(0.3 0.02 70 / 0.05); }
+
+.tile {
+  position: relative; aspect-ratio: 1; border-radius: 13%; display: grid; place-items: center;
+  font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v, normal);
+  font-size: calc(var(--cell) * 0.46 * var(--T-s)); letter-spacing: 0;
+  color: var(--ink); background: var(--tile-face);
+  --ring: inset 0 0 0 0 transparent;
+  box-shadow: var(--ring), var(--shadow-1), var(--shadow-2);
+}
+.tile > span { position: relative; z-index: 1; line-height: 1; text-box: trim-both cap alphabetic; }
+.tile.claimed {
+  --ring: inset 0 0 0 3px var(--pc);
+  background: linear-gradient(to top, var(--pf) 0 var(--p), transparent calc(var(--p) + 1.5%) 100%), var(--tile-face);
+}
+.tile.sel::before {
+  content: ''; position: absolute; z-index: 0; inset: 17%; border-radius: 50%; background: var(--disc);
+  box-shadow: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 var(--disc-lip);
+}
+
+.side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.word, .pts, .claims li {
+  font-family: var(--T-font); font-weight: var(--T-w); font-variation-settings: var(--T-v, normal);
+  text-transform: uppercase; letter-spacing: var(--T-t);
+}
+.word { font-size: calc(26px * var(--T-s)); line-height: 1; }
+.lbl {
+  font-family: var(--T-font); font-weight: var(--T-lw); font-variation-settings: var(--T-v, normal);
+  font-size: calc(0.78rem * var(--T-s)); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.claim { align-self: flex-start; background: var(--ink); color: var(--ground); padding: 7px 15px; border-radius: 7px; }
+.player { display: flex; flex-direction: column; gap: 3px; color: var(--pc); }
+.playerhead { display: flex; align-items: baseline; gap: 8px; }
+.player .lbl { font-size: calc(0.95rem * var(--T-s)); letter-spacing: 0.06em; }
+.pts { font-size: calc(1.15rem * var(--T-s)); font-variant-numeric: tabular-nums lining-nums; }
+.claims { list-style: none; margin: 0; padding: 0; }
+.claims li { font-size: calc(0.78rem * var(--T-s)); line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="theme" id="theme"></div>
+<div class="page">
+  <div class="lineup" id="lineup"></div>
+  <div id="groups"></div>
+</div>
+
+<script>
+/* f font, w tile weight, lw label weight, s size correction (cap height against
+   the cell), t word tracking, v variation settings. */
+const SYS = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+const G = [
+  {
+    name: 'Ends',
+    about: `The two you've played on: the old system font and the current Besley.`,
+    O: [
+      { id: 'system', name: 'System (before)', fonts: 'San Francisco on a Mac, Segoe on Windows · 800',
+        idea: `No voice, but the letters are monoline, wide and open, so the eye goes straight to each shape.`,
+        f: SYS, w: 800, lw: 700, s: 1, t: '0.06em' },
+      { id: 'besley', name: 'Besley (now)', fonts: 'Besley · 650',
+        idea: `High contrast with ball terminals and heavy brackets. Lots of character, but at tile size the serifs make letters look more alike: E, F and P share a silhouette, and C, G and O all close up.`,
+        f: "'Besley', serif", w: 650, lw: 550, s: 0.98, t: '0.04em' },
+    ],
+  },
+  {
+    name: 'Sans with a voice',
+    about: `The closest to the old font. Same monoline clarity, with a bit of period character in how the letters are drawn.`,
+    O: [
+      { id: 'franklin', name: 'Libre Franklin', fonts: 'Libre Franklin · 700',
+        idea: `Franklin Gothic is the American grotesque of the early 1900s: newspaper headlines, signs, the bold sans in reference books. Slightly narrow, with a two-storey G and a sturdy R. Probably the most "1960" a sans gets.`,
+        f: "'Libre Franklin', sans-serif", w: 700, lw: 650, s: 1, t: '0.05em' },
+      { id: 'archivo', name: 'Archivo', fonts: 'Archivo · 700, width 100',
+        idea: `Based on late-1800s American grotesques: squarer, with flat-sided curves and a bit of wood type in it. Very sturdy at small sizes.`,
+        f: "'Archivo', sans-serif", w: 700, lw: 650, s: 1, t: '0.05em' },
+      { id: 'plexsans', name: 'IBM Plex Sans', fonts: 'IBM Plex Sans · 700',
+        idea: `IBM's own grotesque, with cut-off ends and a slightly engineered look, like the labels on a 1960s machine. Every capital is very distinct.`,
+        f: "'IBM Plex Sans', sans-serif", w: 700, lw: 600, s: 1, t: '0.05em' },
+      { id: 'sourcesans', name: 'Source Sans 3', fonts: 'Source Sans 3 · 700',
+        idea: `A humanist sans in the line of News Gothic. Open counters and a gentle width change from letter to letter. Quiet and very readable.`,
+        f: "'Source Sans 3', sans-serif", w: 700, lw: 650, s: 1.04, t: '0.05em' },
+      { id: 'alegreyasans', name: 'Alegreya Sans', fonts: 'Alegreya Sans · 800',
+        idea: `A sans drawn with a broad pen, so the strokes swell slightly and the ends lean. Warmer than the rest, almost bookish, but still a sans to scan.`,
+        f: "'Alegreya Sans', sans-serif", w: 800, lw: 700, s: 1.06, t: '0.05em' },
+    ],
+  },
+  {
+    name: 'Monoline slabs',
+    about: `The middle. Even, sans-like strokes with square serifs on the ends: the typewriter and the textbook. The serifs add character without crowding the letter.`,
+    O: [
+      { id: 'zilla', name: 'Zilla Slab', fonts: 'Zilla Slab · 700',
+        idea: `A humanist slab, light on its feet, with crisp square serifs. The most Clarendon-like of the slabs without the ball terminals.`,
+        f: "'Zilla Slab', serif", w: 700, lw: 600, s: 1.08, t: '0.04em' },
+      { id: 'roboto', name: 'Roboto Slab', fonts: 'Roboto Slab · 650',
+        idea: `Plain, wide and very regular: a sans with feet. The safest of the slabs for scanning.`,
+        f: "'Roboto Slab', serif", w: 650, lw: 550, s: 1, t: '0.04em' },
+      { id: 'bitter', name: 'Bitter', fonts: 'Bitter · 700',
+        idea: `A slab drawn for screens: big, even strokes and a slight warmth in the curves. Holds up well in dark mode.`,
+        f: "'Bitter', serif", w: 700, lw: 600, s: 1, t: '0.04em' },
+      { id: 'aleo', name: 'Aleo', fonts: 'Aleo · 650',
+        idea: `A soft slab, with rounded corners on the serifs. Friendly, a touch less formal than Besley.`,
+        f: "'Aleo', serif", w: 650, lw: 600, s: 1.02, t: '0.04em' },
+      { id: 'arvo', name: 'Arvo', fonts: 'Arvo · 700',
+        idea: `A geometric slab: circular O, C and G and blunt square serifs. Very graphic, with the most distinct round letters here.`,
+        f: "'Arvo', serif", w: 700, lw: 700, s: 1, t: '0.04em' },
+      { id: 'plexserif', name: 'IBM Plex Serif', fonts: 'IBM Plex Serif · 700',
+        idea: `Halfway between a slab and a text serif, with the same engineered cut as Plex Sans. Low contrast, very distinct capitals.`,
+        f: "'IBM Plex Serif', serif", w: 700, lw: 600, s: 1, t: '0.04em' },
+    ],
+  },
+  {
+    name: 'Calm text serifs',
+    about: `Closer to Besley. Proper bracketed serifs and some contrast, but drawn for reading, so the counters stay open and the serifs stay out of the way.`,
+    O: [
+      { id: 'literata', name: 'Literata', fonts: 'Literata · 650, optical size 24',
+        idea: `Google's e-book face. Sturdy, slightly wedge-serifed, built for long reading on screens. The most like Besley in mood here.`,
+        f: "'Literata', serif", w: 650, lw: 600, s: 1, t: '0.04em', v: "'opsz' 24" },
+      { id: 'merriweather', name: 'Merriweather', fonts: 'Merriweather · 700, optical size 24',
+        idea: `Wide, big and slightly condensed in the serifs, made to stay readable on screens. Has some of Clarendon's weight without its blobs.`,
+        f: "'Merriweather', serif", w: 700, lw: 600, s: 0.96, t: '0.04em', v: "'opsz' 24" },
+      { id: 'sourceserif', name: 'Source Serif 4', fonts: 'Source Serif 4 · 650, optical size 30',
+        idea: `A transitional serif after Fournier, with a sharp, clean cut. More formal; the closest to a 1960 dictionary's body text.`,
+        f: "'Source Serif 4', serif", w: 650, lw: 600, s: 1.02, t: '0.04em', v: "'opsz' 30" },
+      { id: 'ptserif', name: 'PT Serif', fonts: 'PT Serif · 700',
+        idea: `Firm, slightly flared serifs with a robust bold. Plain and very clear at small sizes.`,
+        f: "'PT Serif', serif", w: 700, lw: 700, s: 1.02, t: '0.04em' },
+      { id: 'gelasio', name: 'Gelasio', fonts: 'Gelasio · 650',
+        idea: `Georgia's twin. Georgia was designed to be read on low-resolution screens, so it has big open capitals and a calm bold.`,
+        f: "'Gelasio', serif", w: 650, lw: 600, s: 1.02, t: '0.04em' },
+    ],
+  },
+  {
+    name: 'Besley, eased',
+    about: `Keeping Besley and turning it down. Lower weights shrink the ball terminals and open the counters back up.`,
+    O: [
+      { id: 'besley550', name: 'Besley 550', fonts: 'Besley · 550',
+        idea: `One step down. The contrast drops and E, F and P separate a little.`,
+        f: "'Besley', serif", w: 550, lw: 500, s: 1, t: '0.05em' },
+      { id: 'besley480', name: 'Besley 480', fonts: 'Besley · 480',
+        idea: `Close to the regular weight. Much more open, but lighter than the coloured rings around it.`,
+        f: "'Besley', serif", w: 480, lw: 480, s: 1.02, t: '0.05em' },
+    ],
+  },
+];
+
+const BOARD = 'STORECLINGAMWDEUHPRBVKAFIJ'.slice(0, 25).split('');
+const STRIP = 'ILTJODCGQEFPRBMNWHUV'.replace('Q', '').split('');
+const CLAIMED = { 6: ['c0', '72%'], 7: ['c0', '72%'], 8: ['c0', '72%'], 9: ['c0', '72%'], 18: ['c1', '30%'], 13: ['c1', '30%'], 12: ['c1', '30%'] };
+const SEL = [0, 1, 2, 3, 4];
+
+const vars = (o) => `--T-font:${o.f};--T-w:${o.w};--T-lw:${o.lw};--T-s:${o.s};--T-t:${o.t};${o.v ? `--T-v:${o.v};` : ''}`;
+const tile = (ch, cls = '', style = '') => `<div class="tile ${cls}" style="${style}"><span>${ch}</span></div>`;
+
+const lineup = document.getElementById('lineup');
+const groups = document.getElementById('groups');
+for (const g of G) {
+  lineup.insertAdjacentHTML('beforeend', `<div class="grp">${g.name}</div>`);
+  let html = `<h1 class="grp-h">${g.name}</h1><p class="grp-p">${g.about}</p><div class="opts">`;
+  for (const o of g.O) {
+    lineup.insertAdjacentHTML('beforeend',
+      `<a href="#${o.id}">${o.name}</a><div class="strip" style="${vars(o)}">${STRIP.map((c) => tile(c)).join('')}</div>`);
+    const board = BOARD.map((c, i) => {
+      const cl = CLAIMED[i];
+      const cls = [cl ? `claimed ${cl[0]}` : '', SEL.includes(i) ? 'sel' : ''].join(' ');
+      return tile(c, cls, cl ? `--p:${cl[1]}` : '');
+    }).join('');
+    html += `<section class="opt" id="${o.id}" style="${vars(o)}">
+      <h2>${o.name}</h2><div class="fonts">${o.fonts}</div><p>${o.idea}</p>
+      <div class="spec">
+        <div class="board">${board}</div>
+        <div class="side">
+          <div class="word">STORE</div>
+          <div class="lbl claim">claim</div>
+          <div class="player c0"><div class="playerhead"><span class="lbl">benji</span><span class="pts">14</span></div>
+            <ul class="claims"><li>cling</li><li>wade</li><li>vapid</li></ul></div>
+          <div class="player c1"><div class="playerhead"><span class="lbl">bot</span><span class="pts">9</span></div>
+            <ul class="claims"><li>herd</li><li>fake</li></ul></div>
+        </div>
+      </div></section>`;
+  }
+  groups.insertAdjacentHTML('beforeend', html + '</div>');
+}
+
+const themeBox = document.getElementById('theme');
+const setTheme = (t) => {
+  document.documentElement.dataset.theme = t;
+  themeBox.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.textContent === t));
+};
+for (const t of ['light', 'dark']) {
+  const b = document.createElement('button');
+  b.textContent = t;
+  b.onclick = () => setTheme(t);
+  themeBox.append(b);
+}
+setTheme(new URLSearchParams(location.search).get('theme') || 'light');
+</script>
+</body>
+</html>
