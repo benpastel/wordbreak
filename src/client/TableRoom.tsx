@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { COLOR_COUNT, MAX_GRID, MAX_PLAYERS, MIN_GRID } from '../shared/types';
+import { BOT_LEVELS, COLOR_COUNT, MAX_GRID, MAX_PLAYERS, MIN_GRID } from '../shared/types';
 import type { EndMode, Settings, TableView } from '../shared/types';
 import TableShell from './TableShell';
 
@@ -58,9 +58,9 @@ function Setting<T extends string | number>({
   );
 }
 
-/** A bot's difficulty, from extremely easy at the left to extremely hard at the right.
- *  Held locally while dragging, so the thumb does not jump back between the server
- *  echoing each step. */
+/** A bot's difficulty, one of BOT_LEVELS, from extremely easy at the left to extremely
+ *  hard at the right. Held locally while dragging, so the thumb does not jump back
+ *  between the server echoing each step. */
 function BotLevel({
   difficulty,
   disabled,
@@ -76,14 +76,15 @@ function BotLevel({
       type="range"
       className="botlevel"
       min={0}
-      max={100}
-      value={draft ?? Math.round(difficulty * 100)}
+      max={BOT_LEVELS.length - 1}
+      step={1}
+      value={draft ?? Math.round(difficulty * (BOT_LEVELS.length - 1))}
       disabled={disabled}
       aria-label="Bot difficulty"
       onChange={(e) => {
         const v = Number(e.target.value);
         setDraft(v);
-        onPick(v / 100);
+        onPick(BOT_LEVELS[v]);
       }}
       onPointerUp={() => setDraft(null)}
       onBlur={() => setDraft(null)}
@@ -224,7 +225,7 @@ export default function TableRoom({
               key={p.id}
               className={`setupwho c${p.color}${p.connected ? '' : ' gone'}${
                 p.ready ? ' setgo' : ''
-              }`}
+              }${p.bot ? ' isbot' : ''}`}
             >
               {p.id === meId ? (
                 <>

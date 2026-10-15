@@ -3,7 +3,7 @@
 // a fresh snapshot plus a few animation hints.
 
 import {
-  COLOR_COUNT, countdownFor, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
+  BOT_LEVELS, COLOR_COUNT, countdownFor, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
   DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
 } from '../shared/types';
 import type {
@@ -301,7 +301,8 @@ export class Hub {
     const bot = this.store.getPlayer(botId);
     if (!t || t.hostId !== playerId || t.phase === 'playing') return;
     if (!bot?.bot || bot.tableId !== t.id || !Number.isFinite(difficulty)) return;
-    bot.bot = { ...bot.bot, difficulty: Math.max(0, Math.min(1, difficulty)) };
+    const level = BOT_LEVELS.reduce((a, b) => (Math.abs(b - difficulty) < Math.abs(a - difficulty) ? b : a));
+    bot.bot = { ...bot.bot, difficulty: level };
     this.store.putPlayer(bot);
     this.pushTable(t.id, []);
   }

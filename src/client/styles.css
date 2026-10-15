@@ -783,7 +783,10 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   padding: 0 2px;
 }
 .botout:hover { color: var(--ink); }
-.setuphead .addbotrow { flex-basis: 100%; }
+/* People share the top line; each bot takes a line of its own beneath them, and add
+   bot comes last. */
+.setuphead .setupwho.isbot { flex-basis: 100%; order: 1; }
+.setuphead .addbotrow { flex-basis: 100%; order: 2; }
 .setuphead .addbot { padding: 4px 12px; font-size: 0.72rem; }
 
 /* ------------------------------------------------------------ preferences

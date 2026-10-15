@@ -9,6 +9,10 @@
 // slow clocks. So one mechanism decides both how long a move takes and how long the
 // word is. Difficulty only changes the clocks (knobs.ts).
 //
+// Other players' claims change nothing about which word comes to mind. A word that
+// runs through one is noticed exactly as fast as any other, so whether a move breaks
+// a claim is down to where the bot happened to be looking.
+//
 // Attention is the limit. Nothing is noticed while selecting tiles or recovering
 // from a claim, and a half-noticed word keeps only part of its progress into the
 // next search.
@@ -38,7 +42,7 @@ export interface BotAction {
   tileIds: number[];
 }
 
-interface Breakable {
+interface OwnClaim {
   claimedAt: number;
   banksAt: number;
 }
@@ -52,10 +56,8 @@ interface Cand {
   effort: number;
   progress: number;
   valid: boolean;
-  /** Other players' claims this word would break. */
-  breaks: Breakable[];
   /** Its own claims this word would break. */
-  own: Breakable[];
+  own: OwnClaim[];
 }
 
 /** Cost of one step by direction [dr, dc]. Reading order is cheapest. */
@@ -69,7 +71,7 @@ function stepCost(dr: number, dc: number): number {
 const TURN_COST = 1.25;
 
 /** How far through its hold a claim is, 0 to 1. */
-function fillOf(c: Breakable, now: number): number {
+function fillOf(c: OwnClaim, now: number): number {
   return Math.max(0, Math.min(1, (now - c.claimedAt) / Math.max(1, c.banksAt - c.claimedAt)));
 }
 
@@ -81,7 +83,6 @@ export class Brain {
   private cands = new Map<string, Cand>();
   /** Tile id -> when this bot first saw it. */
   private seenAt = new Map<number, number>();
-  private seenClaims = new Set<string>();
   private fx = 0;
   private fy = 0;
   private phase: 'start' | 'reorient' | 'search' | 'enter' = 'start';
@@ -145,34 +146,24 @@ export class Brain {
 
     for (const t of game.grid) if (!this.seenAt.has(t.id)) this.seenAt.set(t.id, now);
 
-    // Someone else's fresh claim can pull the eye to it.
-    for (const c of game.claims) {
-      if (this.seenClaims.has(c.id)) continue;
-      this.seenClaims.add(c.id);
-      if (c.playerId !== this.playerId && this.rng() < this.knobs.attend) {
-        this.lookAt(game.size, c.tileIds.map((id) => R.tileIndex(game, id)), 0.4);
-      }
-    }
-
     if (gridSig !== this.gridSig) {
       this.gridSig = gridSig;
       this.rebuild(game);
     }
 
     const byTile = new Map<number, GameState['claims'][number]>();
-    for (const c of game.claims) for (const id of c.tileIds) byTile.set(id, c);
+    for (const c of game.claims) {
+      if (c.playerId === this.playerId) for (const id of c.tileIds) byTile.set(id, c);
+    }
     for (const cand of this.cands.values()) {
       cand.valid = R.validatePath(game, cand.tileIds) === null;
-      cand.breaks = [];
       cand.own = [];
       const hit = new Set<string>();
       for (const id of cand.tileIds) {
         const c = byTile.get(id);
         if (!c || hit.has(c.id)) continue;
         hit.add(c.id);
-        const b = { claimedAt: c.claimedAt, banksAt: c.banksAt };
-        if (c.playerId === this.playerId) cand.own.push(b);
-        else cand.breaks.push(b);
+        cand.own.push({ claimedAt: c.claimedAt, banksAt: c.banksAt });
       }
     }
   }
@@ -195,7 +186,6 @@ export class Brain {
           effort: -Math.log(Math.max(this.rng(), 1e-12)) - Math.log(Math.max(this.rng(), 1e-12)),
           progress: 0,
           valid: false,
-          breaks: [],
           own: [],
         },
       );
@@ -276,20 +266,10 @@ export class Brain {
       for (const id of c.tileIds) youngest = Math.min(youngest, now - (this.seenAt.get(id) ?? now));
       if (youngest < k.freshMs) ms *= 1 + 3 * (1 - youngest / k.freshMs);
 
-      // The most tempting claim it would break decides the pull. A claim that has
-      // only just landed has to be read before a longer word through it occurs.
-      let pull = c.breaks.length ? 0 : 1;
-      let newest = Infinity;
-      for (const b of c.breaks) {
-        pull = Math.max(pull, k.breakPull * (1 + k.urgency * fillOf(b, now)));
-        newest = Math.min(newest, now - b.claimedAt);
-      }
-      if (newest < k.newClaimMs) ms *= 1 + 3 * (1 - newest / k.newClaimMs);
       if (c.own.length) {
         const fill = Math.max(...c.own.map((o) => fillOf(o, now)));
-        pull *= k.ownPull * (1 - fill) ** k.ownAversion;
+        ms /= k.ownPull * (1 - fill) ** k.ownAversion;
       }
-      ms /= pull;
 
       c.progress += (EFFORT_MEDIAN * dt) / ms;
       const over = c.progress / c.effort;

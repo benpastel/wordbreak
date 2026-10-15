@@ -10,6 +10,9 @@ export const MIN_GRID = 4;
 export const MAX_GRID = 6;
 export const MAX_PLAYERS = 8;
 export const COLOR_COUNT = 8;
+/** The difficulties a bot can be set to, from extremely easy to extremely hard: the
+ *  points every bot knob is pinned at (server/bot/knobs.ts). */
+export const BOT_LEVELS = [0, 0.25, 0.5, 0.75, 1] as const;
 
 export const DEFAULT_GRID = 4;
 
@@ -61,7 +64,7 @@ export interface Player {
   trophies: Trophies;
   connected: boolean;
   ready: boolean;
-  /** Set only for a bot: how hard it plays, 0 (extremely easy) to 1 (extremely hard). */
+  /** Set only for a bot: how hard it plays, one of BOT_LEVELS. */
   bot?: { difficulty: number };
 }
 

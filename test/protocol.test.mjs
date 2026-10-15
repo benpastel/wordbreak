@@ -404,6 +404,12 @@ process.on('exit', stop);
     check('difficulty is clamped, and only the host sets it',
       bots()[0].bot.difficulty === 1, JSON.stringify(bots().map((p) => p.bot)));
     check('the host can remove a bot', bots().length === 1 && bots()[0].id === hard.id);
+    h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 0.6 });
+    await sleep(100);
+    check('difficulty snaps to the nearest level', bots()[0].bot.difficulty === 0.5,
+      JSON.stringify(bots()[0].bot));
+    h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 1 });
+    await sleep(100);
 
     const asBot = new Client('impostor');
     await asBot.connect(hard.id);
