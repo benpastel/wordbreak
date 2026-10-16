@@ -12,6 +12,11 @@ const GAP_RATIO = 0.1; // must match --gap in styles.css
 
 const center = (i: number) => i * (1 + GAP_RATIO) + 0.5;
 const viewBoxOf = (size: number) => size + (size - 1) * GAP_RATIO;
+/** How far from a tile's centre a slide picks it up, as a share of its width. */
+const HIT_RADIUS = 0.42;
+/** The 'tap' input preference (Prefs.tsx): taps build a trail too, with buttons to
+ *  claim and clear it. Read at the moment of each press, so it needs no render. */
+const tapInput = () => document.documentElement.dataset.input === 'tap';
 
 interface Props {
   table: TableView;
@@ -23,10 +28,23 @@ interface Props {
 export default function Game({ table, fx, onClaim, onLeave }: Props) {
   const game = table.game!;
   const boardRef = useRef<HTMLDivElement>(null);
-  const [selection, setSelection] = useState<number[]>([]);
+  const [selection, setSelectionState] = useState<number[]>([]);
+  // Mirrored in a ref so a pointerup can act on the trail as it is, not as of the
+  // last render: a fast drag's final moves may not have rendered yet.
+  const selRef = useRef<number[]>([]);
+  const setSelection = useCallback((next: number[] | ((sel: number[]) => number[])) => {
+    const n = typeof next === 'function' ? next(selRef.current) : next;
+    if (n === selRef.current) return;
+    selRef.current = n;
+    setSelectionState(n);
+  }, []);
+  /** A slid word that is not one, shown a moment where the trail was. */
+  const [rejected, setRejected] = useState<{ word: string; n: number } | null>(null);
   const [reseeding, setReseeding] = useState<Set<number>>(new Set());
   const [breaking, setBreaking] = useState<Set<number>>(new Set());
   const dragging = useRef(false);
+  /** Whether this press has crossed into another tile, making it a slide. */
+  const slid = useRef(false);
   /** The tile the current press landed on, until the pointer leaves it. */
   const downTile = useRef<number | null>(null);
 
@@ -64,9 +82,9 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
     });
   }, [game.grid]);
 
-  // Claiming is explicit. Building a trail commits to nothing, so you can look at a
-  // word before taking it — and nothing you touch is telegraphed to the table until
-  // you do.
+  // Nothing you touch is telegraphed to the table until you claim: a slide claims as
+  // you let go, and taps (the 'tap' input preference) build a trail that commits to
+  // nothing until the claim button.
   const word = R.wordOf(game, selection);
   const pathError = selection.length ? R.validatePath(game, selection) : 'empty';
   const spellsWord = selection.length > 0 && isWord(word);
@@ -83,11 +101,42 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
     if (!canClaim) return;
     onClaim(selection);
     setSelection([]);
-  }, [canClaim, onClaim, selection]);
+  }, [canClaim, onClaim, selection, setSelection]);
 
-  // The key handler is bound once, so it reaches the live commit through a ref.
+  // The window handlers are bound once, so they reach live state through refs.
   const commitRef = useRef(commit);
   commitRef.current = commit;
+  const gameRef = useRef(game);
+  gameRef.current = game;
+  const onClaimRef = useRef(onClaim);
+  onClaimRef.current = onClaim;
+
+  // Letting go of a slide claims it if it is a word and shakes it off if not. A
+  // single letter is never a slide, so A and I take the tap input's claim button.
+  // Tapping keeps a slide that misses, to finish by hand.
+  const release = useCallback(() => {
+    const sel = selRef.current;
+    const g = gameRef.current;
+    const tapping = tapInput();
+    if (!slid.current || sel.length < 2) {
+      if (!tapping) setSelection([]);
+      return;
+    }
+    const w = R.wordOf(g, sel);
+    if (isWord(w) && R.validatePath(g, sel) === null) {
+      onClaimRef.current(sel);
+      setSelection([]);
+    } else if (!tapping) {
+      setSelection([]);
+      setRejected((r) => ({ word: w, n: (r?.n ?? 0) + 1 }));
+    }
+  }, [setSelection]);
+
+  useEffect(() => {
+    if (!rejected) return;
+    const t = setTimeout(() => setRejected(null), 900);
+    return () => clearTimeout(t);
+  }, [rejected]);
 
   // Animation hints from the server. Whatever batch is current at mount belongs to
   // the last match: leave one just after a bank and the next board would fly the
@@ -120,9 +169,12 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
   const onTileDown = useCallback(
     (tileId: number) => {
       downTile.current = tileId;
-      setSelection((sel) => S.pressTile(game, sel, tileId));
+      slid.current = false;
+      setRejected(null);
+      // Sliding only, every press starts a new word.
+      setSelection((sel) => (tapInput() ? S.pressTile(game, sel, tileId) : [tileId]));
     },
-    [game],
+    [game, setSelection],
   );
 
   const onTileDrag = useCallback(
@@ -133,15 +185,18 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
         if (downTile.current === tileId) return;
         downTile.current = null;
       }
+      slid.current = true;
       setSelection((sel) => S.dragTile(game, sel, tileId));
     },
-    [game],
+    [game, setSelection],
   );
 
   useEffect(() => {
     const up = () => {
+      const was = dragging.current;
       dragging.current = false;
       downTile.current = null;
+      if (was) release();
     };
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setSelection([]);
@@ -160,7 +215,7 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
       window.removeEventListener('pointerup', up);
       window.removeEventListener('keydown', key);
     };
-  }, []);
+  }, [release, setSelection]);
 
   const selSet = useMemo(() => new Set(selection), [selection]);
   const vb = viewBoxOf(game.size);
@@ -168,11 +223,29 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
 
   return (
     <div className="play">
-      <div className="playtop">
-        <MatchStatus settings={table.settings} endsAt={game.endsAt} />
-      </div>
-
       <div className="boardwrap" style={{ '--n': game.size } as React.CSSProperties}>
+        <div className="readout">
+          {selection.length > 0 ? (
+            <>
+              <button className="x" onClick={() => setSelection([])} title="clear (esc)">
+                ✕
+              </button>
+              <span className={`word${spellsWord ? ' real' : ''}`}>
+                {word.toUpperCase()}
+                {needs !== null && <span className="needs">needs {needs}+</span>}
+              </span>
+              <button className="claim" disabled={!canClaim} onClick={commit}>
+                claim
+              </button>
+            </>
+          ) : (
+            rejected && (
+              <span key={rejected.n} className="word rejected">
+                {rejected.word.toUpperCase()}
+              </span>
+            )
+          )}
+        </div>
         <div
           className="board"
           ref={boardRef}
@@ -185,6 +258,12 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
               .elementFromPoint(e.clientX, e.clientY)
               ?.closest<HTMLElement>('[data-idx]');
             if (!hit) return;
+            // Only near a tile's middle, so a diagonal can pass the corner between two
+            // other tiles without catching either.
+            const r = hit.getBoundingClientRect();
+            const dx = e.clientX - (r.left + r.width / 2);
+            const dy = e.clientY - (r.top + r.height / 2);
+            if (Math.hypot(dx, dy) > r.width * HIT_RADIUS) return;
             const tile = game.grid[Number(hit.dataset.idx)];
             if (tile) onTileDrag(tile.id);
           }}
@@ -233,21 +312,10 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
             />
           ))}
         </div>
+      </div>
 
-        <div className="readout">
-          {selection.length > 0 && (
-            <>
-              <span className={`word${spellsWord ? ' real' : ''}`}>{word.toUpperCase()}</span>
-              {needs !== null && <span className="needs">needs {needs}+</span>}
-              <button className="claim" disabled={!canClaim} onClick={commit}>
-                claim <kbd>⏎</kbd>
-              </button>
-              <button className="x" onClick={() => setSelection([])} title="clear (esc)">
-                ✕
-              </button>
-            </>
-          )}
-        </div>
+      <div className="playstatus">
+        <MatchStatus settings={table.settings} endsAt={game.endsAt} />
       </div>
 
       <div className="scores">

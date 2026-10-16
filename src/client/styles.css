@@ -25,6 +25,9 @@
   --ground: oklch(0.94 0.008 85);
   --tray: oklch(0.902 0.012 85);
   --tile-face: oklch(0.985 0.004 85);
+  /* The page under the flush layout: the tile face itself in light, where white
+     tiles on white paper still part by their shadows and the grey tray. */
+  --page: var(--tile-face);
   --ink: oklch(0.22 0.01 60);
   --ink-soft: oklch(0.52 0.008 70);
   --ink-mute: oklch(0.7 0.008 70);
@@ -35,6 +38,10 @@
   --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
   --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
   --shadow-lift: 0 4px 9px oklch(0.3 0.02 70 / 0.14);
+  /* A control's own edge. Its face is the page's colour, and a soft shadow alone
+     left buttons and fields hard to find on it. Badges go without, so a thing you
+     can press still looks different from a label. */
+  --edge: inset 0 0 0 1px oklch(0.3 0.02 70 / 0.2);
 
   /* A board tile's corner is 13% of its size, which lands near 7px at the cell
      sizes we actually render. Controls take that as a flat value so they read as
@@ -89,11 +96,14 @@
 }
 
 /* Same surfaces, lit from the same place: the tray is still the lowest thing and the
-   tile face the highest, so the board reads as a recess with tiles standing in it. */
+   tile face the highest, so the board reads as a recess with tiles standing in it.
+   Shadows barely show on a dark page, so here the page sits between the two
+   instead of matching the tiles, and the tiles stand out from it by face alone. */
 :root[data-theme='dark'] {
   --ground: oklch(0.215 0.006 70);
-  --tray: oklch(0.175 0.006 70);
-  --tile-face: oklch(0.275 0.008 75);
+  --tray: oklch(0.165 0.006 70);
+  --tile-face: oklch(0.3 0.008 75);
+  --page: oklch(0.2 0.006 70);
   --ink: oklch(0.93 0.01 85);
   --ink-soft: oklch(0.72 0.01 80);
   --ink-mute: oklch(0.52 0.01 75);
@@ -102,6 +112,7 @@
   --shadow-1: 0 1px 1px oklch(0 0 0 / 0.35);
   --shadow-2: 0 2px 5px oklch(0 0 0 / 0.3);
   --shadow-lift: 0 4px 9px oklch(0 0 0 / 0.4);
+  --edge: inset 0 0 0 1px oklch(1 0 0 / 0.13);
   --go: oklch(0.6 0.12 148);
   --warn: oklch(0.7 0.16 28);
   --disc: oklch(0.21 0.006 70);
@@ -191,15 +202,15 @@ button:not(:disabled):active { transform: translateY(1px); }
   background: var(--tile-face); color: var(--ink-soft);
   font-weight: var(--w-label); padding: 8px 16px; font-size: 0.85rem;
   text-transform: uppercase; letter-spacing: var(--track-label);
-  box-shadow: var(--shadow-1), var(--shadow-2);
+  box-shadow: var(--edge), var(--shadow-1), var(--shadow-2);
 }
-.ghost:hover:not(:disabled) { color: var(--ink); box-shadow: var(--shadow-1), var(--shadow-lift); transform: translateY(-1px); }
-.ghost:not(:disabled):active { box-shadow: var(--shadow-1); }
+.ghost:hover:not(:disabled) { color: var(--ink); box-shadow: var(--edge), var(--shadow-1), var(--shadow-lift); transform: translateY(-1px); }
+.ghost:not(:disabled):active { box-shadow: var(--edge), var(--shadow-1); }
 
 input {
   font: inherit; font-weight: var(--w-label-strong); color: var(--ink);
   background: var(--tile-face); border: 0; border-radius: var(--r-ctl);
-  padding: 8px 16px; box-shadow: var(--shadow-1), var(--shadow-2); outline: none; width: 10ch;
+  padding: 8px 16px; box-shadow: var(--edge), var(--shadow-1), var(--shadow-2); outline: none; width: 10ch;
 }
 /* Inset, so focus never haloes outside the tile's edge. */
 input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(--shadow-2); }
@@ -209,7 +220,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   background: var(--tile-face); color: var(--ink-soft);
   font-size: 0.82rem; font-weight: var(--w-label); padding: 6px 13px;
   text-transform: uppercase; letter-spacing: var(--track-label);
-  box-shadow: var(--shadow-1), var(--shadow-2);
+  box-shadow: var(--edge), var(--shadow-1), var(--shadow-2);
 }
 .segmented button.on { background: var(--ink); color: var(--ground); box-shadow: none; }
 
@@ -266,7 +277,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
    thing on the page after the wordmark. */
 .namefield.big input {
   font-size: 1.25rem; padding: 12px 20px; border-radius: var(--r-ctl-lg);
-  box-shadow: var(--shadow-1), var(--shadow-2);
+  box-shadow: var(--edge), var(--shadow-1), var(--shadow-2);
 }
 /* Needed explicitly: the rule above outranks `input:focus`, so the lobby's own
    name field has been focusing with no ring at all. */
@@ -357,9 +368,9 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 
 /* ------------------------------------------------------------ game */
 /* ---------------------------------------------------------------- play layout
-   A single column: header, board, readout, scoreboard. The board sits above
-   everything that grows, so claims appearing under a name can never move the
-   board itself. Exactly one screen tall: the scoreboard takes what is left
+   A single column: the word being built, board, match status, scoreboard. The
+   board sits above everything that grows, so claims appearing under a name can
+   never move the board itself. Exactly one screen tall: the scoreboard takes what is left
    under the board and clips rather than scrolls.
 
    Board size comes only from the viewport and the grid size — there is no
@@ -373,7 +384,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   gap: 10px; padding: 10px 8px calc(var(--shellbar) + env(safe-area-inset-bottom, 0px) + 12px);
 }
 
-.playtop {
+.playstatus {
   width: min(100%, var(--board));
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
@@ -381,7 +392,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   background: var(--tile-face); color: var(--ink-soft);
   font-size: 0.78rem; font-weight: var(--w-label); padding: 6px 13px;
   text-transform: uppercase; letter-spacing: var(--track-label);
-  box-shadow: var(--shadow-1); flex: none;
+  box-shadow: var(--edge), var(--shadow-1); flex: none;
 }
 .leave:hover { color: var(--ink); }
 
@@ -476,42 +487,58 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 
 .readout {
-  display: flex; align-items: center; justify-content: flex-end; gap: 14px;
-  align-self: stretch; flex-wrap: wrap;
-  /* Reserved whether or not there is a word, so the scoreboard never jumps. Just
-     the word's own height, or the clear button's, whichever is taller. */
-  min-height: max(46px, calc(var(--cell) * 0.46 * var(--tile-scale)));
-  margin: 6px 0 0;
+  /* The word in the middle of the board's width, clear on the left and claim on
+     the right where the tap input shows them. */
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px;
+  align-self: stretch;
+  /* Reserved whether or not there is a word, so the board never jumps. */
+  min-height: max(52px, calc(var(--cell) * 0.46 * var(--tile-scale)));
+  margin: 0 0 8px;
 }
 .readout .word {
+  grid-column: 2; position: relative;
   font-family: var(--font-tile); font-weight: var(--w-tile);
   font-size: calc(var(--cell) * 0.46 * var(--tile-scale)); letter-spacing: var(--track-tile);
-  color: var(--ink-mute); line-height: 1;
+  color: var(--ink-mute); line-height: 1; white-space: nowrap;
 }
 .readout .word.real { color: var(--ink); }
+/* A slid word that is not one: shaken, then gone. */
+.readout .word.rejected { color: var(--warn); animation: reject 900ms ease-out forwards; }
+@keyframes reject {
+  0% { transform: translateX(0); }
+  8% { transform: translateX(-9px); }
+  18% { transform: translateX(8px); }
+  28% { transform: translateX(-6px); }
+  38% { transform: translateX(4px); }
+  48% { transform: translateX(0); opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
 .readout .needs {
-  font-size: 0.74rem; font-weight: var(--w-label); color: var(--ink-mute);
+  position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px;
+  font-family: var(--font-label); font-size: 0.74rem; font-weight: var(--w-label); color: var(--ink-mute);
   text-transform: uppercase; letter-spacing: var(--track-label);
 }
 .readout .claim {
+  grid-column: 3; justify-self: end;
   background: var(--ink); color: var(--ground);
-  font-size: 0.82rem; font-weight: var(--w-label-strong); padding: 7px 15px;
-  text-transform: uppercase; letter-spacing: var(--track-label);
-  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 1.05rem; font-weight: var(--w-label-strong); height: 52px; padding: 0 26px;
+  text-transform: uppercase; letter-spacing: var(--track-label); border-radius: var(--r-ctl-lg);
 }
-.readout .claim kbd { background: color-mix(in oklch, var(--ground) 18%, transparent); color: inherit; }
 .readout .claim:disabled { background: var(--tray); color: var(--ink-mute); opacity: 1; }
-.readout .claim:disabled kbd { background: color-mix(in oklch, var(--ink) 7%, transparent); }
 /* Sized as a real touch target: on a phone this is the button you hit most after
-   the letters themselves, and it was a 20px hitbox. */
+   the letters themselves. */
 .readout .x {
+  grid-column: 1; justify-self: start;
   background: var(--tray); color: var(--ink-soft);
-  width: 46px; height: 46px; flex: none;
-  border-radius: 50%; font-size: 1.35rem; line-height: 1;
+  width: 52px; height: 52px; flex: none;
+  border-radius: 50%; font-size: 1.5rem; line-height: 1;
   display: grid; place-items: center; padding: 0;
 }
 .readout .x:hover { background: color-mix(in oklch, var(--tray), var(--ink) 7%); color: var(--ink); }
 .readout .x:active { transform: scale(0.94); }
+/* Sliding only, the default: letting go claims, so there is nothing to press. */
+:root:not([data-input='tap']) .readout :is(.x, .claim) { display: none; }
 
 /* Beneath the board, players side by side with their words hanging below each.
    Fills whatever height the board leaves and never grows past it. */
@@ -572,7 +599,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
    with the clock or the board itself. */
 .shellbar .leave {
   font-size: 1rem; padding: 13px 28px; border-radius: var(--r-ctl-lg);
-  box-shadow: var(--shadow-1), var(--shadow-2);
+  box-shadow: var(--edge), var(--shadow-1), var(--shadow-2);
 }
 /* Same trap, other track: chat holds its own intrinsic width without this. */
 .shell > .chat { min-width: 0; }
@@ -690,7 +717,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .chatline b { font-family: var(--font-label); color: var(--pc); font-weight: var(--w-label); margin-right: 8px; }
 .chatbox { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--hairline); }
 .chatbox button { flex: none; }
-.chatbox input { flex: 1; width: auto; min-width: 0; font-family: var(--font-prose); font-weight: 400; box-shadow: none; background: var(--ground); }
+.chatbox input { flex: 1; width: auto; min-width: 0; font-family: var(--font-prose); font-weight: 400; box-shadow: var(--edge); background: var(--ground); }
 
 /* --------------------------------------------------------------- trophies
    Playing pieces rather than icons: a domed disc with a lit top edge and a
@@ -752,13 +779,13 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
    on one surface, split by a single rule. Toggled by FLUSH in TableShell. */
 .shell.flush {
   width: 100%; gap: 0; padding: 0 0 calc(var(--shellbar) + env(safe-area-inset-bottom, 0px));
-  background: var(--tile-face);
+  background: var(--page);
 }
 .shell.flush > .shellmain { padding: 0; margin: 0; }
-.shellbar.flush { background: var(--tile-face); }
+.shellbar.flush { background: var(--page); }
 /* One white surface on every screen. The board keeps its tray, so tiles still lift
    off it; the table list becomes rows split by rules, like the panels. */
-:root.flush body { background: var(--tile-face); }
+:root.flush body { background: var(--page); }
 :root.flush .tablelist { gap: 0; }
 :root.flush .tablerow {
   background: none; box-shadow: none; border-radius: 0; border-bottom: 1px solid var(--hairline);
@@ -805,7 +832,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   position: relative; font-size: 0.68rem; font-weight: var(--w-label);
   text-transform: uppercase; letter-spacing: var(--track-label);
   padding: 4px 24px 4px 9px; background: var(--tile-face); color: var(--ink-soft);
-  box-shadow: var(--shadow-1), var(--shadow-2);
+  box-shadow: var(--edge), var(--shadow-1), var(--shadow-2);
 }
 .levelbtn:hover:not(:disabled), .levelbtn[aria-expanded='true'] { color: var(--ink); }
 .levelbtn::after {

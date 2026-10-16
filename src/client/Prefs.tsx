@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from 'react';
  */
 const PREFS = {
   theme: { key: 'wordbreak.theme', choices: ['light', 'dark'] },
+  /** Slide to claim on letting go, or also tap letters in and claim by button. */
+  input: { key: 'wordbreak.input', choices: ['slide', 'tap'] },
 } as const;
 type Pref = keyof typeof PREFS;
 
@@ -24,12 +26,12 @@ function stored(p: Pref): string {
 
 export default function Prefs() {
   const [open, setOpen] = useState(false);
-  const [values, setValues] = useState(() => ({ theme: stored('theme') }));
+  const [values, setValues] = useState(() => ({ theme: stored('theme'), input: stored('input') }));
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const root = document.documentElement;
-    root.dataset.theme = values.theme;
+    for (const p of Object.keys(PREFS) as Pref[]) root.dataset[p] = values[p];
   }, [values]);
 
   useEffect(() => {

@@ -18,6 +18,8 @@
       try {
         const theme = localStorage.getItem('wordbreak.theme');
         if (theme === 'dark') document.documentElement.dataset.theme = theme;
+        const input = localStorage.getItem('wordbreak.input');
+        if (input === 'tap') document.documentElement.dataset.input = input;
       } catch {}
     </script>
     <meta
