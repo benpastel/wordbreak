@@ -502,8 +502,8 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   color: var(--ink-mute); line-height: 1; white-space: nowrap;
 }
 .readout .word.real { color: var(--ink); }
-/* A slid word that is not one: shaken, then gone. */
-.readout .word.rejected { color: var(--warn); animation: reject 900ms ease-out forwards; }
+/* A slid word that is not one: in the grey a non-word is built in, shaken, then gone. */
+.readout .word.rejected { color: var(--ink-mute); animation: reject 900ms ease-out forwards; }
 @keyframes reject {
   0% { transform: translateX(0); }
   8% { transform: translateX(-9px); }
