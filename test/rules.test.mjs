@@ -81,7 +81,8 @@ section('settings are clamped to the offered range');
     clamp({ endMode: 'whenever' }).endMode === 'points');
   check('unlimited is no longer an end mode', clamp({ endMode: 'unlimited' }).endMode === 'points');
   equal('hold grows with the board', [4, 5, 6].map(R.holdMsFor), [13_000, 18_000, 26_000]);
-  equal('the countdown is a beat alone and longer with company', [1, 2, 8].map(T.countdownFor), [1_000, 3_000, 3_000]);
+  equal('the countdown waits for company', [2, 8].map((n) => T.countdownFor(n, 'points')), [3_000, 3_000]);
+  equal('alone, a timed match gets a beat and a points race none', [T.countdownFor(1, 'time'), T.countdownFor(1, 'points')], [500, 0]);
 }
 
 section('medals: standard competition ranking, and nothing for nothing');

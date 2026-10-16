@@ -110,11 +110,14 @@ export const MAX_CHAT_LEN = 240;
 /**
  * Warning between the table agreeing and the board appearing.
  *
- * Playing alone there is nobody to wait for and nothing to brace against, so it is
- * barely a pause. With company it is long enough to look up, and no longer.
+ * With other people it is long enough to look up, and no longer. Alone, or alone
+ * with bots, there is nobody to wait for: a timed match gets a beat so its clock
+ * doesn't start mid-reach, and a race to points, which nothing is timing, starts
+ * at once.
  */
-export function countdownFor(players: number): number {
-  return players <= 1 ? 1_000 : 3_000;
+export function countdownFor(humans: number, endMode: EndMode): number {
+  if (humans > 1) return 3_000;
+  return endMode === 'time' ? 500 : 0;
 }
 
 /** One claim as it happened, for the end-of-match timeline. */

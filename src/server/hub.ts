@@ -7,7 +7,7 @@ import {
   DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
 } from '../shared/types';
 import type {
-  Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
+  EndMode, Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
 } from '../shared/types';
 import * as R from '../shared/rules';
 import { Brain } from './bot/brain';
@@ -41,7 +41,7 @@ function cleanName(raw: string, fallback: string): string {
 /** Every real duration the hub waits on. */
 export interface Timing {
   holdMs: (gridSize: number) => number;
-  countdownMs: (players: number) => number;
+  countdownMs: (humans: number, endMode: EndMode) => number;
   /** The real length of a timed match, given the length its settings ask for. */
   gameMs: (asked: number) => number;
 }
@@ -375,7 +375,8 @@ export class Hub {
     const present = t.playerIds.map((id) => this.store.getPlayer(id)!).filter((x) => x?.connected);
     const agreed = present.length > 0 && present.every((x) => x.ready);
     if (agreed && t.startsAt === null) {
-      const ms = this.timing.countdownMs(present.length);
+      const ms = this.timing.countdownMs(present.filter((x) => !x.bot).length, t.settings.endMode);
+      if (ms === 0) return this.start(t.hostId);
       t.startsAt = Date.now() + ms;
       t.countdownMs = ms;
       this.clearStartTimer(t.id);
