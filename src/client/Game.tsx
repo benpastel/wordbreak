@@ -89,9 +89,12 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
   const commitRef = useRef(commit);
   commitRef.current = commit;
 
-  // Animation hints from the server.
+  // Animation hints from the server. Whatever batch is current at mount belongs to
+  // the last match: leave one just after a bank and the next board would fly the
+  // old letters off and reseed their tiles.
+  const mountSeq = useRef(fx.seq);
   useEffect(() => {
-    if (!fx.items.length) return;
+    if (!fx.items.length || fx.seq === mountSeq.current) return;
     const board = boardRef.current;
     const reseed = new Set<number>();
     const broke = new Set<number>();

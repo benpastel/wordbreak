@@ -669,6 +669,11 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 
 @media (max-width: 760px) {
   .recap { flex: none; height: 70dvh; }
+  /* Stacked, the page is the one scroller. Android Chrome lets a contained scroller
+     swallow a swipe even when it has nothing to scroll, so the panels stop being
+     scrollers and the chat hands its overscroll on to the page. */
+  .recapscroll, .setupbody { overflow: visible; }
+  .shell .chatlog { overscroll-behavior: auto; }
 }
 
 /* ------------------------------------------------------------------- chat */
