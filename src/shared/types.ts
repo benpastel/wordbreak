@@ -116,7 +116,7 @@ export const MAX_CHAT_LEN = 240;
  * at once.
  */
 export function countdownFor(humans: number, endMode: EndMode): number {
-  if (humans > 1) return 3_000;
+  if (humans > 1) return 2_000;
   return endMode === 'time' ? 500 : 0;
 }
 
