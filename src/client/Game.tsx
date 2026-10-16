@@ -111,24 +111,23 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
   const onClaimRef = useRef(onClaim);
   onClaimRef.current = onClaim;
 
-  // Letting go of a slide claims it if it is a word and shakes it off if not. A
-  // single letter is never a slide, so A and I take the tap input's claim button.
-  // Tapping keeps a slide that misses, to finish by hand.
+  // Sliding only, letting go always ends the word: claimed if it is one, shaken
+  // off if not. A press that never left its tile is a word too (A, I), but one
+  // that is not a word only clears, so a stray touch is not scolded. With taps on,
+  // a press is ambiguous, so only a slide claims, and one that misses stays to be
+  // finished by hand.
   const release = useCallback(() => {
     const sel = selRef.current;
     const g = gameRef.current;
     const tapping = tapInput();
-    if (!slid.current || sel.length < 2) {
-      if (!tapping) setSelection([]);
-      return;
-    }
+    if (!sel.length || (tapping && !slid.current)) return;
     const w = R.wordOf(g, sel);
     if (isWord(w) && R.validatePath(g, sel) === null) {
       onClaimRef.current(sel);
       setSelection([]);
     } else if (!tapping) {
       setSelection([]);
-      setRejected((r) => ({ word: w, n: (r?.n ?? 0) + 1 }));
+      if (sel.length > 1) setRejected((r) => ({ word: w, n: (r?.n ?? 0) + 1 }));
     }
   }, [setSelection]);
 
