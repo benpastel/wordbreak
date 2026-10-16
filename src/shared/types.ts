@@ -10,14 +10,15 @@ export const MIN_GRID = 4;
 export const MAX_GRID = 6;
 export const MAX_PLAYERS = 8;
 export const COLOR_COUNT = 8;
-/** The difficulties a bot can be set to, easiest first. Each is one of the points
- *  every bot knob is pinned at (server/bot/knobs.ts); the top point, 1, is beyond
- *  any person and offered nowhere. */
+/** The difficulties a bot can be set to, easiest first, as points on the dial every
+ *  bot knob runs along (server/bot/knobs.ts); the top of it, 1, is beyond any
+ *  person and offered nowhere. Playing alone for three minutes on a 4x4 board,
+ *  these claim about 2.3, 4.5 and 8.6 words a minute above child. */
 export const BOT_LEVELS = [
   { name: 'child', difficulty: 0 },
-  { name: 'beginner', difficulty: 0.25 },
-  { name: 'intermediate', difficulty: 0.5 },
-  { name: 'expert', difficulty: 0.75 },
+  { name: 'beginner', difficulty: 0.15 },
+  { name: 'intermediate', difficulty: 0.35 },
+  { name: 'expert', difficulty: 0.62 },
 ] as const;
 
 export const DEFAULT_GRID = 4;

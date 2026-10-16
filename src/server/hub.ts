@@ -22,7 +22,7 @@ type Send = (playerId: string, msg: ServerMsg) => void;
 const DISCONNECT_GRACE_MS = 120_000;
 /** How often the bots at a table look at the board. */
 const BOT_TICK_MS = 100;
-const DEFAULT_BOT_DIFFICULTY = 0.5;
+const DEFAULT_BOT_DIFFICULTY = 0.35;
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // no look-alikes, these end up in URLs
 
 function rid(n: number): string {

@@ -391,7 +391,7 @@ process.on('exit', stop);
     await sleep(200);
     const bots = () => h.table.players.filter((p) => p.bot);
     check('the host can seat bots, and only the host', bots().length === 2, String(bots().length));
-    check('a bot starts in the middle', bots().every((p) => p.bot.difficulty === 0.5));
+    check('a bot starts in the middle', bots().every((p) => p.bot.difficulty === 0.35));
     check('a bot is ready from the start', bots().every((p) => p.ready));
     check('bots take their own colours',
       new Set(h.table.players.map((p) => p.color)).size === h.table.players.length);
@@ -402,18 +402,18 @@ process.on('exit', stop);
     h.send({ t: 'removeBot', botId: spare.id });
     await sleep(200);
     check('difficulty is clamped, and only the host sets it',
-      bots()[0].bot.difficulty === 0.75, JSON.stringify(bots().map((p) => p.bot)));
+      bots()[0].bot.difficulty === 0.62, JSON.stringify(bots().map((p) => p.bot)));
     check('the host can remove a bot', bots().length === 1 && bots()[0].id === hard.id);
-    h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 0.6 });
+    h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 0.4 });
     await sleep(100);
-    check('difficulty snaps to the nearest level', bots()[0].bot.difficulty === 0.5,
+    check('difficulty snaps to the nearest level', bots()[0].bot.difficulty === 0.35,
       JSON.stringify(bots()[0].bot));
     h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 1 });
     await sleep(100);
     h.send({ t: 'addBot' });
     await sleep(150);
     check('a new bot copies the difficulty of the one above it',
-      bots().length === 2 && bots()[1].bot.difficulty === 0.75, JSON.stringify(bots().map((p) => p.bot)));
+      bots().length === 2 && bots()[1].bot.difficulty === 0.62, JSON.stringify(bots().map((p) => p.bot)));
     h.send({ t: 'removeBot', botId: bots()[1].id });
     await sleep(100);
 
