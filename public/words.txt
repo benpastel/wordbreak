@@ -111309,6 +111309,7 @@ ponying
 ponytail
 ponytailed
 ponytails
+poo
 pooch
 pooched
 pooches
@@ -111317,6 +111318,7 @@ pood
 poodle
 poodles
 poods
+pooed
 poof
 poofs
 pooftah
@@ -111328,6 +111330,7 @@ pooh
 poohed
 poohing
 poohs
+pooing
 pool
 pooled
 poolhall
@@ -111357,6 +111360,7 @@ poorness
 poornesses
 poortith
 poortiths
+poos
 poove
 pooves
 pop

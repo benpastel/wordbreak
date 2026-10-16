@@ -9,10 +9,13 @@
 # is no Q tile in the bag). Inflections are spelled out rather than generated,
 # because the game rewards length and a missing plural is a dead end.
 #
-# Deliberately absent: initialisms (YOLO, FOMO, OBVS) and abbreviations, which
-# ENABLE excludes by policy; trademarks (GOOGLE, ADBLOCK); QI, which has no
-# tile; and OI, which is Collins-only. Coinages that have not settled into
-# dictionaries (ADORBS, DERP) are left out — they age badly.
+# Deliberately absent: initialisms and abbreviations still read as abbreviations
+# (YOLO, FOMO, LOL, IMO); QI, which has no tile. Coinages that have not settled
+# into dictionaries (ADORBS, DERP) are left out — they age badly.
+#
+# Welcome, as of October 2026: British spellings, slang and vulgar words, and
+# brand names that have become ordinary verbs (GOOGLE). Candidates of every kind
+# are mined by scripts/mine-words.mjs into data/word-candidates.txt for review.
 #
 # Merge into public/words.txt with `node scripts/build-words.mjs`.
 
@@ -357,3 +360,7 @@ cyberbullying
 sudoku
 sudokus
 sustainably
+poo
+pooed
+pooing
+poos

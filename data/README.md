@@ -20,6 +20,20 @@ Additions clear the same bar as the base list: a-z only, 15 letters or fewer, no
 so nothing is quietly lost. Inflections are spelled out rather than generated,
 because the game rewards length and a missing plural is a dead end.
 
+## `word-candidates.txt`
+
+Words people say that the dictionary rejects, for a person to review before any of
+them go into `modern-words.txt`. Every word the subtitle corpus has seen at least
+200 times that has a lowercase English Wiktionary entry and is missing from
+`public/words.txt`, most common first, with its labels (british, slang, vulgar,
+trademark…), first definition and the inflections it would bring. Abbreviations,
+misspellings, personal and place names and contraction halves are filtered out.
+
+Rebuild with `node scripts/mine-words.mjs <en_full.txt> <wikt.jsonl.gz> data/word-candidates.txt`;
+the script's header says where to download both. Wiktionary content is
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via
+[kaikki.org](https://kaikki.org/)'s wiktextract.
+
 ## `word-frequency.txt`
 
 Every word of `public/words.txt` that appears at least three times in an
