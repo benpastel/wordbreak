@@ -15,7 +15,8 @@
 // Wiktionary has a lowercase English entry for it, and ENABLE does not.
 //
 // Abbreviations still working as abbreviations (LOL, IMO) and misspellings are
-// dropped. Everything else is kept and tagged — british, vulgar, slang, trademark,
+// dropped, and so are words mostly written capitalised (Johnson, Yankee): proper
+// nouns, whatever slang sense they also carry. Everything else is kept and tagged — british, vulgar, slang, trademark,
 // and so on — for a person to judge. Output is one line per word, most common
 // first, with the inflections it would bring along.
 //
@@ -88,6 +89,12 @@ async function* jsonLines(path) {
  *  name, so the count says nothing about the word. "sam" is Wiktionary's "to
  *  assemble", and nobody has said it since 1600. */
 const names = new Set();
+/** word -> [lowercase, capitalised] mid-sentence uses in Wiktionary's quotations,
+ *  which, unlike the subtitles, keep their case. A word's own entries are skipped:
+ *  their quotations were picked to show it off. */
+const cased = new Map();
+const MID = /(?<=[a-z,;]\s+)[A-Za-z]+/g; // after a lowercase word or a comma: not a sentence start
+
 /** Halves of contractions the subtitle tokenizer split: aren from aren't, ll from 'll. */
 const fragments = new Set();
 
@@ -99,6 +106,19 @@ for await (const line of jsonLines(wiktPath)) {
   if (j.lang_code !== 'en') continue;
   const word = j.word;
   const lower = word.toLowerCase();
+  for (const s of j.senses ?? []) {
+    for (const ex of s.examples ?? []) {
+      for (const [w] of (ex.text ?? '').matchAll(MID)) {
+        const l = w.toLowerCase();
+        if (l === lower || !freq.has(l)) continue;
+        const i = w === l ? 0 : w === l[0].toUpperCase() + l.slice(1) ? 1 : -1;
+        if (i < 0) continue;
+        let c = cased.get(l);
+        if (!c) cased.set(l, (c = [0, 0]));
+        c[i]++;
+      }
+    }
+  }
   // Both apostrophes: Wiktionary titles use the straight one, quotations the curly.
   const frag = /^['’]([a-z]+)$|^([a-z]+)['’]t$/.exec(word);
   if (frag) {
@@ -152,9 +172,6 @@ for await (const line of jsonLines(wiktPath)) {
 const dropCounts = {};
 const count = (why) => (dropCounts[why] = (dropCounts[why] ?? 0) + 1);
 const rows = [];
-/** Names whose lowercase word is labelled slang or the like: a few (karen, stan)
- *  are real, so they are listed apart rather than dropped. */
-const nameRows = [];
 for (const [w, n] of freq) {
   if (fragments.has(w)) {
     count('contraction fragment');
@@ -172,15 +189,24 @@ for (const [w, n] of freq) {
   }
   // An inflection whose word is itself a candidate is listed under that word.
   if (e.formOf && !e.gloss && freq.has(e.formOf) && info.get(e.formOf)?.kept) continue;
+  // A name's count proves nothing about the word, so it must show itself written
+  // lowercase: in two thirds of at least three uses. Short names also need a slang
+  // label, as their lowercase uses are mostly Middle English and foreign quotations
+  // (le, mee, wil). Any other word is dropped when less than a third lowercase.
+  const [lo, up] = cased.get(w) ?? [0, 0];
   if (names.has(w)) {
-    if (['slang', 'vulgar', 'informal'].some((l) => e.labels.has(l))) nameRows.push({ w, n, e });
-    else count('name');
+    const slang = ['slang', 'vulgar', 'informal', 'childish'].some((l) => e.labels.has(l));
+    if (lo < 3 || lo < 2 * up || (w.length < 4 && !slang)) {
+      count('name');
+      continue;
+    }
+  } else if (up >= 5 && 2 * lo < up) {
+    count('mostly capitalised');
     continue;
   }
   rows.push({ w, n, e });
 }
 rows.sort((a, b) => b.n - a.n);
-nameRows.sort((a, b) => b.n - a.n);
 
 const fmt = ({ w, n, e }) => {
   const labels = [...e.labels].sort();
@@ -199,19 +225,14 @@ const fmt = ({ w, n, e }) => {
 const header = [
   `# Candidates for data/modern-words.txt, mined by scripts/mine-words.mjs.`,
   `# Every word the subtitle corpus has seen at least ${MIN_COUNT} times that has a`,
-  `# lowercase English Wiktionary entry and is missing from public/words.txt, most`,
-  `# common first. Columns: word, corpus count, part of speech · labels, the first`,
+  `# lowercase English Wiktionary entry, is mostly written lowercase in Wiktionary's`,
+  `# quotations and is missing from public/words.txt, most common first.`,
+  `# Columns: word, corpus count, part of speech · labels, the first`,
   `# definition, and the inflections it would bring (+form).`,
   `#`,
   `# Not listed: ${Object.entries(dropCounts).map(([k, v]) => `${v} ${k}`).join(', ')}.`,
   ``,
 ];
-const names_ = [
-  ``,
-  `# Also a common name, so the count above is mostly the name. Listed only where the`,
-  `# lowercase word is labelled slang, vulgar or informal.`,
-  ``,
-];
-writeFileSync(outPath, header.concat(rows.map(fmt), names_, nameRows.map(fmt)).join('\n') + '\n');
-console.log(`wrote ${rows.length} candidates and ${nameRows.length} names to ${outPath}`);
+writeFileSync(outPath, header.concat(rows.map(fmt)).join('\n') + '\n');
+console.log(`wrote ${rows.length} candidates to ${outPath}`);
 console.log(dropCounts);

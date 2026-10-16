@@ -1,10 +1,11 @@
 # Candidates for data/modern-words.txt, mined by scripts/mine-words.mjs.
 # Every word the subtitle corpus has seen at least 200 times that has a
-# lowercase English Wiktionary entry and is missing from public/words.txt, most
-# common first. Columns: word, corpus count, part of speech · labels, the first
+# lowercase English Wiktionary entry, is mostly written lowercase in Wiktionary's
+# quotations and is missing from public/words.txt, most common first.
+# Columns: word, corpus count, part of speech · labels, the first
 # definition, and the inflections it would bring (+form).
 #
-# Not listed: 61 contraction fragment, 159 abbreviation, 8729 no lowercase English entry, 136 case variant, 1115 name, 33 misspelling, 2 case variant/abbreviation, 3 abbreviation/case variant, 1 abbreviation/misspelling.
+# Not listed: 61 contraction fragment, 159 abbreviation, 8729 no lowercase English entry, 1294 name, 136 case variant, 91 mostly capitalised, 33 misspelling, 2 case variant/abbreviation, 3 abbreviation/case variant, 1 abbreviation/misspelling.
 
 gonna            1188190  verb · informal                   A modal used to express a future action that is being planned or prepared for in the pres…
 wanna             243109  contraction · informal            Represents a contracted pronunciation of want to.
@@ -14,16 +15,18 @@ fuckin             36802  verb adj · informal nonstandard slang vulgar  Pronunc
 whoo               31217  intj noun verb                    An expression of joy and excitement.  +whooed +whooing +whoos
 kinda              27662  adv intj noun · informal          Kind of; somewhat.  +kindas +kindsa
 outta              25290  prep · informal                   Out of.
+goin               24873  verb · nonstandard                Pronunciation spelling of going.
 doin               22289  verb · nonstandard                Pronunciation spelling of doing.
 ahh                19459  intj noun verb · nonstandard slang  Alternative spelling of aah.  +ahhed +ahhing +ahhs
 online             15339  adj adv verb · slang              Of a system: connected (generally electrically) to a larger network. Of a generator or po…  +onlined +onlines +onlining
+goodnight          12889  phrase noun verb                  Alternative spelling of good night.  +goodnighted +goodnighting +goodnights
+le                 11814  article prep · archaic informal   the
 favourite          11650  adj noun verb · british slang     Most-liked. (In other words, [person]'s favorite [noun] = the [noun] that [person] likes …  +favourited +favouritemost +favourites +favouritest +favouriting
 comin              11237  verb · nonstandard                Pronunciation spelling of coming.
 gettin             10829  verb · nonstandard                Pronunciation spelling of getting.
 oi                 10736  intj noun pron · british          Said to get someone's attention; hey.  +ois
 talkin             10729  verb · nonstandard                Pronunciation spelling of talking.
 lookin              9991  verb                              Alternative spelling of lookin'.
-indians             9616  noun                              form of indian
 dont                9523  contraction · archaic             Obsolete spelling of don't.
 aii                 9323  contraction · slang               Alternative form of ai.
 uhh                 8591  intj                              Alternative form of uh.
@@ -45,6 +48,7 @@ agh                 4582  intj                              An exclamation of mi
 non                 4464  adv noun · archaic nonstandard slang  Obsolete form of none.  +nons
 hyah                4376  intj                              a call, often to horses, livestock, or cattle, to move forward or proceed
 oui                 4269  intj · dated                      Synonym of yes.
+des                 4110  noun · informal                   Desflurane.
 sensei              4064  noun                              A martial arts instructor; especially one for a Japanese martial art.  +senseis
 thats               3866  noun pron contraction · archaic   Obsolete form of that's.
 neighbourhood       3853  noun · british                    British standard spelling of neighborhood.  +neighbourhoods
@@ -53,22 +57,22 @@ tha                 3704  pron article · dialect nonstandard  Pronunciation spe
 freakin             3659  adv                               Alternative form of freakin'.
 innit               3653  contraction · british informal    Used as a replacement for any other negative tag question, irrespective of person, number…
 etc                 3644  phrase                            Alternative form of etc..
-julio               3606  noun                              A former coin of Italy, struck by Pope Julius II (1503-13).  +julios
 duh                 3366  intj                              A disdainful indication that something is obvious.
 shhh                3347  intj                              Elongated form of shh.
 oppa                3343  noun                              An affectionate term of address for an older brother or somewhat older man.  +oppas
-yankee              3323  noun                              A headsail resembling a genoa or a jib but with a high-cut clew, normally used together w…  +yankees
 gracias             3292  intj · informal                   Thank you.
 voiceover           3271  noun verb                         Alternative form of voice-over.  +voiceovered +voiceovering +voiceovers
 mwah                3261  intj noun · slang                 The sound of a kiss, to indicate blowing a kiss to someone.
 dickhead            3112  noun · slang vulgar               The glans penis.  +dickheads
+makin               3109  verb                              Alternative form of makkin.
 merci               3086  intj noun · informal              Thank you.  +mercis
 tellin              3082  noun                              A marine bivalve mollusc, of the genus Tellina, that burrows in the sand, from where it s…  +tellins
 ufo                 3023  noun                              A UFO.  +ufos
 oof                 2956  intj noun · british dated slang   A sound mimicking the loss of air, as if someone's solar plexus had just been struck.  +oofs
+mal                 2904  noun · informal                   illness, affliction.  +mals
 yakuza              2850  noun                              A Japanese organized crime gang.  +yakuzas
 dumpster            2793  noun verb · slang trademark       A large, usually metal trash receptacle designed to be hoisted up by a garbage truck in o…  +dumpstered +dumpstering +dumpsters
-starfleet           2739  noun                              A fleet of starships; a space navy.  +starfleets
+ju                  2729  noun · slang                      Someone admitted to university through the JUPAS system.
 livin               2683  noun                              A particular protein that inhibits apoptosis
 yer                 2600  adv noun pron contraction det · british dialect nonstandard slang  Pronunciation spelling of yeah (“yes”).  +yers
 goddammit           2542  intj · informal vulgar            Synonym of goddamn.
@@ -82,40 +86,38 @@ bhai                2415  noun                              friend, dude, man  +
 friggin             2401  adj · nonstandard                 Alternative spelling of frigging.
 deeks               2310  verb                              form of deek
 voicemail           2279  noun verb · trademark             A computerized interactive system for storing, processing and reproducing verbal messages…  +voicemailed +voicemailing +voicemails
+dino                2270  noun · informal slang             A dinosaur (type of animal).  +dinos
 hmmm                2258  intj                              Elongated form of hmm.
 playin              2176  verb                              Alternative form of playin'.
 babysitting         2161  verb noun                         The work of a babysitter; the care of children in the temporary absence of their parents …  +babysittings
-aires               2070  noun                              form of aire
 tox                 2063  adj · informal                    Affected by toxin; intoxicated; toxicological.
 uhm                 2044  intj                              Alternative form of um.
+yong                2035  adj · archaic                     Obsolete spelling of young.  +yonger +yongest
 bein                2021  adj adv verb                      Wealthy; well-to-do.  +beined +beining +beins
 ooo                 2004  phrase                            hugs (usually placed at the end of a letter or in text messaging, sometimes alongside xxx…
 frickin             1980  adj · nonstandard                 Pronunciation spelling of fricking.
-hai                 1958  intj · slang                      Hi.
 babysit             1942  verb · informal                   To watch or tend someone else's child for a period of time, often for money.  +babysat +babysits +babysitted +babysitting
 thingy              1940  noun pron adj · childish informal slang  A thing (used to refer to something vaguely or when one cannot recall or does not wish to…  +thingier +thingies +thingiest
-sai                 1932  noun · informal vulgar            A handheld weapon with three prongs, used in some Oriental martial arts.
 wanker              1902  noun · archaic british slang vulgar  Someone who wanks; masturbates.  +wankers
 gon                 1888  contraction noun · informal       Alternative form of gonna.  +gons
 dumbass             1880  noun adj · slang vulgar           A stupid or foolish person.  +dumbasses +dumberass +dumbestass
-showtime            1874  noun intj                         The time at which an entertainment event is set to begin.  +showtimes
 cyber               1872  adj verb noun · dated informal slang  Of, or having to do with, the Internet; alternative form of cyber-.  +cybered +cybering +cybers
-hawkeye             1818  noun                              Alternative spelling of hawk-eye.  +hawkeyes
 ryo                 1813  noun                              An anhemitonic pentatonic scale used in a Japanese Buddhist chant, and built up by interv…
 shite               1804  noun adj intj verb · british vulgar  Shit; trash; rubbish; nonsense.  +shited +shiter +shites +shitest +shiting +shitten
 woah                1801  intj                              Alternative spelling of whoa.
-frau                1786  noun                              A woman, especially a German woman.  +fraus
 blondie             1769  noun · informal                   A nickname for a person with blond hair, particularly an attractive woman.  +blondies
 homie               1748  noun                              Someone, particularly a friend or male acquaintance, from one's hometown.  +homies
 stig                1695  noun verb · british slang vulgar  Someone from a poor background, with poor dress sense.  +stigged +stigging +stigs
 arsehole            1690  noun · british vulgar             The anus.  +arseholes
 dat                 1620  det conj pron adv · dialect nonstandard  Pronunciation spelling of that.
 hmph                1612  intj verb                         Alternative form of humph.  +hmphed +hmphing +hmphs
+hoss                1598  noun · nonstandard slang          Pronunciation spelling of horse.  +hosses
 thankyou            1560  noun intj · nonstandard           Alternative spelling of thank-you.  +thankyous
-daleks              1527  noun                              form of dalek
+mega                1532  adj adv noun · informal slang     Very large.  +megas
 sorta               1514  contraction · informal            Sort of.  +sortsa
 bawk                1508  intj                              Alternative form of bok (“clucking sound of a chicken”).
 comm                1463  noun                              Synonym of commlink.  +commed +comming +comms
+fleur               1392  noun                              fleur-de-lis  +fleurs
 smurf               1382  noun verb · slang                 A blue pixie with a white stocking cap, from the media franchise The Smurfs.  +smurfed +smurfing +smurfs +smurves
 shithole            1337  noun · vulgar                     The anus.  +shitholes
 meself              1336  pron · british dialect slang      Alternative form of myself.
@@ -126,70 +128,71 @@ lemme               1288  contraction · informal            Let me.
 hottie              1286  noun · archaic british informal slang  Synonym of hotshot.  +hotties
 sory                1274  noun adj · archaic                iron(II) sulfate, or some earth impregnated with it
 juvie               1269  noun · informal                   Synonym of juvenile hall (a youth detention centre).  +juvies
+yous                1262  pron det noun verb · dialect informal  You.
 mmmm                1257  noun                              Elongated form of mmm.
 rockin              1257  adj                               Alternative form of rockin'.
+betcha              1244  contraction · informal nonstandard  Pronunciation spelling of bet you.
 superboy            1239  noun                              A very remarkable, talented or otherwise exceptional boy.  +superboys
 colourful           1237  adj · british                     British standard spelling of colorful.
+fo                  1229  prep · informal                   Alternative spelling of fo'.  +fos
 sats                1226  noun                              form of sat
+spam                1224  noun verb · rare slang trademark  Unsolicited bulk electronic messages.  +spammed +spamming +spams
+devi                1223  noun                              A goddess in Vedic mythology, Hinduism and Buddhism.  +devis
 fae                 1217  adj noun pron · nonstandard rare  Alternative spelling of fey (“magical, fairylike”).  +faes
+yee                 1210  pron intj · archaic slang         You (the people being addressed); alternative spelling of ye.
 wook                1195  noun · slang                      An unwashed, unemployed moocher who enjoys traveling to festivals and crashes at other pe…  +wooks
 perv                1180  noun verb · british slang         A pervert.  +perved +perving +pervs
 hye                 1180  adj verb · archaic                Obsolete spelling of high.  +hyed +hyeing +hyer +hyes +hyest
 gah                 1179  intj                              Expressing exasperation or annoyance.
 megatron            1174  noun                              A disc-seal tube, used in lighthouses or submersibles.  +megatrons
-trojan              1170  noun adj verb                     Malware that appears to perform or actually performs a desired task for a user while perf…  +trojaned +trojaning +trojans
 nevermind           1170  noun verb · informal              Attention, heed.  +neverminded +neverminding +neverminds
 sweety              1166  noun                              Alternative spelling of sweetie.
 rainforest          1160  noun                              A forest in a climate with high annual rainfall and no dry season.  +rainforests
-nai                 1158  noun                              A barber.  +nais
 ringtone            1157  noun verb                         The sound made by a telephone when ringing.  +ringtoned +ringtones +ringtoning
 ehh                 1141  intj verb                         An expression of surprise  +ehhed +ehhing +ehhs
 xo                  1124  noun                              Alternative form of xoxo (an abbreviation for hugs and kisses, usually placed at the end …
 brah                1122  noun                              Alternative spelling of bra (“brother, friend”).  +brahs
+koji                1101  noun                              A substance that is produced by letting a mold, especially Aspergillus oryzae, grow on ri…  +kojis
 realtor             1089  noun · trademark                  A person or business that sells or leases out real estate, acting as an agent for the pro…  +realtors
 seatbelt            1083  noun                              Alternative spelling of seat belt.  +seatbelts
 everytime           1077  adv                               Alternative spelling of every time.
 fest                1072  noun                              A gathering for a specified reason or occasion.  +fests
 tink                1069  verb noun · british dated slang vulgar  To emit a high-pitched sharp or metallic noise.  +tinked +tinking +tinks
 wannabe             1069  noun · informal vulgar            Someone who wishes to be someone or do something, but lacks the qualifications or talent;…  +wannabes
-prix                1068  noun                              Synonym of prize.
 taser               1067  noun verb · trademark             A Taser, a handheld device made by Taser International intended to immobilize another by …  +tasered +tasering +tasers
-rolex               1064  noun                              An omelette served inside a chapati.  +rolexes
 hyuk                1059  intj                              Alternative form of nyuk (“exaggerated laugh”).
 namaste             1057  intj noun verb                    A greeting in contexts relating to Indian culture or the New Age movement.  +namasted +namasteing +namastes
-africans            1054  noun                              form of african
 sie                 1053  verb noun pron · dialect nonstandard rare  To sink; fall; drop.  +sied +sies +sying
 toki                1050  noun                              A Japanese crested ibis (Nipponia nippon).  +tokis
 tvs                 1046  noun                              form of tv
-inca                1045  noun                              Any of several species of hummingbirds in the genus Coeligena  +incas
 motherfuckin        1037  adj · nonstandard                 Pronunciation spelling of motherfucking.
 fm                  1033  symbol                            fathoms
 milkshake           1026  noun verb · british informal slang  A thick beverage consisting of milk and ice cream mixed together, often with fruit, choco…  +milkshaked +milkshakes +milkshaking
 newbie              1026  noun · slang                      A newcomer or neophyte, someone new to something.  +newbies
 unni                1019  noun                              Alternative form of unnie.  +unnis
+mami                1018  noun                              mommy, mother  +mamis
 vamos               1007  verb · archaic                    Obsolete form of vamoose.
 damnit              1001  intj                              Synonym of dammit.
-jong                 996  noun · slang                      A Tibetan building which makes up a prefecture; typically a monastery or fortress.  +jongs
 beka                 992  noun                              an ancient Biblical unit of weight, half a shekel  +bekas
-grammy               988  noun · informal                   grandmother  +grammies
 kryptonite           982  noun verb · slang                 The one weakness of something or someone that is otherwise invulnerable.  +kryptonited +kryptonites +kryptoniting
 airlock              981  noun verb · informal              A sealed, airtight chamber, such as in a manned spacecraft or submarine, used to provide …  +airlocked +airlocking +airlocks
 urgh                 979  intj                              Alternative form of eurgh.
 oww                  977  intj · slang                      Alternative spelling of ow.
 muy                  976  adv · informal                    Very.
 nooo                 972  intj                              Elongated form of no.
-yorker               971  noun                              A ball bowled so as to bounce at or near the batsman's popping crease.  +yorkers
 ahjussi              970  noun                              A middle-aged Korean man.  +ahjussis
 dancin               966  verb · nonstandard                Pronunciation spelling of dancing.
 bruv                 964  noun · british slang              Brother, mate, friend.  +bruvs
 oop                  954  intj adv · informal nonstandard   Used to acknowledge a small mistake or accident.
+lol                  953  particle intj · archaic slang     Neutralises the tone of a message; denotes that a message is light-hearted or casual.  +lold +loled +loling +lols
 seein                950  verb · nonstandard                Pronunciation spelling of seeing.
 gots                 950  verb · dialect nonstandard        Has, has got (3rd person singular).
 uber                 949  adj adv                           Super; high-level; high-ranking.  +ubered +ubering +ubers
+yuko                 949  noun                              The score for a throw that lands the opponent on his or her side.  +yukos
+okey                 947  noun                              A Turkish game in which players attempt to collect certain groups of tiles.
 offline              932  adj adv verb · slang              Of a system, currently not connected (generally electrically) to a larger network. For ex…  +offlined +offlines +offlining
 nandu                924  noun                              rhea (large, flightless birds)  +nandus
 krang                923  noun                              The portions of a whale that remain after the blubber has been removed, especially the fl…  +krangs
-chinaman             921  noun · archaic dated              A dealer in porcelain (china).  +chinamen
 tock                 921  noun verb                         A clicking sound similar to one made by the hands of a clock.  +tocked +tocking +tocks
 eggman               918  noun                              A man who delivers eggs.  +eggmen
 douchebag            899  noun · slang vulgar               A sterile container for holding fluid used in a vaginal douche.  +douchebags
@@ -197,15 +200,15 @@ mythbusters          896  noun                              form of mythbuster
 looky                892  verb · informal                   Look.
 bling                890  noun                              An ostentatious display of richness or style.
 sheesh               888  intj                              An expression of disbelief or exasperation.
-rd                   886  noun                              Symbol for rad (unit of measure for absorbed dose of radiation).  +rds
+wank                 888  verb noun · british slang vulgar  To masturbate.  +wanked +wanking +wanks
 daycare              881  noun                              Daytime supervision, usually of children or pets.  +daycares
-neanderthals         879  noun                              form of neanderthal
 hitman               872  noun                              A male contract killer, especially one paid by a mafia.  +hitmen
 shitload             862  noun · slang vulgar               A large amount.  +shitloads
 stardate             854  noun                              A date according to the fictional system of time measurement developed for Star Trek.  +stardates
 nav                  851  noun verb · informal slang        Navigation. Often used attributively, as in nav beacon.  +navs +navved +navving
-mala                 847  noun                              A seasoning made from Sichuan pepper and chilis.  +malae +malas
 stepdad              845  noun · informal                   A stepfather.  +stepdads
+dem                  842  pron det · nonstandard slang      Nonstandard form of them.
+fam                  832  noun · slang                      A term of endearment between friends; derived from "family" but not used between relative…  +fams
 garde                831  noun verb · archaic               Obsolete form of guard.  +garded +gardes +garding
 alot                 831  adv noun · nonstandard            Alternative form of a lot (compare to awhile).
 aagh                 829  intj                              An exclamation of horror, disgust or frustration
@@ -216,78 +219,75 @@ kalinda              821  noun                              Alternative form of 
 popsicle             820  noun · trademark                  Frozen fruit juice, flavored sugar water, or the like on a stick.  +popsicles
 fairytale            817  adj noun                          Alternative spelling of fairy-tale.  +fairytales
 maki                 816  noun                              A ring-tailed lemur (Lemur catta).  +makis
-muppet               814  noun · british slang vulgar       An incompetent or foolish person.  +muppets
-dept                 806  noun                              Alternative spelling of dept..  +depts
+tac                  805  noun · slang                      The drug cannabis.  +tacs
 gopi                 802  noun                              Any of the milkmaids that were companions of Krishna in Indian mythology.  +gopis
 tig                  801  verb noun · dialect               To touch lightly or playfully; to trifle, dally.  +tigged +tigging +tigs
 cardio               800  adj noun                          Cardiovascular; pertaining to the health of the circulatory and respiratory systems.  +cardios
 healthcare           796  noun                              Alternative spelling of health care.  +healthcares
 shitless             793  adj · slang vulgar                Having an empty bowel; greatly frightened; see usage notes below.
+bona                 786  adj adv                           Good.
 goddamnit            782  intj                              Alternative spelling of goddammit.
 phaser               779  noun verb                         An electronic device that produces special effects on the sound produced by an electric g…  +phasered +phasering +phasers
-skywalker            775  noun                              One who walks in the sky. A member of the Mohawk group of Native Americans; especially on…  +skywalkers
 dipshit              773  noun · slang vulgar               A stupid, obnoxious, or undesirable person.  +dipshits
 kabaddi              773  noun                              A South Asian team sport in which players must hold their breath while making raids into …
-nani                 773  intj · slang                      what
 mucho                771  adj adv                           Much; a great deal of.
+sho                  753  adv noun · childish nonstandard   Pronunciation spelling of sure.  +shos
 hoi                  749  intj                              Alternative form of hoy, hey! a call to gain someone's attention.
-mata                 746  noun                              A respectful title for a female spiritual leader or for a wife, mother, or grandmother of…  +matas
 prenup               742  noun · informal                   A prenuptial agreement.  +prenups
+ish                  739  verb adv noun intj · dated informal nonstandard slang  Pronunciation spelling of is.  +ishes
 shifu                736  noun                              Synonym of sifu: the Mandarin Chinese-derived name.  +shifus
-grampa               736  noun · informal                   grandfather  +grampas
 hasta                734  verb intj noun · informal         A spear carried by early Roman legionaries.  +hastae +hastas
 ahjumma              730  noun                              Alternative spelling of ajumma.  +ahjummas
+bok                  727  adj intj verb · slang             Keen or willing.  +bokked +bokking +boks
 laundromat           725  noun · british trademark          A self-service laundry facility with (traditionally) coin-operated (which now may use oth…  +laundromats
 std                  724  noun                              Standard library.
-spiderman            723  noun · informal slang             A steeplejack.  +spidermen
+manga                722  noun · archaic                    A comic originating in Japan.  +mangas
+fab                  721  adj noun verb · informal          Fabulous (great or spectacular).  +fabbed +fabber +fabbest +fabbing +fabs
 ofcourse             721  adv · nonstandard                 Alternative form of of course.
 hahaha               718  intj                              haha (an onomatopoeic representation of laughter).
 lookie               716  verb                              Alternative form of lookee.
 fricking             713  adj adv · informal                A minced oath of "fucking" as an intensifier.
+lor                  712  particle adj · informal slang     Tagged at the end of a sentence to convey a sense of resignation or inevitability.
 lookit               711  intj verb · informal nonstandard  look, listen; see here, pay attention; the thing is, to be honest
 grrr                 710  intj                              Elongated form of grr.
 alrighty             708  intj · informal                   Used to affirm, indicate agreement, or consent.
 ooooh                705  intj                              Elongated form of ooh.
 probie               704  noun · slang                      Someone holding a position on a probationary basis, subject to performance or examination.  +probies
-henning              704  verb                              form of hen
 summat               701  pron adv · informal               Something.
 messin               696  noun                              A mongrel dog; a cur.  +messins
+noone                695  pron noun · archaic nonstandard   Nonstandard spelling of no one.  +noones
 trippin              691  verb                              Alternative form of trippin'.
 scarface             690  noun                              A person with a scarred face.  +scarfaces
 def                  689  adj · slang                       Excellent; very good.  +deffer +deffest +defs
 hodja                687  noun                              A Muslim schoolmaster.  +hodjas
-humpty               683  adj noun · archaic slang          Short and thick; dumpy.  +humpties
+demi                 686  noun adj · informal slang         Alternative spelling of demy.  +demis
 grr                  674  intj                              Sound of an animal growl.
 sunbae               672  noun                              An upperclassman or senior, in the context of Korea.  +sunbaes
 cappie               671  noun                              a small, usually wooden drinking vessel  +cappies
 paintball            671  noun verb                         A sport where teams shoot each other with gelatin capsules filled with paint-like dye.  +paintballed +paintballing +paintballs
-capt                 660  verb · archaic                    form of cap  +capts
+ep                   659  noun · informal                   episode (of a TV serial, etc.)  +eps
 mhm                  658  intj                              Expressing agreement or affirmation.
 brainiac             657  noun · slang vulgar               A very intelligent and usually studious, erudite person.  +brainiacs
 chem                 656  noun · informal                   Clipping of chemical. A chemical weapon.  +chems
-englishmen           656  noun                              form of englishman
 kajal                655  noun                              Kohl.
-kleenex              652  noun · trademark                  A disposable tissue.  +kleenexes +kleenices
 suki                 651  noun                              a favored customer; a regular who receives preferential treatment  +sukis
-parmesan             643  noun · slang                      A hard, full-fat Italian cheese from Parma or its neighboring province Reggio Emilia.  +parmesans
 catwoman             641  noun · rare                       A woman in a cat costume.  +catwomen
 senpai               638  noun · slang                      The senior member of a group in Japanese arts; a mentor.  +senpais
-dutchy               637  noun adj · archaic dialect        Archaic spelling of duchy.  +dutchier +dutchies +dutchiest
-craigslist           637  verb · informal slang             To advertise (a product or service) on the Craigslist website.  +craigslisted +craigslisting +craigslists
 birdy                636  adj noun · informal               Resembling or characteristic of a bird.
+dede                 634  noun · archaic                    Obsolete spelling of deed.
 admin                628  noun verb · informal slang        Administration, or administrative work.  +admined +admining +adminned +adminning +admins
-jetson               626  noun · archaic                    jetsam  +jetsons
 mes                  626  noun                              form of me
 saheb                623  noun                              Alternative form of sahib.  +sahebs
 butthole             622  noun · informal slang vulgar      The anus.  +buttholes
 ketamine             622  noun                              A synthetic compound used as a dissociative anesthetic and analgesic drug and also recrea…  +ketamines
+nt                   620  noun · slang                      Alternative form of n/t (“no text”).
 homeworld            619  noun                              The world on which someone or something originated; a home planet or moon.  +homeworlds
 chillin              616  verb                              Alternative form of chillin'.
 holodeck             615  noun                              A room that provides holographic simulations for recreation, training, etc.  +holodecks
 cale                 611  noun · british                    Any of a number of marine fish in the family Odacidae  +cales
 tarek                609  noun                              Synonym of pearl mullet.  +tareks
+av                   608  verb · slang                      have  +avs
 walkie               606  noun · childish                   A walkie-talkie.  +walkies
-bolsheviks           605  noun                              form of bolshevik
 chibs                603  noun verb                         form of chib
 gangsta              603  noun adj · nonstandard            Pronunciation spelling of gangster, representing African-American Vernacular English.  +gangstas
 robo                 601  noun · informal                   A robot.  +robos
@@ -303,15 +303,15 @@ nak                  588  noun                              A female yak.  +naks
 soju                 584  noun                              A Korean distilled alcoholic beverage, similar to shochu.  +sojus
 chrissake            583  intj                              used to express annoyance or frustration
 yume                 580  noun verb · slang                 Alternative form of yumeshipper.  +yumed +yumeing +yumes
+hoon                 580  noun verb · british dated slang vulgar  A worthless person; a hooligan or lout.  +hooned +hooning +hoons
 mothership           579  noun                              Alternative spelling of mother ship.  +motherships
 hazmat               578  noun                              Hazardous material(s).  +hazmats
+signe                577  noun · archaic                    Obsolete spelling of sign.  +signes
+gro                  576  adj num · slang                   Disgusting, unpleasant; gross.
 attagirl             575  intj noun · informal              Used to show encouragement or approval to a girl, woman, or female animal.  +attagirls
 lightman             570  noun                              A man who carries or takes care of a light.  +lightmen
-ville                569  noun · rare                       A Vietnamese village.  +villes
-polaroid             567  noun verb · informal trademark    A sheet of plastic embedded with microscopic crystals of herapathite or similarly acting …  +polaroided +polaroiding +polaroids
-lun                  559  noun · british                    Alternative form of lown.  +luns
-merc                 557  noun verb · slang                 A mercenary.  +merced +mercing +mercs
-atari                553  noun                              A move that threatens the immediate capture of one or more stones.  +ataries +ataris
+tris                 564  noun                              A flammable compound which forms a corrosive solution in water and is used as a buffer an…
+omg                  557  phrase · slang                    Alternative form of OMG: Oh my God.
 todo                 552  noun                              Alternative form of to-do.  +todos
 foon                 551  noun                              Synonym of spork.  +foons
 wer                  549  noun verb · archaic nonstandard   A man; a male; a husband.  +wers
@@ -321,25 +321,23 @@ somethings           545  verb noun                         form of something
 crackhead            539  noun · slang vulgar               A person who is addicted to or regularly uses crack cocaine.  +crackheads
 batgirl              534  noun                              The female equivalent of a batboy.  +batgirls
 pooper               532  noun · rare slang vulgar          The anus; often in reference to anal intercourse.  +poopers
-afro                 531  noun                              A hairstyle characterized by tightly curled locks and a rounded shape.  +afros
 bugsy                530  adj                               Infested with bugs; buggy  +bugsier +bugsiest
 bitchin              530  adj verb                          Alternative spelling of bitching (“excellent”).  +bitchinest
 kaboom               529  noun intj verb · informal         The sound of an explosion, typically seen in comic strips or heard in a light-hearted con…  +kaboomed +kabooming +kabooms
 puta                 525  noun · vulgar                     A prostitute, whore, slut, bitch, etc.
 defenceless          521  adj · british                     Without defence; undefended.
+sig                  521  noun verb · british dated dialect informal slang  A signature, especially one on emails or newsgroup postings.  +sigged +sigging +sigs
 gugu                 517  noun · slang vulgar               A Filipino.  +gugus
 eee                  515  intj                              An expression of happiness or excitement: yay!
 mnh                  514  intj                              Alternative form of mmm. Expressing satisfaction.
-tuan                 513  noun · archaic                    A brush-tailed phascogale (Phascogale tapoatafa), endemic to Australia.  +tuans
+hella                509  det pron adv intj · slang         An intensifier, signifying an abundance of a thing; much or many.
 carlito              507  noun                              A Philippine tarsier (Carlito syrichta).  +carlitos
+bodie                502  noun · archaic                    Obsolete spelling of body.
 lovey                502  noun · british                    An informal mode of address (associated most often with actors and the like).  +loveys
-injun                499  noun · slang vulgar               A Native American.  +injuns
 bitte                496  noun · archaic                    Obsolete form of bit.  +bittes
-batmobile            495  verb · dated slang                To move or proceed as if in the Batmobile  +batmobiled +batmobiles +batmobiling
 knowed               494  verb · nonstandard                form of know
 yada                 493  intj                              Only used in yada yada yada
 bapu                 493  noun                              father  +bapus
-ibn                  493  noun                              son of
 kevlar               492  noun · slang trademark            (Fabric, cordage, etc made of) aramid fiber, an exceptionally strong, light, man-made fib…  +kevlars
 esp                  491  adv                               Alternative form of esp..
 tranny               491  noun · british informal slang vulgar  A transgender person, especially a trans woman, or (especially historically) anyone who c…  +trannies
@@ -349,13 +347,15 @@ goosebumps           489  noun                              form of goosebump
 brung                489  verb · dialect informal nonstandard  form of bring
 leng                 488  adj noun                          Synonym of peng (“attractive, excellent”).  +lenger +lengest +lengs
 nanites              486  noun                              form of nanite
+blythe               485  adj · archaic                     Obsolete spelling of blithe.
 eonni                483  noun                              Alternative form of unnie.  +eonnis
 schoolyard           483  noun · british                    The grounds around a school.  +schoolyards
 uzi                  482  noun                              A type of compact submachine gun, having a caliber of 9 millimeters with ammunition house…  +uzis
+thang                480  noun · nonstandard slang          Pronunciation spelling of thing, usually used to denote a known fad or popular activity.  +thangs
 gert                 479  adj adv · slang                   big
 biryani              478  noun                              A spiced dish of rice, blended with meat and/or vegetables.  +biryanis
+masa                 478  noun                              A strong form of paper, smooth on one side and lightly textured on the other, used for dr…  +masas
 stepmom              477  noun · informal                   Stepmother.  +stepmoms
-solly                476  adj · nonstandard                 Pronunciation spelling of sorry, mimicking an Asian accent.
 lunchbox             475  noun · british slang              A container for transporting meals, especially lunch.  +lunchboxes
 replicator           474  noun                              Something capable of self-replication, like a gene or meme.  +replicators
 nyet                 474  noun intj                         A no; a negative response (in a Russian context).
@@ -367,34 +367,35 @@ arrivederci          468  intj noun                         farewell, goodbye, s
 kidnappings          468  noun                              form of kidnapping
 whup                 468  verb noun intj · dialect informal  Alternative form of whoop (“to whip, thrash, or defeat”).  +whupped +whupping +whups
 frak                 468  verb · slang                      Fuck.  +frakked +frakking +fraks
+katana               468  noun                              A type of Japanese longsword, having a single edge and slight curvature, historically use…  +katanas
 cristal              467  adj noun · archaic                Relating to a crest.  +cristals
 spanky               466  adj · informal                    brand spanking new
 lbs                  463  noun                              form of lb
 miro                 463  noun · british                    A large conifer of New Zealand, Pectinopitys ferruginea (syn. Prumnopitys ferruginea), wi…  +miros
-florentine           463  adj noun · archaic                Cooked or served with spinach.  +florentines
-capulet              459  noun                              Alternative form of capellet.  +capulets
+unc                  463  adj noun · slang                  Old; no longer versed in or relevant to current youth culture.  +uncs
 spiritus             459  noun                              A breathing.  +spirituses
 cybermen             459  noun                              form of cyberman
-dumpty               455  adj                               Alternative form of dumpy.  +dumptier +dumptiest
 winky                453  adj noun · childish slang         Tending to wink; winking.  +winkies
 filip                453  noun                              Alternative form of fillip.  +filips
 paedophile           452  noun                              Commonwealth standard spelling of pedophile.  +paedophiles
 favourable           452  adj · british                     Apt to win favour; pleasing.
-westside             451  noun                              The western side of a building, street, area etc.  +westsides
 wassup               451  intj · slang                      what's up? (as a greeting)
 flatline             449  noun verb · informal slang        An asystole; the absence of heart contractions or brain waves. The disappearance of the r…  +flatlined +flatlines +flatlining
 tannoy               449  noun verb · british informal trademark  A public address system.  +tannoyed +tannoying +tannoys
 saya                 448  noun                              A skirt.  +sayas
-tourette             447  verb                              To exhibit the characteristic tics of Tourette syndrome.  +touretted +tourettes +touretting
 shitter              447  noun adj · british informal slang vulgar  One who defecates.  +shitters
 payphone             446  noun                              A public telephone that requires prepayment to operate, generally via the insertion of co…  +payphones
+mahi                 446  noun · british                    the work required to complete a task
 marga                446  noun · vulgar                     The canon of established forms of classical music, dance etc., as opposed to modern or re…  +margas
+farr                 445  adj · archaic                     Obsolete spelling of far.
+nyah                 445  intj · slang                      Expressing smug triumph.
 rearview             443  adj noun                          That provides a view from or to the rear.  +rearviews
-catholicism          443  noun                              The state or quality of being catholic or universal; catholicity.  +catholicisms
 jakey                443  noun                              A homeless drunk.  +jakeys +jakies
 mija                 442  noun                              A term of endearment for a woman or girl.  +mijas
+knockin              440  noun                              The insertion of a cDNA sequence at a particular locus in an organism's chromosome  +knockins
 erectus              439  noun                              Homo erectus.
 contessa             439  noun                              A countess, often specifically an Italian countess  +contessas
+nuh                  439  intj noun verb · nonstandard slang vulgar  no, nah
 dishonour            438  noun verb · british               Shame or disgrace.  +dishonoured +dishonouring +dishonours
 stian                438  noun · archaic                    A stye.  +stians
 uhuh                 436  intj                              Alternative spelling of uh-uh.
@@ -402,7 +403,9 @@ rox                  435  verb · informal slang             Alternative spellin
 royale               434  noun adj · nonstandard            A garnish of a consommé made with unsweetened cooked custard, usually cut into decorative…  +royales
 ghostbusters         433  noun                              form of ghostbuster
 aish                 433  intj                              damn, shit
+fait                 433  noun                              Only used in fait accompli.  +faits
 ceasefire            433  noun                              In warfare, an agreed end to hostilities for a specific purpose. (Typically only temporar…  +ceasefires
+blacky               432  noun · informal vulgar            A black person.  +blackies
 aaagh                432  intj                              Elongated form of agh.
 resync               431  noun verb                         resynchronization  +resynced +resynched +resynching +resyncing +resyncs
 authorisation        430  noun · british nonstandard        Non-Oxford British English standard spelling of authorization.  +authorisations
@@ -410,19 +413,16 @@ sucky                429  adj noun · informal slang vulgar  Suitable for suckin
 eugh                 428  noun intj · archaic               Obsolete spelling of yew.  +eughs
 mins                 428  noun                              minutes; plural of min
 toma                 428  noun                              A semi-hard Italian cheese from Piedmont
-dumbledore           427  noun · archaic dialect slang      A bumblebee.  +dumbledores
 undercooked          426  verb adj                          Done with insufficient energy, enthusiasm, etc.
 sharky               426  adj · informal                    Resembling or characteristic of a shark.
 aint                 426  contraction · informal nonstandard  Alternative form of ain't.
 chupacabra           425  noun                              Alternative form of chupacabras.  +chupacabras
 cufflinks            424  noun                              form of cufflink
-evo                  424  noun · british informal           Evening (time of day).  +evos
 skanky               423  adj · slang                       dirty; smutty or scabby  +skankier +skankiest
 ent                  423  noun verb                         A large, fictional, humanoid, walking tree in works by J. R. R. Tolkien.  +ented +enting +ents
 zod                  423  noun · dated slang                A loser; a contemptible or uncool person.  +zods
 kaji                 422  noun                              an ugly anthropomorphic spirit  +kajis
 fracking             422  noun adj · slang                  Hydraulic fracturing.  +frackings
-americano            421  noun                              A drink made of espresso coffee diluted with hot water.  +americanos
 haddie               421  noun · dialect                    A haddock.  +haddies
 bizarro              420  adj noun · informal               Alternative form of bizarre.  +bizarros
 blud                 419  noun pron · archaic british slang  Informal address to a man.  +bluds
@@ -438,6 +438,7 @@ vaseline             410  noun verb · trademark             Petroleum jelly.  +
 capisce              408  intj verb · slang vulgar          Used by a listener to confirm that they have understood something said to them: I got it,…  +capisced +capisces +capiscing
 wifey                408  adj noun · informal               Of, befitting, pertaining to, or characteristic of a wife.  +wifeys +wifier +wifiest
 boku                 407  noun adv det                      Alternative spelling of beaucoup (lots, a large amount)
+minibar              407  noun                              A small refrigerator in a hotel room, containing drinks and snacks that the guest may cho…  +minibars
 addons               407  noun                              form of addon
 breastfeeding        406  noun verb                         The act or process of feeding a baby or young child milk from a lactating breast.  +breastfeedings
 haemorrhage          406  noun verb · british               British standard spelling of hemorrhage.  +haemorrhaged +haemorrhages +haemorrhaging
@@ -449,33 +450,33 @@ zoinks               403  intj verb                         Expressing surprise,
 arr                  402  intj verb noun · british rare     Yes.  +arred +arring +arrs
 hav                  402  verb · informal                   Informal spelling of have.
 chrissakes           402  intj                              used to express annoyance or frustration
+mou                  401  particle · informal               Sentence-final particle, forming a tag question.
 gato                 401  noun                              cat, kitty  +gatos
 fentanyl             401  noun                              A synthetic opioid narcotic analgesic, C₂₂H₂₈N₂O, with pharmacological action similar to …  +fentanyls
-garbo                401  noun adj · british informal vulgar  A rubbish collector; a garbage man.  +garbos
 numero               401  noun                              The sign ⟨ № ⟩.
 creeped              401  verb                              form of creep
-gare                 400  noun                              Coarse wool on the legs of sheep.  +gares
 moonbase             400  noun                              A base or outpost located on a moon.  +moonbases
-flor                 399  noun                              A film of yeast that develops on the surface of some wines during fermentation, induced d…  +flors
+pappa                400  noun                              Alternative spelling of papa.  +pappas
 yessir               399  intj noun · informal              Used to express assent, especially to a male superior.
 waah                 399  intj                              Alternative form of wah.
 hubba                398  noun · british                    A grain.  +hubbas
+tran                 398  noun · informal vulgar            A trans person.
 gung                 398  noun · archaic                    Alternative form of gong: an outhouse.  +gungs
 habeas               398  noun                              A habeas corpus.  +habeases
 soulmate             397  noun                              Someone, especially a romantic partner, with whom one is exceptionally or uniquely compat…  +soulmates
-capitan              397  noun                              Captain (in Spanish-speaking contexts).  +capitans
 anyhoo               396  adv · dialect informal            anyhow
 mijo                 396  noun                              A term of endearment for a man or boy; dear, darling, my heart.  +mijos
 basta                395  intj                              (that's) enough; stop!
 dominus              392  noun                              master; sir; a title of respect formerly applied to a knight or clergyman, and sometimes …  +domini
 opa                  392  noun                              Grandfather, grandpa.  +opas
+paine                391  noun · archaic                    Obsolete spelling of pain.  +paines
 kilometre            391  noun                              An SI unit of length equal to 10³ metres. Symbol: km  +kilometres
 taki                 390  noun                              Alternative form of takhi.  +takis
 tivo                 390  verb · trademark                  To digitally record (a television show).  +tivoed +tivoing +tivos
-myspace              389  noun verb · slang                 One's profile on the MySpace website.  +myspaced +myspaces +myspacing
 energon              389  noun                              A proposed form of energetic particle.  +energons
 chitti               389  noun · informal                   Alternative form of chitthi.  +chittis
 untill               388  prep · archaic                    Obsolete spelling of until.
+emo                  387  noun adj · informal vulgar        Any form of guitar-driven alternative rock that is particularly or notably emotional; a b…  +emos
 getcha               387  contraction · informal            Understand; comprehend.
 omo                  386  intj                              An exclamation of surprise or shock: oh my god, woah
 coochie              384  noun · archaic slang              The hootchy-kootchy, a type of erotic dance.  +coochies
@@ -484,38 +485,41 @@ mojito               381  noun                              A Cuban cocktail, ge
 blinky               380  adj noun · dialect                Of eyes or people/animals: blinking repeatedly, prone to blink.  +blinkies
 ack                  379  noun intj verb · vulgar           The letter A as used in signalling and other types of communications.  +acked +acking +acks
 sais                 379  noun verb · dated                 A groom, or servant with responsibility for the horses.  +saises
+mens                 376  noun · archaic nonstandard        Alternative form of men (“plural of man”).
 yeow                 375  intj                              Expressing sudden pain or startlement.
 bestest              375  adj adv verb · archaic childish informal nonstandard  Best; the best of the best.
+manju                374  noun                              A traditional Japanese confection; most have an outside made from flour, rice powder, kud…  +manjus
 fuckhead             373  noun · vulgar                     A stupid or otherwise undesirable person.  +fuckheads
 yadda                373  intj noun                         Used three times in a row, or in combination with other words, to indicate part of a sent…  +yaddas
 telecom              373  noun · informal                   Telecommunication or telecommunications.  +telecoms
-kumbaya              371  noun                              Used to evoke spiritual unity and interpersonal harmony, with varying degrees of sincerit…
 hyperdrive           370  noun                              A spaceship engine that allows faster-than-light travel by entering hyperspace.  +hyperdrives
 smokescreen          369  noun                              Smoke used as a disguise, mask or cover, as of troops in battle.  +smokescreens
 mailroom             367  noun                              A room used for receiving and (usually) sending mail.  +mailrooms
 pff                  367  intj                              An expression of annoyance or disappointment.
 shoebox              366  noun · vulgar                     The box in which shoes are sold.  +shoeboxes
 lulla                363  intj                              Alternative form of lullay.
+salam                362  intj noun verb                    Alternative spelling of salaam.  +salamed +salaming +salams
 grandmama            361  noun                              Alternative spelling of grandmamma.  +grandmamas
 lookee               360  noun verb                         One who is looked at.  +lookees
 doobie               359  noun · slang                      A marijuana cigarette.  +doobies
 styrofoam            358  noun · trademark                  Expanded polystyrene foam, such as is used in cups and packaging.  +styrofoams
+tri                  355  noun · informal                   triathlon  +tris
 sonofabitch          355  noun · nonstandard                Alternative spelling of son of a bitch.  +sonofabitches +sonsabitches +sonsofbitches
+goode                354  adj · archaic                     Obsolete spelling of good.
 twinkie              354  noun · trademark                  A generic snack product consisting of an oblong yellow cake with a creamy white filling.  +twinkies
 laine                352  noun                              an area of arable land at the foot of a hill  +laines
 sssh                 352  intj                              Alternative form of shh.
 hairspray            352  noun verb                         Alternative form of hair spray.  +hairsprayed +hairspraying +hairsprays
+pullin               351  noun · archaic                    poultry  +pullins
 shacked              351  verb                              form of shack
 bigtime              351  adj adv noun · informal           Of major significance or importance.  +bigtimes
-robocop              350  noun                              A cyborg police officer.  +robocops
+normie               349  noun adj · slang vulgar           A normal person; one with commonly held, normative beliefs, neurology, tastes or interest…  +normier +normies +normiest
 cig                  348  noun · informal                   Cigarette.  +cigs
-diddy                348  noun adj · british childish informal rare slang  A woman's breast.  +diddier +diddies +diddiest
 nano                 347  noun                              A nanotechnological device, such as a computer  +nanos
 woohoo               347  intj                              Used to express sudden or exuberant joy, happiness, excitement, approval or delight.
 ceos                 347  noun                              form of ceo
 faire                347  adj noun · archaic                Obsolete spelling of fair.  +faires
 outwith              347  prep adv                          Outside; beyond; outside of.
-katara               345  noun                              An Indian push dagger with an H-shaped handle, used predominantly ceremonially, and rarel…  +kataras
 neverland            345  noun                              An ideal, fantastical, imaginary, or dreamlike place.  +neverlands
 int                  345  verb contraction · informal       To die intentionally in a match by having oneself slain by enemy characters or structures…  +inted +inting +ints
 handbrake            345  noun verb                         A brake in a vehicle, set by hand, and usually locking on until released by hand, enablin…  +handbraked +handbrakes +handbraking
@@ -531,7 +535,6 @@ rocksteady           341  noun                              A genre of Jamaican 
 chappie              340  noun                              Alternative spelling of chappy.  +chappies
 scaredy              340  adj noun · informal               Characterised by being timorous or afraid.  +scaredies
 masala               340  noun                              Any of many blends of spices used in Indian cuisine, most often containing cardamom, cori…  +masalas +masale
-amma                 339  noun                              mother  +ammas
 adrenalin            339  noun                              Alternative spelling of adrenaline.  +adrenalins
 wellbeing            339  noun                              Alternative form of well-being.  +wellbeings
 kavya                338  noun                              A highly artificial Sanskrit literary style used by Indian court poets in the early centu…
@@ -539,6 +542,7 @@ guk                  337  noun                              A class of soup-like
 chie                 337  noun · archaic                    Obsolete form of chai (“female gypsy”).  +chies
 shockwave            336  noun                              Alternative spelling of shock wave.  +shockwaves
 ema                  336  noun                              A wooden plaque bearing a prayer or wish, left hanging at a Shinto shrine.
+venu                 336  noun                              One of the ancient transverse flutes of Indian classical music.  +venus
 treehouse            336  noun                              A house, or similar structure within a tree, or several trees, built with light materials.  +treehouses
 cowabunga            335  intj · slang                      Expressing amazement, enthusiasm, or joy.
 ribbit               334  intj noun verb                    The vocal sound made by a frog or toad.  +ribbited +ribbiting +ribbits +ribbitted +ribbitting
@@ -553,9 +557,9 @@ scooch               328  verb noun                         To shift, move aside
 gravedigger          328  noun                              A person employed to dig graves.  +gravediggers
 dosa                 328  noun                              A type of thin south Indian pancake made from fermented lentils and rice blended with wat…  +dosas
 multi                328  noun · informal                   A multituberculate.  +multies +multis
+glam                 327  noun adj verb · slang             Glamour; glamorousness.  +glammed +glammer +glammest +glamming +glams
 bleh                 327  intj adj · slang                  Used to reflect general indifference to a situation or topic.
-kodak                326  noun verb · dated trademark       A camera: a device for taking still photographs.  +kodaked +kodaking +kodaks
-kou                  326  noun                              A tree of species Cordia subcordata.
+stent                326  noun verb · archaic               A slender tube inserted into a blood vessel, a ureter or the oesophagus in order to provi…  +stented +stenting +stents
 leadeth              326  verb · archaic                    form of lead
 iru                  324  noun                              A West African condiment made from fermented locust beans.
 sik                  324  adj · british slang               Alternative form of sick (“cool, excellent”).
@@ -571,9 +575,10 @@ hinky                321  adj · informal vulgar             Acting suspiciously
 guruji               321  noun                              A guru or spiritual teacher.  +gurujis
 nidge                320  verb                              To dress the face of (a stone) with a sharp-pointed hammer.  +nidged +nidges +nidging
 wooh                 319  intj · informal                   Alternative spelling of whoo, expressing joy or excitement.
-bolognese            318  noun                              An Italian sauce made from ground meat and tomato, originating in Bologna.  +bologneses
+chappy               318  noun adj · british informal rare  A chap; a fellow.  +chappies
 gumball              318  noun · slang                      Chewing gum sold as a ball usually coated with colored hard sugar.  +gumballs
 buzzy                317  adj · informal                    Having a buzzing sound.  +buzzier +buzziest
+hehe                 317  intj                              An approximation to the sound of a mischievous giggle.
 sto                  317  noun · nonstandard slang          Pronunciation spelling of store.
 contraire            316  adj · archaic                     Obsolete form of contrary.
 merch                316  noun verb · informal rare slang   goods which are or were offered or intended for sale.  +merched +merches +merching
@@ -587,6 +592,7 @@ eeny                 312  adj adv · british dialect informal nonstandard  minus
 dukat                311  noun                              Alternative form of ducat (“historical European coin”).  +dukats
 bhau                 311  noun                              Alternative spelling of bhai
 damme                311  intj · archaic                    Expressing anger or vehemence.
+rager                311  noun · british slang              One who rages.  +ragers
 poxy                 311  adj · british slang vulgar        Suffering from pox.  +poxier +poxiest
 airbag               311  noun · slang                      A protective system in automobiles in which when a crash occurs, a bag containing nitroge…  +airbags
 foosball             310  noun                              table soccer (US), table football (UK)
@@ -624,6 +630,7 @@ conny                299  adj · archaic                     Brave; fine; canny.
 ith                  299  adj noun                          Occurring at position i in a sequence.  +iths
 blech                299  intj verb noun · slang            An imitation of the sound of gagging, used to express disgust or disdain.  +bleched +bleches +bleching +blechs
 yuh                  299  pron intj · slang                 you
+arent                299  adj · archaic rare                Drying out, parching, withering.
 fuckface             298  noun · vulgar                     An ugly or otherwise undesirable or annoying person.  +fuckfaces
 petar                298  noun · archaic                    Obsolete form of petard.  +petars
 biscotti             298  noun                              A hard, usually nut-flavored biscuit, derived from the Tuscan cantuccio.  +biscottis
@@ -661,10 +668,10 @@ nutjob               289  noun                              Alternative spelling
 bullseye             289  noun intj · archaic british informal slang  The centre of a target, inside the inner and magpie.  +bullseyes
 wolfman              289  noun                              A male werewolf or lycanthrope.  +wolfmen
 pervy                289  adj · slang                       Behaving or looking like a sexual pervert.  +pervier +perviest
+raine                288  noun · archaic                    Obsolete form of rain.  +raines
 loverboy             288  noun                              A male lover, especially a young one.  +loverboys
 tachy                288  adj noun · archaic informal       Alternative form of tetchy.
 doon                 288  adv prep adj noun                 Down.  +doons
-duc                  287  noun                              A French duke.  +ducs
 ajussi               287  noun                              Alternative spelling of ahjussi.  +ajussis
 chicky               286  noun · childish                   Chicken.  +chickies
 giveth               286  verb · archaic                    form of give
@@ -680,15 +687,14 @@ salle                283  noun                              A fencing school.  +
 sumi                 283  noun                              A Japanese inkstick.
 wel                  283  verb                              To transform or change in form, appearance, or state.  +wels
 weve                 283  contraction · informal nonstandard  Alternative form of we've.
-ahm                  282  intj                              Alternative form of um.
 gwan                 282  intj noun · nonstandard rare      Pronunciation spelling of going on.  +gwans
 unauthorised         282  adj · british                     Alternative spelling of unauthorized.
+gg                   281  noun · slang                      Loss, defeat, game over.
 omni                 281  noun · informal                   A person or animal who is not vegan; one with no particular dietary restrictions.  +omnis
 shazam               281  intj verb                         Used to indicate that a magic trick or other illusion has been performed.  +shazammed +shazamming +shazams
 bonzo                280  noun                              Alternative form of bonze (“Buddhist monk or priest in East Asia”).  +bonzos
 shii                 278  noun · nonstandard slang          Pronunciation spelling of shit.  +shiis
 nanobots             277  noun                              form of nanobot
-auguste              277  noun                              A kind of clown, usually serving as an anarchic foil to the whiteface.  +augustes
 poochie              276  noun · informal                   A dog; a pooch.  +poochies
 bicep                276  noun                              A biceps.
 morgenstern          276  noun                              morning star (spiked weapon)  +morgensterns
@@ -696,18 +702,17 @@ inbox                276  noun verb                         A container in which
 mune                 276  adj · informal                    Not immune; subject or vulnerable to (something).
 nostra               275  noun                              form of nostrum
 cava                 275  noun                              Alternative form of kava.  +cavae +cavas
-noni                 275  noun                              The Polynesian fruit tree Morinda citrifolia.  +nonis
 candyman             274  noun · slang                      A male confectioner.  +candymen
 aris                 274  noun · slang                      arse
 photoshopped         274  adj verb                          Of an image, digitally edited or altered.
 mamacita             274  noun · slang                      A babe, a hottie (sexually attractive woman).  +mamacitas
+geet                 274  adj adv                           great
 gummi                273  noun · trademark                  A sugary, gelatinous material used to make candies.  +gummies +gummis
+lally                272  noun                              Leg.  +lallies
 southside            272  noun                              The southern side of a building, street, city, area, etc.  +southsides
-beamer               272  noun · informal slang             A gymnast proficient with or specializing in the balance beam.  +beamers
 tk                   272  adj                               A placeholder used before publication for information that is not yet available but will …
 likey                272  verb · nonstandard                Alternative form of like.
 ger                  271  noun                              A yurt.  +gerim +gers
-pont                 270  verb                              to pose until nearly frozen in all sorts of uncomfortable positions.  +ponted +ponting +ponts
 pssh                 270  intj                              Synonym of pshaw.
 affraid              269  adj · archaic                     Obsolete spelling of afraid.
 popo                 269  noun · informal                   Alternative spelling of po-po.  +popos
@@ -726,10 +731,12 @@ anker                268  noun · archaic                    A measure of wine o
 nono                 268  noun                              Alternative spelling of no-no.  +nonos
 hydrochloric         268  adj                               Of or relating to hydrochloric acid.
 boba                 267  noun · informal slang             Synonym of tapioca pearl.  +bobas
+vada                 267  noun verb                         A type of savoury doughnut eaten as a snack in south Asia.  +vadaed +vadaing +vadas
 storyline            266  noun                              The plot of a story; one of several within a story, usually interwoven.  +storylines
 hiyah                266  intj                              Alternative form of hi-yah (“combat sound”).
 rollercoaster        266  noun                              An amusement ride consisting of a train on a track that rises, falls, twists and turns.  +rollercoasters
 transitioning        266  verb noun                         An act of transition; a change of state.  +transitionings
+dy                   266  verb adv · archaic slang          Obsolete form of die.
 elif                 265  noun                              A conditional statement in computer code that runs after an "if" statement.  +elifs
 goldmine             265  noun                              Alternative form of gold mine  +goldmines
 peanutbutter         265  noun                              Alternative spelling of peanut butter.  +peanutbutters
@@ -745,20 +752,20 @@ tricorder            263  noun · slang                      A fictional futuris
 bruh                 262  noun intj · archaic slang         Alternative form of bro (“male comrade or friend”).  +bruhs
 breastfeed           261  verb noun                         To feed (a baby) milk via the breasts; to suckle; to nurse.  +breastfed +breastfeeding +breastfeeds
 usin                 261  noun                              Alternative form of ussun (“someone on the same side of the Northern Irish sectarian divi…  +usins
-covent               261  noun · archaic                    Convent.  +covents
 ramblings            261  noun                              form of rambling
 taichi               261  noun                              Alternative spelling of tai chi.
 knick                260  verb                              Alternative spelling of nick (“to make a notch in”).  +knicked +knicking +knicks
 bubber               259  noun · archaic                    A person who steals plate from public houses.  +bubbers
 realisation          259  noun · british                    Alternative spelling of realization.  +realisations
 everypony            259  pron                              Synonym of everybody.
+lifes                259  noun verb · archaic               form of life
 shal                 259  verb · archaic                    Obsolete spelling of shall.
 prego                258  adj                               Alternative spelling of preggo.
 kamp                 258  adj · british                     homosexual
 pepito               258  noun · archaic                    A sandwich of Spanish origin and popular in Latin America, made with beef, pork, or chick…  +pepitos
 shithouse            257  noun adj verb · british slang vulgar  An outhouse, an outbuilding used as a lavatory.  +shithoused +shithouses +shithousing
 maj                  256  noun                              Alternative form of maj..
-nonna                255  noun · informal                   A grandmother, especially one with Italian ancestry.  +nonnas
+machi                256  noun                              A traditional healer and religious leader in the Mapuche culture of Chile and Argentina.  +machis
 vato                 255  noun                              A Hispanic youth; a guy; a dude.  +vatos
 breathalyzer         255  noun · trademark                  A device that measures alcohol in expired air so as to estimate the concentration of alco…  +breathalyzers
 bagi                 255  noun                              A voodoo sanctuary or sacred chamber.  +bagis
@@ -766,20 +773,21 @@ whoopsie             255  intj noun                         Alternative spelling
 libre                255  adj noun · archaic rare           Especially of the will: free, independent, unconstrained.  +libres
 asystole             254  noun                              An absence of a systole; a failure of the heart to contract.  +asystoles
 bloodlust            253  noun                              A desire for bloodshed and carnage, often aroused in the heat of battle and leading to un…  +bloodlusts
-zs                   253  noun                              Alternative form of z's (sleep)
+kizzy                253  noun                              Only used in no kizzy
 hummel               252  noun verb                         A stag that has failed to grow antlers; a cow that has not developed horns.  +hummeled +hummeling +hummelled +hummelling +hummels
 mhmm                 252  intj                              Alternative spelling of mhm.
 bento                252  noun                              A Japanese takeaway lunch served in a box, often with the food arranged into an elaborate…  +bentos
 mahalo               252  intj                              thank you
 kyu                  252  noun                              A grade or rank in various Japanese activities such as martial arts, flower arranging, an…  +kyus
 bffs                 252  noun                              form of bff
+huevos               252  noun · slang                      Balls; nerve; bravery; brazenness.
 headshot             251  noun verb · slang                 A portrait for branding or social media.  +headshots +headshotted +headshotting
+caf                  251  noun · informal                   A café.  +cafs
 laters               251  intj · slang                      See you later; an expression used at parting.
 snart                250  noun verb · slang                 The phenomenon where one sneezes and farts at the same time.  +snarted +snarting +snarts
 augh                 250  intj                              Alternative form of argh.
 kandi                250  noun                              Alternative spelling of candy (“rave accessory”).
 racecar              249  noun                              Alternative spelling of race car.  +racecars
-gekko                249  noun                              Alternative spelling of gecko.  +gekkoes +gekkos
 dass                 249  verb · archaic                    To dare.  +dassed +dasses +dassing
 triffids             248  noun                              form of triffid
 aux                  248  noun · slang                      The auxiliary audio connector of a sound system.  +auxes
@@ -795,6 +803,7 @@ believeth            246  verb · archaic                    form of believe
 teleporter           245  noun                              A person who teleports.  +teleporters
 hacky                244  adj · informal                    Like a hack; amateurish.  +hackier +hackiest
 handjob              244  noun · slang vulgar               Alternative spelling of hand job.  +handjobs
+eek                  244  intj verb noun adv · slang vulgar  Representing a scream or shriek (especially in comic strips and books).  +eeked +eeking +eeks
 halal                244  adj adv verb                      Allowable, according to Muslim religious customs, to have or do.  +halalled +halalling +halals
 growed               243  verb · nonstandard                form of grow
 yaar                 243  noun                              A friend, pal, or buddy.  +yaars
@@ -811,9 +820,9 @@ dosh                 240  noun · british slang              Money.
 goli                 240  noun                              A traditional dance and masquerade of the Baoulé people of the Ivory Coast.  +golis
 themself             240  pron · nonstandard                The reflexive form of they, the third-person singular personal pronoun. The single person…
 babuji               239  noun                              babu (as a respectful term of address)  +babujis
+hea                  239  noun adj adv · informal           Alternative spelling of hea'.
 passcode             239  noun                              A string of characters used for authentication on a digital device.  +passcodes
 conman               238  noun                              A confidence trickster.  +conmen
-sansa                238  noun                              Alternative spelling of zanza..  +sansas
 topo                 236  noun adj                          A topographic map.
 psh                  235  intj                              Synonym of pshaw.
 chitra               235  noun                              A sandfly.  +chitras
@@ -823,6 +832,7 @@ jonesing             233  adj verb                          Suffering from withd
 yeesh                233  intj                              Expressing exasperation or impatience.
 pillock              233  noun · british slang vulgar       A stupid or annoying person; a simpleton; a fool.  +pillocks
 pitbull              233  noun · informal                   Shortened form of pit bull terrier.  +pitbulls
+boi                  233  noun intj · slang                 Alternative spelling of boy.  +bois +boiz
 mado                 233  noun · british                    Any fish in the genus Atypichthys, in Australia mostly Atypichthys strigatus and in New Z…  +mados
 nygma                233  noun                              A spot on the wings of certain endopterygotes, having a peculiar dense cuticular structur…  +nygmata
 classifieds          232  noun                              A section of a newspaper, magazine or web site containing classified advertisements.
@@ -837,8 +847,8 @@ hairdryer            229  noun · british                    A small electrical 
 whoah                229  intj                              Alternative spelling of whoa.
 churros              229  noun                              form of churro
 harish               228  adj                               Like a hare.
+login                228  noun                              Credentials: the combination of a user's identification and password used to enter a comp…  +logins
 lightyear            228  noun                              Alternative spelling of light year.  +lightyears
-haram                227  noun adj                          A sin.  +harams
 pizzazz              227  noun                              Flair, vitality, or zest; energy; vigor.
 ajumma               227  noun                              A married middle-aged Korean woman.  +ajummas
 hijab                226  noun                              A traditional headscarf worn by Muslim women, covering the hair and neck.  +hijabs
@@ -867,15 +877,19 @@ jinkies              223  intj                              Expressing surprise 
 disher               222  noun · archaic                    A dish maker.  +dishers
 behavioural          222  adj · british                     Of or pertaining to behaviour.
 grimoire             222  noun                              A book of instructions in the use of alchemy or magic, especially one containing spells f…  +grimoires
+kora                 221  noun                              A type of harp or lute played in West Africa.  +koras
 zoot                 221  noun verb · british slang         A zoot suit.  +zooted +zooting +zoots
 ehhh                 221  intj                              Alternative form of eh.
 unsubs               221  noun verb                         form of unsub
 biriyani             221  noun                              Alternative spelling of biryani.  +biriyanis
 hori                 220  noun · british slang vulgar       A Māori.  +horis
+sus                  220  noun adj verb intj · british informal slang  Suspicion (in terms of a sus law).  +susser +sussest
 beatdown             220  noun · slang                      A severe beating.  +beatdowns
+sed                  220  name verb noun · nonstandard slang  A noninteractive text editor (originally developed in Unix), intended for making systemat…  +sedded +sedding +seds
 muah                 220  intj                              Alternative form of mwah (“kiss sound”).
 aight                220  adj · slang                       Okay; average; nothing special.
 teleprompter         219  noun · trademark                  A device placed near or on a television camera that displays scrolling text, allowing a p…  +teleprompters
+thar                 219  adv noun · nonstandard            Nonstandard form of there.  +thars
 nini                 219  intj · childish                   Alternative form of night night.
 indeedy              219  adv                               indeed
 waa                  219  intj noun                         Alternative spelling of wah (“sound of a baby crying”)
@@ -884,20 +898,19 @@ oughtta              219  contraction                       Alternative spelling
 vilde                218  adj · archaic                     Obsolete form of vile.
 elke                 218  noun · archaic                    The European wild, whistling, or common swan (Cygnus cygnus, syn. Cygnus ferus).  +elkes
 weaponized           217  adj verb                          Made into, or to serve as, a weapon.
-meister              217  noun                              A person of great skill or authority in a particular field.  +meisters
+schooler             217  noun                              A student, or in some cases member, of a particular type of school or schooling. (ordinar…  +schoolers
 runneth              217  verb · archaic                    form of run
 dreamboat            217  noun · archaic dated informal slang  An exceptionally good-looking and sexually attractive person, particularly a man.  +dreamboats
 parm                 216  noun                              A dish served in the parmigiana style (combined with cheese and coated with tomato sauce …  +parms
 sanitizer            216  noun                              A program to detect errors in code, usually integrated into a compiler.  +sanitizers
 heya                 216  noun intj                         the so-called "stable" of rikishi who train under the instruction of a particular shisho;…
-pel                  216  noun · dated                      pixel  +pels
-adidas               216  noun · informal trademark         chicken feet, skewered and grilled, sold as street food
 fulfilment           216  noun · british                    The act of fulfilling or the state or quality of being fulfilled; consummation; completio…  +fulfilments
 throwed              215  verb · dialect nonstandard        form of throw
 failsafe             215  adj noun verb                     Alternative form of fail-safe.  +failsafed +failsafes +failsafing
 freakazoid           215  adj noun · slang                  Freaky.  +freakazoids
 gumiho               214  noun                              An usually malevolent, shape-shifting fox spirit, typically said to take the form of a be…  +gumihos
 peasy                214  adj                               Resembling or characteristic of peas.
+olde                 214  adj · archaic                     Archaic spelling of old.
 someting             214  adv pron · nonstandard            Pronunciation spelling of something.
 haldol               214  noun · informal                   Haloperidol.  +haldols
 diggity              213  adv intj noun                     Alternative form of diggety.
@@ -911,10 +924,12 @@ knowest              212  verb · archaic                    form of know
 blankie              212  noun · childish informal          A blanket, especially one used as a security blanket.  +blankies
 comtesse             212  noun                              A French countess.  +comtesses
 paracetamol          211  noun                              A synthetic compound used as a drug to relieve and reduce fever, usually taken in tablet …  +paracetamols
+beene                211  verb · archaic                    Obsolete spelling of been.
 punchline            211  noun                              Alternative spelling of punch line.  +punchlines
 fertiliser           211  noun · british                    Alternative spelling of fertilizer.  +fertilisers
 vamonos              211  phrase                            let's go
 breadsticks          211  noun                              form of breadstick
+lata                 211  noun                              Alternative form of latah.
 highschool           211  noun                              Alternative form of high school.  +highschools
 punked               210  verb                              form of punk
 youself              210  pron · nonstandard                Pronunciation spelling of yourself.
@@ -922,6 +937,7 @@ merrin               209  noun                              A species of nailtai
 wellingtons          209  noun                              form of wellington
 moley                209  adj noun · archaic                Pertaining to, full of, or characteristic of moles (burrowing insectivores).  +moleys
 hoochie              209  noun · slang vulgar               A woman who dresses scantily or in a revealing fashion.  +hoochies
+sama                 209  noun                              A Sufi ritual involving music, dancing, and recitation.
 gisaeng              208  noun                              Alternative form of kisaeng.  +gisaengs
 kuya                 208  noun                              An elder brother.  +kuyas
 maa                  208  intj verb                         A bleating sound, as that of a sheep or goat.  +maaed +maaing +maas
@@ -930,7 +946,6 @@ gynaecologist        208  noun · british                    Alternative spellin
 shitstorm            207  noun · slang vulgar               A chaotic and unpleasant or violent situation.  +shitstorms
 tol                  207  adj noun · archaic slang          Tall.  +tols
 landmines            207  noun                              form of landmine
-kriss                207  noun                              Alternative form of kris (“dagger”).  +krisses
 strigoi              207  noun                              In Balkan folklore, the troubled souls of the dead rising from the grave.
 sooo                 207  adv                               Elongated form of so.
 recognisable         206  adj · british                     Able to be recognised.
@@ -939,7 +954,6 @@ sucka                205  noun · nonstandard                Pronunciation spell
 yor                  205  adj · nonstandard                 Eye dialect spelling of your.
 puto                 205  noun                              A rice cake made of boiled or steamed rice.  +putos
 porkchop             205  noun                              Alternative form of pork chop.  +porkchops
-apo                  205  adj                               In an inactive, unbound state  +apos
 pentothal            205  noun · trademark                  Thiopental.
 eew                  204  intj                              Alternative spelling of ew.
 numbnuts             204  noun · slang vulgar               A slow-witted, unresponsive, or inept person (usually male).  +numbnutses
@@ -966,290 +980,3 @@ kegger               200  noun · slang                      Synonym of keg part
 sux                  200  noun verb · informal nonstandard slang  Suxamethonium.
 camo                 200  noun verb · informal              A pattern on clothing consisting of irregularly shaped patches that are either greenish/b…  +camoed +camoing +camos
 lampshade            200  noun verb · slang                 A cover over a lamp to either diffuse the light or to block it in certain directions to a…  +lampshaded +lampshades +lampshading
-
-# Also a common name, so the count above is mostly the name. Listed only where the
-# lowercase word is labelled slang, vulgar or informal.
-
-sam                80423  verb adv adj noun · archaic british dialect slang  To assemble.  +sammed +samming +sams
-york               65880  verb · slang                      to bowl a yorker at a batsman, especially to get a batsman out in this way.  +yorked +yorking +yorks
-jim                42323  verb noun · british informal      To jimmy (something); to mess up or mess with (something).  +jimmed +jimming +jims
-jeff               29984  verb noun · dated slang vulgar    To play or gamble with em quads, throwing them as dice.  +jeffed +jeffing +jeffs
-daniel             28404  noun · slang                      The buttocks.  +daniels
-san                26690  noun · dated informal             An Ancient Greek letter representing /s/ (uppercase Ϻ, lowercase ϻ), originally used in s…
-pete               26016  noun · slang                      Alternative form of peter (“a safe”).  +petes
-simon              25165  noun · archaic british dated slang  Sixpence coin.  +simons
-andy               24822  noun · slang                      android  +andies
-johnson            15936  noun · slang                      Penis.  +johnsons
-bruce              14413  noun · slang                      A man.  +bruces
-todd               14262  noun · slang                      Alternative form of tod (“a male fox”).  +todds
-june               14126  verb · dated slang                To rush.  +juned +junes +juning
-vincent            13852  noun · slang                      The victim or dupe in a betting game, especially bowls.  +vincents
-betty              13426  noun verb · archaic slang vulgar  A short bar used by thieves to wrench doors open; a jimmy.  +bettied +betties +bettying
-tina               12777  noun · slang                      The drug methamphetamine hydrochloride (crystal meth).
-le                 11814  article prep · archaic informal   the
-ron                11456  noun · slang                      heroin
-vic                11054  noun · slang                      A victim of a homicide.  +vics
-norman              9245  noun · slang                      A wooden bar, or iron pin.  +normans
-harris              9124  noun · british slang              A dried preparation of the flowering tops or other parts of the cannabis plant used as a …
-mia                 9086  noun · slang                      An ancient bluffing game played with dice.
-wendy               9013  noun · british slang vulgar       A wuss; someone who is particularly cowardly.  +wendies
-fu                  8617  noun suffix · informal            flux unit  +fus
-holmes              8509  noun · slang                      An informal term of address, like man or dude.
-diego               8408  noun · slang vulgar               A Spanish-speaker, especially from Latin America.  +diegos
-kang                8176  noun verb · nonstandard slang     A traditional long platform of brick, clay or concrete, used for heating in colder parts …  +kanged +kanging +kangs +kangz
-gina                8069  noun · slang vulgar               The vagina.  +ginas
-chan                7983  noun · dated informal slang       An IRC channel.  +chans
-tara                7886  intj noun · british informal rare  Goodbye.  +taras
-barney              7839  noun adj verb · archaic british dialect slang  A lark, a romp, some fun.  +barneyed +barneying +barneys
-peggy               7431  noun · british slang              Any of several small warblers, the whitethroat, etc.  +peggies
-rosa                7305  verb noun · british slang         to hide, vanish, shadow  +rosaed +rosaing +rosas
-rosie               7206  noun · informal rare              form of rose  +rosies
-sid                 7095  noun · slang                      sadiki
-ned                 6918  noun · slang vulgar               A person, usually a youth, of low social standing and education, with a violent dispositi…  +neds
-val                 6731  noun · informal                   Valium.  +vals
-min                 6721  adj noun verb · archaic british dialect informal  Less; smaller; lower.  +minned +minning +mins
-sharon              6425  verb · slang                      Wrapping leftover foods to take home from any kind of social function such as a birthday …  +sharoned +sharoning +sharons
-jessie              6418  noun · dated informal             Synonym of sissy: a cowardly, effeminate, or homosexual man, a girly man.  +jessies
-wang                6418  noun verb · informal              Alternative spelling of whang.  +wanged +wanging +wangs
-ja                  6266  adv noun · informal               Yes.  +jas
-meg                 5939  noun verb · archaic informal slang  A dollar.  +megged +megging +megs
-buddha              5922  noun · slang                      Marijuana.  +buddhas
-ou                  5813  noun · informal                   A probably extinct species of Hawaiian honeycreeper, Psittirostra psittacea.  +ouens +ous
-manny               5786  noun · informal                   A male nanny (for children).  +mannies
-ming                5384  verb noun · archaic british dialect slang  To mix, blend, mingle.  +meint +ment +meynt +minged +minging +mings
-theo                5348  noun · informal                   The amount of a gambler's theoretical losses based on typical play.
-reggie              5298  adj · slang                       Being regular marijuana, as opposed to good-quality marijuana.
-wong                5276  noun verb · archaic dialect slang  A field, meadow, or other such piece of land.  +wonged +wonging +wongs
-broadway            5244  noun · slang                      An esplanade.  +broadways
-mandy               5175  noun · british slang              The drug MDMA.
-polly               5005  noun · british slang              A prefect at Uppingham School in Rutland, England.  +pollies
-les                 4922  verb · informal nonstandard       Pronunciation spelling of let's  +leses
-maddie              4882  noun · informal rare              A mad person.  +maddies
-kai                 4806  noun · british informal           Food.
-lizzie              4769  noun · slang                      Alternative form of lezzie (“lesbian”).  +lizzies
-brett               4298  noun · archaic informal           A fault in wine caused by Brettanomyces yeast.  +bretts
-brody               4255  noun · slang                      Intentionally spinning in circles and sliding in an automobile.  +brodies
-brady               4128  noun verb · informal              Bradycardia.  +bradied +bradies +bradying
-des                 4110  noun · informal                   Desflurane.
-barbie              4076  noun · british informal           A barbecue (apparatus for grilling).  +barbies
-percy               3952  noun · slang                      A unit of Percocet.  +percies
-joanna              3575  noun · slang                      A piano.  +joannas
-mam                 3477  noun · british informal slang     Mum, mom; diminutive of mother.  +mams
-millie              3453  noun · archaic dated informal vulgar  A mill worker, usually a young working-class woman working in the factories of Ireland's …  +millies
-google              3453  verb noun · dated informal slang trademark  To bowl (a cricket ball) so that it performs a googly (“a ball by a leg-break bowler that…  +googled +googles +googling
-negro               3236  adj noun · archaic dated vulgar   Relating to a black ethnicity.  +negroes +negros
-wah                 3194  noun intj · archaic slang         The red panda.  +wahs
-moe                 3111  noun adj adv verb · archaic slang  Strong interest in, and especially fetishistic attraction towards, fictional characters i…  +moes
-ching               3093  noun intj verb · slang            A pair of small bowl-shaped finger cymbals made of thick and heavy bronze, used in the mu…  +chinged +chinging +chings
-herbert             3021  noun · slang                      A working-class youth, especially male.  +herberts
-dewey               3015  adj noun · archaic slang          Obsolete form of dewy.  +deweys
-corey               2927  noun · british slang vulgar       A penis.  +coreys
-mindy               2918  noun · slang                      Knife.  +mindies
-mal                 2904  noun · informal                   illness, affliction.  +mals
-mai                 2736  det · slang                       Alternative form of my.
-ju                  2729  noun · slang                      Someone admitted to university through the JUPAS system.
-chu                 2702  intj pron · nonstandard slang     The sound of a kiss.
-babylon             2677  noun · british slang              A female breast.  +babylons
-ying                2563  noun verb · slang                 Alternative form of ching (“knife”).  +yinged +yinging +yings
-tito                2531  noun · slang                      An uncle.  +titos
-shi                 2518  pron · rare slang                 Alternative form of sie (gender-neutral pronoun).
-bing                2356  noun verb intj · british dated dialect slang  Solitary confinement.  +bings
-ki                  2316  noun · british slang              A plant native to the Pacific islands and China (Cordyline fruticosa); ti.  +kis
-dino                2270  noun · informal slang             A dinosaur (type of animal).  +dinos
-kiki                2086  noun verb · dated slang vulgar    A gathering of friends for the purpose of gossiping and chit-chat.  +kikied +kikiing +kikis
-desmond             2015  noun · british slang              A lower second class honours or 2.2 degree.  +desmonds
-melvin              1986  noun · slang vulgar               A wedgie performed from in front of the victim.  +melvins
-minnie              1899  noun · archaic childish slang     Alternative form of minnow.
-hetty               1871  noun adj · slang                  A heterosexual.  +hettier +hetties +hettiest
-bai                 1864  noun intj · nonstandard slang     A marshy meadow in sub-Saharan Africa.  +bais
-prem                1839  noun · informal                   The Premier League.  +prems
-corinne             1811  noun · slang                      cocaine
-fong                1791  noun · slang                      A kick.
-guido               1767  noun · slang vulgar               An Italian or (especially) Italian-American man, especially a stereotypical working-class…  +guidos
-wai                 1719  noun adv · slang                  A Thai greeting wherein the palms are brought together in front of the face or chest, som…  +wais
-ren                 1688  noun · slang                      A kidney.  +renes +rens
-viv                 1669  noun · slang                      vivarium  +vivs
-johnnie             1639  noun · slang                      Alternative form of johnny (a condom)
-hoss                1598  noun · nonstandard slang          Pronunciation spelling of horse.  +hosses
-foley               1580  noun · informal                   The creation of sound effects, and their addition to film and TV images.  +foleys
-cosmo               1555  noun · informal                   A cosmopolitan, a cocktail containing vodka, triple sec, lime juice, and cranberry juice.
-mega                1532  adj adv noun · informal slang     Very large.  +megas
-webber              1459  noun · dated informal             An animal that creates webs, such as a spider.  +webbers
-huey                1445  noun · archaic british dated slang  A helicopter.  +hueys
-gao                 1425  adj · informal                    Alternative form of gau.
-goldie              1383  noun · british informal           Something which is golden in color.  +goldies
-yous                1262  pron det noun verb · dialect informal  You.
-betcha              1244  contraction · informal nonstandard  Pronunciation spelling of bet you.
-fo                  1229  prep · informal                   Alternative spelling of fo'.  +fos
-spam                1224  noun verb · rare slang trademark  Unsolicited bulk electronic messages.  +spammed +spamming +spams
-yee                 1210  pron intj · archaic slang         You (the people being addressed); alternative spelling of ye.
-jaffa               1166  noun · slang trademark            A type of sweet orange, normally seedless.  +jaffas
-bucky               1165  noun · british slang              A gun.  +buckies
-clem                1156  verb noun · british dialect slang vulgar  To be hungry; starve.  +clemmed +clemming +clems
-donner              1143  verb noun · slang                 To beat up; clobber; thrash.  +donnering +donners
-jap                 1118  verb · slang vulgar               To carry out a sneak attack upon (something or somebody).  +japped +japping +japs
-foo                 1070  noun intj · archaic nonstandard slang  Alternative form of fu: an administrative subdivision of imperial China; the capital of s…  +foos
-netherlands         1045  noun · slang                      Hindquarters, butt.
-boop                1015  noun verb · informal              A low-pitched beeping sound.  +booped +booping +boops
-rog                  994  verb noun intj · archaic informal slang  To shake.  +rogged +rogging +rogs
-ajax                 987  prep noun · archaic slang         Nearby, over there
-momo                 978  noun · slang vulgar               A type of dumpling, typical of the cuisines of Nepal, Ladakh, and Tibet and also regional…  +momos
-shep                 975  noun · nonstandard slang          Pronunciation spelling of ship.  +sheps
-lol                  953  particle intj · archaic slang     Neutralises the tone of a message; denotes that a message is light-hearted or casual.  +lold +loled +loling +lols
-knicks               950  noun · british informal           Knickers.
-marv                 938  adj · informal                    Marvellous, fantastic.
-aristotle            932  noun · slang                      A bottle.  +aristotles
-avi                  926  noun · slang                      Synonym of avatar.  +avis
-supergirl            918  noun · informal                   A girl who is particularly successful, talented, or otherwise remarkable.  +supergirls
-moby                 903  noun adj · british slang          A mobile phone.  +mobies
-brodie               898  noun · rare slang                 A close male friend, or a man deserving of respect; a bro.  +brodies
-wank                 888  verb noun · british slang vulgar  To masturbate.  +wanked +wanking +wanks
-ralphie              876  noun · vulgar                     A scruffy school child.  +ralphies
-dem                  842  pron det · nonstandard slang      Nonstandard form of them.
-fam                  832  noun · slang                      A term of endearment between friends; derived from "family" but not used between relative…  +fams
-zak                  828  noun · slang                      Money.  +zaks
-trev                 824  noun · british slang              A farm assistant or other rural worker; an ordinary country bloke.  +trevs
-ono                  821  adj noun · slang                  good-tasting, delicious.
-wakey                813  noun intj · childish informal slang  The day on which one wakes up and travels home.
-fifi                 812  noun · slang vulgar               An improvised vagina substitute used for masturbation.  +fifis
-tac                  805  noun · slang                      The drug cannabis.  +tacs
-benz                 791  noun · slang trademark            The drug amphetamine, used recreationally for its stimulant effects.
-epstein              788  verb adj · informal slang         To commit homicide and then frame it as a suicide, especially against a witness or co-con…  +epsteined +epsteining +epsteins
-addy                 776  noun · slang                      Address (especially e-mail address).  +addies
-nic                  765  noun · slang                      nicotine
-bogart               764  noun verb · informal slang        An obnoxious, selfish and overbearing person; an attention hog.  +bogarted +bogarting +bogarts
-maru                 760  noun · informal                   A Japanese ship, especially a merchant ship.  +marus
-blanc                741  noun · vulgar                     A white person; a person of European or Caucasian descent.  +blancs
-goth                 740  noun adj · british rare slang     Relating to goth music or people.  +gother +gothest +goths
-ish                  739  verb adv noun intj · dated informal nonstandard slang  Pronunciation spelling of is.  +ishes
-bok                  727  adj intj verb · slang             Keen or willing.  +bokked +bokking +boks
-fab                  721  adj noun verb · informal          Fabulous (great or spectacular).  +fabbed +fabber +fabbest +fabbing +fabs
-lor                  712  particle adj · informal slang     Tagged at the end of a sentence to convey a sense of resignation or inevitability.
-glock                711  noun · informal                   A glockenspiel.  +glocks
-ronin                697  noun · informal                   A masterless samurai (who often becomes a mercenary to make ends meet).  +ronins
-demi                 686  noun adj · informal slang         Alternative spelling of demy.  +demis
-dumbo                685  noun · slang vulgar               A stupid person.  +dumbos
-iggy                 682  verb noun · childish slang        To ignore (a user on a chat system, etc.).  +iggied +iggies +iggying
-ep                   659  noun · informal                   episode (of a TV serial, etc.)  +eps
-pogue                652  noun · dated slang                A kiss.  +pogues
-juarez               648  noun verb · slang vulgar          Alternative form of warez.  +juarezed +juarezes +juarezing
-nt                   620  noun · slang                      Alternative form of n/t (“no text”).
-av                   608  verb · slang                      have  +avs
-tata                 605  intj noun · slang                 Alternative form of ta-ta.  +tatas
-berk                 604  noun · british slang vulgar       a fool, a prat, a twit, etc.  +berks
-jacko                595  noun · british informal           laughing kookaburra  +jackos
-ozzie                593  noun · slang                      A hospital.  +ozzies
-ts                   593  noun det pron · slang             Alternative form of this.
-vidya                589  noun · slang                      Video games.
-kush                 587  noun · slang                      Marijuana, especially Cannabis indica (a variety of marijuana originating in Afghanistan …
-hoon                 580  noun verb · british dated slang vulgar  A worthless person; a hooligan or lout.  +hooned +hooning +hoons
-gro                  576  adj num · slang                   Disgusting, unpleasant; gross.
-omg                  557  phrase · slang                    Alternative form of OMG: Oh my God.
-endo                 546  noun verb · slang                 Marijuana.  +endoed +endoing +endos
-polk                 543  verb · archaic slang              To dance the polka.  +polked +polking +polks
-graff                541  noun verb · archaic slang         Alternative form of graft.  +graffed +graffing +graffs
-gulliver             540  noun · slang                      one's head.  +gullivers
-deo                  529  noun · informal rare              deodorant  +deos
-tonto                528  noun adj · slang vulgar           Synonym of idiot: someone who is foolish or stupid.  +tontos
-sig                  521  noun verb · british dated dialect informal slang  A signature, especially one on emails or newsgroup postings.  +sigged +sigging +sigs
-binky                514  noun verb · childish informal trademark  A stuffed animal, pillow, blanket, or toy that a small child is more attached to than any…  +binkied +binkies +binkying
-kes                  510  noun · british slang              Alternative form of kesh.
-hella                509  det pron adv intj · slang         An intensifier, signifying an abundance of a thing; much or many.
-cami                 492  noun · informal                   A camisole.  +camis
-sor                  491  noun · informal                   A sorority (student organization).  +sors
-chica                490  noun · informal                   A Latin-American girl; a Latina.  +chicas
-thang                480  noun · nonstandard slang          Pronunciation spelling of thing, usually used to denote a known fad or popular activity.  +thangs
-rollie               478  noun · british slang              A cigarette rolled by hand.  +rollies
-grundy               476  noun adj · british slang trademark  A narrow-minded person or group that is overly concerned with censoring or criticizing pe…  +grundier +grundies +grundiest
-walkman              471  noun · informal trademark         A portable personal audio cassette player with headphones.  +walkmans +walkmen
-kano                 463  noun · slang                      A male American.  +kanos
-unc                  463  adj noun · slang                  Old; no longer versed in or relevant to current youth culture.  +uncs
-grogan               456  noun · slang                      A piece of excrement. A turd.
-chiba                453  noun · slang                      Alternative form of cheeba (“marijuana”).
-nyah                 445  intj · slang                      Expressing smug triumph.
-num                  439  verb intj · informal              Used to denote eating, or enjoyment of eating.  +nums
-nuh                  439  intj noun verb · nonstandard slang vulgar  no, nah
-cray                 435  noun adj · slang                  A crayfish or lobster.  +crays
-blacky               432  noun · informal vulgar            A black person.  +blackies
-albie                427  noun · informal                   A false albacore.  +albies
-knut                 427  noun · archaic informal           An idle upper-class man about town.  +knuts
-buh                  422  noun · nonstandard slang vulgar   Pronunciation spelling of butt.  +buhs
-mah                  418  det particle · informal nonstandard  Pronunciation spelling of my.
-kau                  407  adj · informal                    Alternative form of gau.
-doody                406  noun verb · childish slang        Excrement, poop.  +doodied +doodies +doodying
-mou                  401  particle · informal               Sentence-final particle, forming a tag question.
-mook                 400  noun · informal slang             A disagreeable or incompetent person.  +mooks
-broderick            398  noun verb · archaic slang         A thorough beating  +brodericked +brodericking +brodericks
-tran                 398  noun · informal vulgar            A trans person.
-gump                 393  noun · dated slang                A foolish person.  +gumps
-nong                 393  noun · british slang              An idiot.  +nongs
-naga                 389  noun · british slang              A loincloth.  +nagas
-rasta                388  noun · informal                   Rastafarian  +rastas
-emo                  387  noun adj · informal vulgar        Any form of guitar-driven alternative rock that is particularly or notably emotional; a b…  +emos
-shetty               382  noun · slang                      Alternative form of chete (“knife”).  +shetties
-lyme                 375  verb · slang                      to hang out (to spend time doing nothing in particular)  +lymed +lymes +lyming
-purdy                374  adj · dialect nonstandard slang   Pronunciation spelling of pretty.  +purdier +purdiest
-hardman              363  noun · british slang              A man who is particularly tough or muscular  +hardmen
-goss                 361  noun · archaic slang              Gossip.  +gosses
-tri                  355  noun · informal                   triathlon  +tris
-rolly                350  adj noun · british informal slang  Rolling; having the ability to roll, usually due to wheels attached on the bottom.  +rollies
-chee                 350  noun · slang                      Synonym of mace (“old Chinese unit of weight”).  +chees
-normie               349  noun adj · slang vulgar           A normal person; one with commonly held, normative beliefs, neurology, tastes or interest…  +normier +normies +normiest
-renny                347  noun · slang                      A non-binary parent.  +rennies
-doppler              346  verb · informal                   To travel while emitting a sound that changes pitch due to the Doppler effect.  +dopplered +dopplering +dopplers
-dagmar               342  noun · informal                   One of the bullet-shaped protrusions on the bumpers of various 1950s cars, especially Cad…  +dagmars
-pookie               339  noun · slang                      A glass pipe designed for freebasing cocaine, methamphetamine, or other drugs.  +pookies
-prashant             336  noun · slang                      A croissant.  +prashants
-nettie               329  noun · informal slang             Alternative form of netty: an outhouse; a lavatory; a toilet.  +netties
-glam                 327  noun adj verb · slang             Glamour; glamorousness.  +glammed +glammer +glammest +glamming +glams
-gaylord              327  noun adj · slang trademark vulgar  Synonym of gay: a homosexual man.  +gaylords
-graf                 325  noun · slang                      A German or Austrian count (nobleman).  +grafs
-bevan                324  noun · informal                   a bogan  +bevans
-bim                  323  noun · slang                      A woman.  +bims
-hellman              320  noun · slang                      A daredevil.  +hellmen
-chappy               318  noun adj · british informal rare  A chap; a fellow.  +chappies
-liao                 318  particle noun · informal          Indicates action completion, or more generally, perfective aspect.
-sian                 315  adj · informal                    Bored, weary or fed up; tired (of something).
-rager                311  noun · british slang              One who rages.  +ragers
-kk                   308  phrase · slang                    Okay (indicates that no further explanation is necessary for a subject, or that the messa…
-langer               304  noun · slang vulgar               Fool; idiot; annoying or contemptible person (usually male).  +langers
-wiggins              301  noun · slang                      The creeps; a feeling of fear or anxiety.
-henny                300  noun adj · slang                  Synonym of hinny (cross between a stallion and a she-ass)  +hennier +hennies +henniest
-zooey                298  adj · informal                    Resembling or characteristic of a zoo.  +zooier +zooiest
-witter               295  verb adj · archaic dialect informal  To speak at length on a trivial subject.  +wittered +wittering +witters
-bara                 294  noun adj · informal               A genre of homoerotic media, usually also pornographic, typically created by gay men and …  +baras
-beemer               292  noun · slang                      A BMW motorcycle or automobile.  +beemers
-tetris               283  verb · slang trademark            To arrange items in a constrained space.  +tetrised +tetrises +tetrising
-gg                   281  noun · slang                      Loss, defeat, game over.
-ranga                281  noun · british slang vulgar       An orange-haired or red-haired person.  +rangas
-pidge                279  noun verb · informal              A pigeonhole.  +pidged +pidges +pidging
-genny                277  noun · slang                      A person from the suburbs who moves to a low-income urban area.  +gennies
-cag                  275  noun verb · dialect slang         A keg.  +cagged +cagging +cags
-bari                 275  noun · informal                   A baritone saxophone  +baris
-gorky                267  adj · informal                    Awkward or strange.  +gorkier +gorkiest
-dy                   266  verb adv · archaic slang          Obsolete form of die.
-mk                   256  intj · slang                      Alternative spelling of m'kay.
-nang                 255  noun adj · british slang          A metal bulb filled with nitrous oxide gas, inhaled for its disassociative effects, norma…  +nangs
-huevos               252  noun · slang                      Balls; nerve; bravery; brazenness.
-caf                  251  noun · informal                   A café.  +cafs
-ronson               249  noun · archaic british slang      M4 Sherman tank - due to the proclivity of Shermans to burst into flames from a single hit  +ronsons
-ky                   249  noun symbol · british slang       Alternative form of kye: plural of cow.
-bork                 246  verb noun · informal slang vulgar  To defeat a person's appointment or election, judicial nomination, etc., through a concer…  +borked +borken +borking +borks
-neddy                244  noun · archaic british informal slang  A donkey or ass.  +neddies
-eek                  244  intj verb noun adv · slang vulgar  Representing a scream or shriek (especially in comic strips and books).  +eeked +eeking +eeks
-hea                  239  noun adj adv · informal           Alternative spelling of hea'.
-winnebago            238  noun · slang trademark            A motorhome; a recreational vehicle (RV).  +winnebagoes +winnebagos
-bix                  238  noun · british informal           Biscuits.
-geno                 236  noun verb · informal              Genocide.  +genoed +genoing +genos
-yat                  235  noun · slang                      A vowel letter of the Cyrillic and Glagolitic alphabet (Cyrillic capital Ѣ, Cyrillic smal…  +yats
-abaddon              234  noun · archaic british slang      An informer; a criminal who informs on other criminals to the authorities.  +abaddons
-boi                  233  noun intj · slang                 Alternative spelling of boy.  +bois +boiz
-juve                 230  noun · slang                      A child actor.  +juves
-sus                  220  noun adj verb intj · british informal slang  Suspicion (in terms of a sus law).  +susser +sussest
-sed                  220  name verb noun · nonstandard slang  A noninteractive text editor (originally developed in Unix), intended for making systemat…  +sedded +sedding +seds
-posey                219  adj · british informal            Pretentious; posturing.  +posier +posiest
-iso                  218  noun · informal                   Clipping of isolation. Quarantine measures in order to mitigate the spread of communicabl…  +isos
-tita                 218  noun · slang                      An aunt; auntie.  +titas
-yas                  216  intj pron · nonstandard slang     Nonstandard spelling of yes.
-frack                209  verb adj · slang                  To employ hydraulic fracturing (fracking).  +fracked +fracking +fracks
-shoop                206  noun intj verb · nonstandard slang  The fruit of the rose; rosehip.  +shooped +shooping +shoops

@@ -27,7 +27,9 @@ them go into `modern-words.txt`. Every word the subtitle corpus has seen at leas
 200 times that has a lowercase English Wiktionary entry and is missing from
 `public/words.txt`, most common first, with its labels (british, slang, vulgar,
 trademark…), first definition and the inflections it would bring. Abbreviations,
-misspellings, personal and place names and contraction halves are filtered out.
+misspellings and contraction halves are filtered out, and so are proper nouns: words
+mostly written capitalised in Wiktionary's quotations, which keep their case where
+the subtitles do not. That drops Johnson and Yankee and keeps spam and goth.
 
 Rebuild with `node scripts/mine-words.mjs <en_full.txt> <wikt.jsonl.gz> data/word-candidates.txt`;
 the script's header says where to download both. Wiktionary content is
