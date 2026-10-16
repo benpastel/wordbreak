@@ -390,6 +390,28 @@ export class Hub {
     this.pushTable(t.id, []);
   }
 
+  /** Anyone at a finished table can take everyone back to the setup screen: one
+   *  person wanting to change something is enough reason to stop and talk about it.
+   *  Any rematch countdown is called off, and the people have to ready up again. */
+  backToSetup(playerId: string): void {
+    const t = this.tableOf(playerId);
+    if (!t || t.phase !== 'ended') return;
+    t.phase = 'lobby';
+    t.startsAt = null;
+    t.countdownMs = null;
+    this.clearStartTimer(t.id);
+    for (const id of t.playerIds) {
+      const p = this.store.getPlayer(id);
+      if (p && !p.bot && p.ready) {
+        p.ready = false;
+        this.store.putPlayer(p);
+      }
+    }
+    this.store.putTable(t);
+    this.pushTable(t.id, []);
+    this.pushLobby();
+  }
+
   private clearStartTimer(tableId: string): void {
     const timer = this.startTimers.get(tableId);
     if (timer) clearTimeout(timer);

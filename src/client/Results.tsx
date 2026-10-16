@@ -15,6 +15,7 @@ interface Props {
   meId: string;
   fx: { seq: number; items: Fx[] };
   onReady: (r: boolean) => void;
+  onBackToSetup: () => void;
   onChat: (text: string) => void;
   onLeave: () => void;
 }
@@ -32,7 +33,7 @@ interface Tip {
  * a column per player, each word at the moment it was found, struck through in the
  * colour of whoever broke it.
  */
-export default function Results({ table, meId, fx, onReady, onChat, onLeave }: Props) {
+export default function Results({ table, meId, fx, onReady, onBackToSetup, onChat, onLeave }: Props) {
   const ranked = [...table.players].sort((a, b) => b.score - a.score);
   const popped = useRef(-1);
   const [tip, setTip] = useState<Tip | null>(null);
@@ -84,6 +85,7 @@ export default function Results({ table, meId, fx, onReady, onChat, onLeave }: P
       table={table}
       meId={meId}
       onReady={onReady}
+      onBackToSetup={onBackToSetup}
       onChat={onChat}
       onLeave={onLeave}
     >

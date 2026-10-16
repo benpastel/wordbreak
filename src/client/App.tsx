@@ -126,6 +126,7 @@ export default function App() {
       settings: (s: Partial<Settings>) => send({ t: 'setSettings', settings: s }),
       color: (c: number) => send({ t: 'setColor', color: c }),
       ready: (r: boolean) => send({ t: 'setReady', ready: r }),
+      backToSetup: () => send({ t: 'backToSetup' }),
       claim: (tileIds: number[]) => send({ t: 'claim', tileIds }),
       chat: (text: string) => send({ t: 'chat', text }),
       addBot: () => send({ t: 'addBot' }),
@@ -148,6 +149,7 @@ export default function App() {
         meId={meId}
         fx={fx}
         onReady={actions.ready}
+        onBackToSetup={actions.backToSetup}
         onChat={actions.chat}
         onLeave={actions.leave}
       />

@@ -96,6 +96,9 @@ wss.on('connection', (ws: WebSocket) => {
       case 'start':
         hub.start(playerId);
         break;
+      case 'backToSetup':
+        hub.backToSetup(playerId);
+        break;
       case 'claim':
         hub.claim(playerId, msg.tileIds);
         break;

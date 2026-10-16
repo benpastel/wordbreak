@@ -11,6 +11,8 @@ interface Props {
   table: TableView;
   meId: string;
   onReady: (r: boolean) => void;
+  /** After a match: takes the whole table back to the setup screen. */
+  onBackToSetup?: () => void;
   onChat: (text: string) => void;
   onLeave: () => void;
   children: ReactNode;
@@ -19,12 +21,13 @@ interface Props {
 /**
  * The frame of every screen at a table that is not the board: the screen's own
  * content, the chat down the right, and leave and ready pinned along the bottom so
- * neither ever scrolls away.
+ * neither ever scrolls away. After a match, settings sits beside ready.
  */
 export default function TableShell({
   table,
   meId,
   onReady,
+  onBackToSetup,
   onChat,
   onLeave,
   children,
@@ -38,14 +41,21 @@ export default function TableShell({
         <button className="leave" onClick={onLeave}>
           leave
         </button>
-        <ReadyButton
-          ready={!!me?.ready}
-          waiting={table.players.filter((p) => p.connected && !p.ready).length}
-          color={me?.color ?? 0}
-          startsAt={table.startsAt}
-          countdownMs={table.countdownMs}
-          onReady={onReady}
-        />
+        <div className="shellgo">
+          {onBackToSetup && (
+            <button className="back" onClick={onBackToSetup}>
+              settings
+            </button>
+          )}
+          <ReadyButton
+            ready={!!me?.ready}
+            waiting={table.players.filter((p) => p.connected && !p.ready).length}
+            color={me?.color ?? 0}
+            startsAt={table.startsAt}
+            countdownMs={table.countdownMs}
+            onReady={onReady}
+          />
+        </div>
       </div>
     </div>
   );

@@ -388,13 +388,13 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   width: min(100%, var(--board));
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-.leave {
+.leave, .back {
   background: var(--tile-face); color: var(--ink-soft);
   font-size: 0.78rem; font-weight: var(--w-label); padding: 6px 13px;
   text-transform: uppercase; letter-spacing: var(--track-label);
   box-shadow: var(--edge), var(--shadow-1); flex: none;
 }
-.leave:hover { color: var(--ink); }
+:is(.leave, .back):hover { color: var(--ink); }
 
 .boardwrap {
   flex: none;
@@ -597,9 +597,18 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 /* Matched to the ready button across from it: same height, same type, same corner.
    Scoped to the bar — the one on the board stays small, where it must not compete
    with the clock or the board itself. */
-.shellbar .leave {
+.shellbar :is(.leave, .back) {
   font-size: 1rem; padding: 13px 28px; border-radius: var(--r-ctl-lg);
   box-shadow: var(--edge), var(--shadow-1), var(--shadow-2);
+}
+.shellgo { display: flex; align-items: center; gap: 12px; }
+/* Three buttons across a phone: tighter, and ready may take two lines for
+   "waiting for 2 others". */
+@media (max-width: 480px) {
+  .shellbar { gap: 8px; }
+  .shellgo { gap: 8px; min-width: 0; }
+  .shellbar :is(.leave, .back), .shellbar .primary.big { padding: 12px 15px; font-size: 0.9rem; }
+  .shellbar .primary.big { line-height: 1.15; }
 }
 /* Same trap, other track: chat holds its own intrinsic width without this. */
 .shell > .chat { min-width: 0; }

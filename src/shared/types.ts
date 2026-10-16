@@ -193,6 +193,7 @@ export type ClientMsg =
   | { t: 'setColor'; color: number }
   | { t: 'setReady'; ready: boolean }
   | { t: 'start' }
+  | { t: 'backToSetup' }
   | { t: 'claim'; tileIds: number[] }
   | { t: 'addBot' }
   | { t: 'removeBot'; botId: string }

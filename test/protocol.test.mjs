@@ -366,6 +366,19 @@ process.on('exit', stop);
       a2.table.players.some((p) => p.score === top && p.trophies.gold >= 1));
   }
 
+  section('back to setup');
+  {
+    a2.send({ t: 'setReady', ready: true });
+    await sleep(100);
+    b.send({ t: 'backToSetup' });
+    await sleep(150);
+    check('one player takes the whole table back to setup', a2.table.phase === 'lobby', a2.table.phase);
+    check('and everyone readies again', a2.table.players.every((p) => !p.ready));
+    b.send({ t: 'backToSetup' });
+    await sleep(100);
+    check('it does nothing outside a finished match', a2.table.phase === 'lobby');
+  }
+
   section('leaving');
   b.send({ t: 'leaveTable' });
   await sleep(200);
