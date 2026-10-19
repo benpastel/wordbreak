@@ -135,6 +135,16 @@
   .s-palebg .face.claimed {
     background: linear-gradient(to top, color-mix(in oklab, var(--pf) 60%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face);
   }
+  /* 9-11 the letter keeps nearly its own ink, tinted towards the player's colour:
+     claimed reads as a shift in the letter rather than a new colour on the board. */
+  .s-tint30 .letter.claimed, .s-filltint .letter.claimed { color: color-mix(in oklab, var(--pc) 35%, var(--ink)); }
+  .s-tint50 .letter.claimed { color: color-mix(in oklab, var(--pc) 55%, var(--ink)); }
+  :is(.s-tint30, .s-tint50) .face.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 60%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+  .s-filltint .face.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--p), color-mix(in oklab, var(--pf) 22%, var(--tile-face)) calc(var(--p) + 1.5%)), var(--tile-face);
+  }
 </style>
 </head>
 <body>
@@ -158,13 +168,10 @@
   ];
   const STYLES = [
     ['s-fill', '1 · Fill only'],
-    ['s-head', '2 · Head start: the fill is the claim'],
-    ['s-inkfill', '3 · Coloured letter, tile fill as timer'],
-    ['s-inkhead', '4 · Coloured letter, head-start fill'],
-    ['s-palefill', '5 · Pale letter fills up with colour'],
-    ['s-inkrise', '6 · Ink letter fills up with colour'],
-    ['s-deepen', '7 · Letter deepens from pale to full'],
     ['s-palebg', '8 · Pale letter, tile fill as timer'],
+    ['s-tint30', '9 · Dark-tinted letter (35% colour), tile fill as timer'],
+    ['s-tint50', '10 · Stronger tint (55% colour), tile fill as timer'],
+    ['s-filltint', '11 · Fill only, with the 35% tinted letter'],
   ];
 
   // One loop: claims land a beat apart, each fills over HOLD and banks; meanwhile a
