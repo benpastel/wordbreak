@@ -61,6 +61,11 @@ with `npm ci && npm run build` and starts with `npm start`.
 Keep it at **exactly one instance** — all state is in memory, so a second instance is
 a second, invisible lobby. Every deploy and every restart ends the games in progress.
 
+Every match prints one line to the service's log when it ends (or is abandoned):
+`match {…}`, JSON with the players and bot levels, each claim with rough timings and
+whether it banked, broke or was still held, and each word tried and turned down. See
+`src/server/matchlog.ts`.
+
 ### GitHub Pages
 
 Repo Settings → Pages → Source: **GitHub Actions**. The workflow builds only the

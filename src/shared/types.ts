@@ -195,6 +195,8 @@ export type ClientMsg =
   | { t: 'start' }
   | { t: 'backToSetup' }
   | { t: 'claim'; tileIds: number[] }
+  /** A slid word that was not one, for the server's match report. */
+  | { t: 'missed'; word: string; why: string }
   | { t: 'addBot' }
   | { t: 'removeBot'; botId: string }
   | { t: 'setBotDifficulty'; botId: string; difficulty: number }

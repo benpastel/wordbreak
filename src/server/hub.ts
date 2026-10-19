@@ -7,13 +7,15 @@ import {
   DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
 } from '../shared/types';
 import type {
-  EndMode, Fx, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
+  EndMode, Fx, Medal, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
 } from '../shared/types';
 import * as R from '../shared/rules';
 import { Brain } from './bot/brain';
 import { botName } from './bot/names';
 import { isWord } from './dictionary';
 import { define } from './definitions';
+import { MatchLog, MISS_REASONS } from './matchlog';
+import type { MissReason } from './matchlog';
 import { MemoryStore } from './store';
 import type { PlayerRecord, Store, TableRecord } from './store';
 
@@ -171,6 +173,7 @@ export class Hub {
       chat: [],
       startedAt: 0,
       log: new Map(),
+      matchLog: null,
       recap: null,
       startsAt: null,
       countdownMs: null,
@@ -449,6 +452,11 @@ export class Hub {
     t.startedAt = Date.now();
     t.log = new Map();
     t.recap = null;
+    const who = t.playerIds.flatMap((id) => {
+      const p = this.store.getPlayer(id);
+      return p ? [this.who(p)] : [];
+    });
+    t.matchLog = new MatchLog(t.id, t.settings, t.startedAt, who);
     // Only a timed match carries a deadline; the other two end on a score or not at all.
     t.game = R.newGame(
       t.settings.gridSize,
@@ -496,6 +504,7 @@ export class Hub {
 
     for (const c of t.game.claims) {
       this.clearTimer(c.id);
+      t.matchLog?.held(c.id);
       const holder = this.store.getPlayer(c.playerId);
       if (holder) {
         holder.score += c.tileIds.length;
@@ -528,6 +537,10 @@ export class Hub {
       durationMs: Date.now() - t.startedAt,
     };
     t.log = new Map();
+    const finals = new Map(standing.map((p) => [p.id, { score: p.score, medal: medals[p.id] }]));
+    const top = Math.max(0, ...standing.map((p) => p.score));
+    const how = t.settings.endMode === 'points' && top >= t.settings.targetScore ? 'points' : 'time';
+    this.printReport(t, how, finals);
     this.store.putTable(t);
     this.pushTable(t.id, [{ k: 'ended', medals }]);
     this.pushLobby();
@@ -542,6 +555,7 @@ export class Hub {
 
     const err = R.validatePath(game, tileIds);
     if (err) {
+      this.logMiss(t, playerId, R.wordOf(game, tileIds), err, true);
       // The client pre-validates, so reaching here means the board moved between
       // pressing claim and arriving. Worth saying so now that claiming is a
       // deliberate act — except for tiles that banked out from under the path,
@@ -556,7 +570,10 @@ export class Hub {
     }
 
     const word = R.wordOf(game, tileIds);
-    if (!isWord(word)) return;
+    if (!isWord(word)) {
+      this.logMiss(t, playerId, word, 'not-a-word', true);
+      return;
+    }
 
     // A repeat of a claim you already hold is caught by validatePath above, since
     // an identical path is not strictly longer than itself.
@@ -570,11 +587,14 @@ export class Hub {
       this.timing.holdMs(game.size),
       `${t.id}-${t.claimSeq++}`,
     );
+    const me = this.store.getPlayer(playerId);
     for (const b of broken) {
       const was = t.log.get(b.id);
       if (was) was.brokenBy = playerId;
+      if (me) t.matchLog?.broken(b.id, this.who(me), now);
     }
     t.log.set(claim.id, { playerId, word, at: now - t.startedAt, brokenBy: null });
+    if (me) t.matchLog?.claimed(claim.id, this.who(me), word, now);
 
     const fx: Fx[] = [];
     // Breaking is breaking, whoever held the claim — including you extending your
@@ -615,6 +635,7 @@ export class Hub {
     if (!claim) return;
 
     const { points, idx, letters } = R.bankClaim(t.game, claim, () => t.nextTileId++);
+    t.matchLog?.banked(claimId, Date.now());
     const p = this.store.getPlayer(claim.playerId);
     if (p) {
       p.score += points;
@@ -643,6 +664,35 @@ export class Hub {
     return 0;
   }
 
+  /** A word slid and let go of that was not one, as the player's client saw it. */
+  missed(playerId: string, word: string, why: string): void {
+    const t = this.tableOf(playerId);
+    if (!t || t.phase !== 'playing') return;
+    if (typeof word !== 'string' || !/^[a-z]{1,25}$/.test(word)) return;
+    if (!(MISS_REASONS as readonly string[]).includes(why)) return;
+    this.logMiss(t, playerId, word, why as MissReason, false);
+  }
+
+  private logMiss(t: TableRecord, playerId: string, word: string, why: MissReason, server: boolean): void {
+    const p = this.store.getPlayer(playerId);
+    if (p) t.matchLog?.missed(this.who(p), word, why, Date.now(), server);
+  }
+
+  private who(p: PlayerRecord) {
+    return { id: p.id, name: p.name, bot: p.bot?.difficulty ?? null };
+  }
+
+  /** One JSON line per match, for the host's log viewer (src/server/matchlog.ts). */
+  private printReport(
+    t: TableRecord,
+    how: 'time' | 'points' | 'abandoned',
+    finals: Map<string, { score: number; medal?: Medal }>,
+  ): void {
+    if (!t.matchLog) return;
+    console.log(`match ${t.matchLog.report(how, Date.now(), finals)}`);
+    t.matchLog = null;
+  }
+
   private clearTimer(claimId: string): void {
     const timer = this.timers.get(claimId);
     if (timer) clearTimeout(timer);
@@ -650,6 +700,7 @@ export class Hub {
   }
 
   private destroyTable(t: TableRecord): void {
+    if (t.phase === 'playing') this.printReport(t, 'abandoned', new Map());
     for (const c of t.game?.claims ?? []) this.clearTimer(c.id);
     this.clearEndTimer(t.id);
     this.clearStartTimer(t.id);

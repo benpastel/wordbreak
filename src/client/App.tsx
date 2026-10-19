@@ -128,6 +128,7 @@ export default function App() {
       ready: (r: boolean) => send({ t: 'setReady', ready: r }),
       backToSetup: () => send({ t: 'backToSetup' }),
       claim: (tileIds: number[]) => send({ t: 'claim', tileIds }),
+      missed: (word: string, why: string) => send({ t: 'missed', word, why }),
       chat: (text: string) => send({ t: 'chat', text }),
       addBot: () => send({ t: 'addBot' }),
       removeBot: (botId: string) => send({ t: 'removeBot', botId }),
@@ -160,6 +161,7 @@ export default function App() {
         table={table}
         fx={fx}
         onClaim={actions.claim}
+        onMissed={actions.missed}
         onLeave={actions.leave}
       />
     ) : (

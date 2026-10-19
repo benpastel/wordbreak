@@ -22,10 +22,12 @@ interface Props {
   table: TableView;
   fx: { seq: number; items: Fx[] };
   onClaim: (tileIds: number[]) => void;
+  /** Reports a slid word that was not one, and why, for the server's match log. */
+  onMissed: (word: string, why: string) => void;
   onLeave: () => void;
 }
 
-export default function Game({ table, fx, onClaim, onLeave }: Props) {
+export default function Game({ table, fx, onClaim, onMissed, onLeave }: Props) {
   const game = table.game!;
   const boardRef = useRef<HTMLDivElement>(null);
   const [selection, setSelectionState] = useState<number[]>([]);
@@ -110,6 +112,8 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
   gameRef.current = game;
   const onClaimRef = useRef(onClaim);
   onClaimRef.current = onClaim;
+  const onMissedRef = useRef(onMissed);
+  onMissedRef.current = onMissed;
 
   // Sliding only, letting go always ends the word: claimed if it is one, shaken
   // off if not. A press that never left its tile is a word too (A, I), but one
@@ -122,12 +126,16 @@ export default function Game({ table, fx, onClaim, onLeave }: Props) {
     const tapping = tapInput();
     if (!sel.length || (tapping && !slid.current)) return;
     const w = R.wordOf(g, sel);
-    if (isWord(w) && R.validatePath(g, sel) === null) {
+    const pathErr = R.validatePath(g, sel);
+    if (isWord(w) && pathErr === null) {
       onClaimRef.current(sel);
       setSelection([]);
     } else if (!tapping) {
       setSelection([]);
-      if (sel.length > 1) setRejected((r) => ({ word: w, n: (r?.n ?? 0) + 1 }));
+      if (sel.length > 1) {
+        setRejected((r) => ({ word: w, n: (r?.n ?? 0) + 1 }));
+        onMissedRef.current(w, isWord(w) ? (pathErr ?? 'not-a-word') : 'not-a-word');
+      }
     }
   }, [setSelection]);
 

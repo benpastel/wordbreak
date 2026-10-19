@@ -3,6 +3,7 @@
 // this interface so that adding a real store later is a contained change rather than
 // a rewrite: the rules in src/shared stay pure, and the hub only ever talks to a Store.
 
+import type { MatchLog } from './matchlog';
 import type {
   ChatMessage, GameState, Phase, PlayedWord, Recap, Settings, Trophies,
 } from '../shared/types';
@@ -39,6 +40,8 @@ export interface TableRecord {
   /** Claims made in the match currently running, keyed by claim id so a break can
    *  find the word it took. Becomes the recap when the match ends. */
   log: Map<string, PlayedWord>;
+  /** The match currently running, for the report printed when it ends. */
+  matchLog: MatchLog | null;
   /** The last finished match. */
   recap: Recap | null;
   /** When the agreed countdown fires, or null if nobody is waiting. */
