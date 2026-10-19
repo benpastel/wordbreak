@@ -16,15 +16,17 @@ const ANCHORS = {
   // --- spotting -----------------------------------------------------------------
   /** Median ms to spot one particular 3-letter word that is common, reads forwards
    *  and sits in focus. Every other word is this, scaled by the factors below. */
-  spot3Ms: [15_000, 6_000, 3_500, 2_000, 400],
+  spot3Ms: [15_000, 7_000, 6_200, 4_400, 400],
   /** Multiplier on that median per letter beyond three. Above 1 long words hide;
-   *  below 1 they jump out, which is what makes the hardest bot reach for them. */
-  perLetter: [5, 2.4, 1.9, 1.5, 0.85],
+   *  below 1 they jump out. Set so each level's words peak where a person at that
+   *  level is comfortable: two and three letters for a beginner, three with twos
+   *  and fours either side for intermediate, four with a long tail for expert. */
+  perLetter: [5, 0.8, 0.4, 0.2, 0.15],
   /** Two-letter words are not what people look for, so they run this many times
    *  slower than a three-letter word rather than faster. A young child is barely
    *  slower at them, and knowing few longer words, plays them most of all: about
    *  two in three of its words, the rest split between A or I and three letters. */
-  twoLetter: [1.2, 4, 5, 7, 12],
+  twoLetter: [1.2, 3.5, 4, 6, 12],
   /** A and I, likewise against a three-letter word. Only a young child plays them,
    *  and then now and again; from beginner up they are as good as never seen. */
   oneLetter: [1.8, 1_000, 1_000, 1_000, 1_000],
@@ -70,7 +72,7 @@ const ANCHORS = {
   /** Pause between spotting a word and starting to select it. */
   hesitateMs: [700, 420, 300, 200, 80],
   /** Selecting each tile. */
-  perTileMs: [220, 170, 140, 110, 70],
+  perTileMs: [220, 170, 150, 150, 70],
 } satisfies Record<string, Anchor>;
 
 export type Knobs = { [K in keyof typeof ANCHORS]: number };
