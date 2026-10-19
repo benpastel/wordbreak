@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claims as colour</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..800&display=swap" />
+<style>
+  .light {
+    --page: oklch(0.985 0.004 85);
+    --tray: oklch(0.902 0.012 85);
+    --tile-face: oklch(0.985 0.004 85);
+    --ink: oklch(0.22 0.01 60);
+    --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+    --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+    --disc: oklch(0.885 0.008 75);
+    --disc-lip: oklch(1 0 0 / 0.7);
+    --selink: oklch(0.55 0.01 70);
+  }
+  .dark {
+    --page: oklch(0.2 0.006 70);
+    --tray: oklch(0.165 0.006 70);
+    --tile-face: oklch(0.3 0.008 75);
+    --ink: oklch(0.93 0.01 85);
+    --shadow-1: 0 1px 1px oklch(0 0 0 / 0.35);
+    --shadow-2: 0 2px 5px oklch(0 0 0 / 0.3);
+    --disc: oklch(0.21 0.006 70);
+    --disc-lip: oklch(1 0 0 / 0.07);
+    --selink: oklch(0.72 0.01 80);
+  }
+  .c0 { --hue: 250; --cf: 0.085; --lf: 0.87; --ci: 0.16; }
+  .c1 { --hue: 25; --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+  .c2 { --hue: 148; --cf: 0.12; --lf: 0.845; --ci: 0.14; }
+  .c3 { --hue: 300; --cf: 0.095; --lf: 0.875; --ci: 0.17; }
+  .c4 { --hue: 55; --cf: 0.13; --lf: 0.87; --ci: 0.145; }
+  :is(.c0, .c1, .c2, .c3, .c4) { --pf: oklch(var(--lf) var(--cf) var(--hue)); --pc: oklch(0.55 var(--ci) var(--hue)); }
+  .dark :is(.c0, .c1, .c2, .c3, .c4) {
+    --pf: oklch(calc(var(--lf) - 0.44) calc(var(--cf) * 0.9) var(--hue));
+    --pc: oklch(0.72 var(--ci) var(--hue));
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px 20px 60px; background: oklch(0.985 0.004 85); color: oklch(0.22 0.01 60);
+    font-family: Archivo, system-ui, sans-serif;
+  }
+  .controls { display: flex; gap: 22px; flex-wrap: wrap; max-width: 1240px; margin: 0 auto 22px; align-items: center; }
+  .controls label { font-size: 0.72rem; font-weight: 650; text-transform: uppercase; letter-spacing: 0.08em; color: oklch(0.52 0.008 70); margin-right: 8px; }
+  .seg { display: inline-flex; gap: 6px; }
+  .seg button {
+    font: inherit; font-size: 0.78rem; font-weight: 650; text-transform: uppercase; letter-spacing: 0.08em;
+    background: oklch(0.985 0.004 85); color: oklch(0.52 0.008 70); border: 0; border-radius: 7px; padding: 6px 12px; cursor: pointer;
+    box-shadow: inset 0 0 0 1px oklch(0.3 0.02 70 / 0.2), 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+  }
+  .seg button.on { background: oklch(0.22 0.01 60); color: oklch(0.985 0.004 85); box-shadow: none; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(600px, 1fr)); gap: 30px 26px; max-width: 1240px; margin: 0 auto; }
+  figure { margin: 0; }
+  figcaption { margin-top: 10px; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  .pair { display: flex; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px oklch(0.5 0.01 70 / 0.2); width: max-content; }
+  .panel { background: var(--page); padding: 16px; }
+
+  /* Three layers, so a line can run over the tile faces but under the letters. */
+  .board {
+    --cell: 54px; --gap: calc(var(--cell) * 0.1);
+    position: relative; padding: var(--gap); border-radius: 12px; background: var(--tray);
+    box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13);
+  }
+  .layer { display: grid; grid-template-columns: repeat(var(--n), var(--cell)); gap: var(--gap); }
+  .letters { position: absolute; inset: var(--gap); z-index: 3; pointer-events: none; }
+  .face {
+    position: relative; aspect-ratio: 1; border-radius: 13%; background: var(--tile-face);
+    box-shadow: var(--ring, 0 0 0 transparent), var(--shadow-1), var(--shadow-2); z-index: 1;
+  }
+  .letter {
+    aspect-ratio: 1; display: grid; place-items: center; font-size: calc(var(--cell) * 0.52); font-weight: 700; color: var(--ink);
+  }
+  .letter > span { line-height: 1; text-box: trim-both cap alphabetic; }
+  .face.sel::before {
+    content: ''; position: absolute; inset: 17%; border-radius: 50%; background: var(--disc);
+    box-shadow: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 var(--disc-lip);
+  }
+  .face.bank { animation: bank 420ms ease-out; }
+  @keyframes bank { 0% { transform: scale(1); } 35% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  svg { position: absolute; inset: var(--gap); width: calc(100% - 2 * var(--gap)); height: calc(100% - 2 * var(--gap)); overflow: visible; pointer-events: none; }
+  svg.gaps { z-index: 0; }
+  svg.over { z-index: 2; }
+  polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  polyline.claim { stroke: var(--pc); }
+  polyline.sel { stroke: var(--selink); stroke-width: 0.062; opacity: 0.75; stroke-dasharray: 0.17 0.13; }
+  /* The link: in the gaps, thinner than the game's. */
+  .link-gaps polyline.claim { stroke-width: 0.035; opacity: 0.45; }
+
+  /* ---- styles ----
+     --p is how far the hold has run, 0-100%. --q is the same with a head start: the
+     claim is the fill already part-way up, so there is nothing separate to say
+     "claimed". */
+  .panel { --hs: 25%; }
+  .face, .letter { --q: calc(var(--hs) + var(--p) * 0.75); }
+  .tint-rise { background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face); }
+
+  /* 1 fill only */
+  .s-fill .face.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--p), color-mix(in oklab, var(--pf) 22%, var(--tile-face)) calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+  /* 2 head start */
+  .s-head .face.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--q), transparent calc(var(--q) + 1.5%)), var(--tile-face);
+  }
+  /* 3 coloured letter, tile fill as timer */
+  .s-inkfill .letter.claimed { color: var(--pc); }
+  .s-inkfill .face.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 55%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+  /* 4 coloured letter, head-start fill */
+  .s-inkhead .letter.claimed { color: var(--pc); }
+  .s-inkhead .face.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 55%, var(--tile-face)) 0 var(--q), transparent calc(var(--q) + 1.5%)), var(--tile-face);
+  }
+  /* 5-6 the letter itself fills, bottom up. The span is trimmed to cap height, so
+     the gradient runs exactly from baseline to cap top. */
+  .letter.claimed > span { -webkit-background-clip: text; background-clip: text; }
+  .s-palefill .letter.claimed > span {
+    color: transparent;
+    background-image: linear-gradient(to top, var(--pc) 0 var(--p), color-mix(in oklab, var(--pc) 50%, var(--tile-face)) var(--p));
+  }
+  .s-inkrise .letter.claimed > span {
+    color: transparent;
+    background-image: linear-gradient(to top, var(--pc) 0 var(--q), var(--ink) var(--q));
+  }
+  /* 7 the letter deepens from pale to full colour */
+  .s-deepen .letter.claimed { color: color-mix(in oklab, var(--pc) var(--q), var(--tile-face)); }
+  /* 8 pale letter, tile fill as timer */
+  .s-palebg .letter.claimed { color: color-mix(in oklab, var(--pc) 55%, var(--tile-face)); }
+  .s-palebg .face.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 60%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+</style>
+</head>
+<body>
+<div class="controls">
+  <div><label>board</label><span class="seg" id="boardSeg"></span></div>
+</div>
+<div class="grid" id="grid"></div>
+
+<script>
+  // Generated from the game's own letter mix, word finder and frequency list: common
+  // words whose paths turn and double back, and a longer word through two of them
+  // as the trail being built.
+  const BOARDS = [
+    { n: 4, letters: 'LEGOWLSAELPLISYF',
+      claims: [{ word: 'wells', idx: [4, 1, 5, 9, 13] }, { word: 'ago', idx: [7, 2, 3] }, { word: 'sly', idx: [6, 11, 14] }],
+      sel: { word: 'goals', idx: [2, 3, 7, 11, 6] } },
+    { n: 5, letters: 'NILLIETMBNLAHLGOANOUVNTMO',
+      claims: [{ word: 'hat', idx: [12, 11, 6] }, { word: 'bin', idx: [8, 4, 9] }, { word: 'lie', idx: [2, 1, 5] },
+               { word: 'loan', idx: [10, 15, 16, 21] }, { word: 'ton', idx: [22, 18, 17] }],
+      sel: { word: 'lingo', idx: [3, 4, 9, 14, 18] } },
+  ];
+  const STYLES = [
+    ['s-fill', '1 · Fill only'],
+    ['s-head', '2 · Head start: the fill is the claim'],
+    ['s-inkfill', '3 · Coloured letter, tile fill as timer'],
+    ['s-inkhead', '4 · Coloured letter, head-start fill'],
+    ['s-palefill', '5 · Pale letter fills up with colour'],
+    ['s-inkrise', '6 · Ink letter fills up with colour'],
+    ['s-deepen', '7 · Letter deepens from pale to full'],
+    ['s-palebg', '8 · Pale letter, tile fill as timer'],
+  ];
+
+  // One loop: claims land a beat apart, each fills over HOLD and banks; meanwhile a
+  // trail is dragged through two of them, letter by letter, held, and let go.
+  const LOOP = 16_000, HOLD = 9_000, STAGGER = 1_100, SEL_AT = 3_500, SEL_STEP = 380, SEL_HOLD = 1_800;
+
+  let boardIx = 0, link = 'gaps';
+  const grid = document.getElementById('grid');
+  const views = [];
+
+  function seg(el, items, get, set) {
+    el.innerHTML = '';
+    for (const [k, label] of items) {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.className = get() === k ? 'on' : '';
+      b.onclick = () => { set(k); build(); };
+      el.append(b);
+    }
+  }
+
+  function build() {
+    seg(document.getElementById('boardSeg'), BOARDS.map((b, i) => [i, `${b.n}×${b.n}`]), () => boardIx, (v) => (boardIx = v));
+    grid.innerHTML = '';
+    views.length = 0;
+    const B = BOARDS[boardIx];
+    const vb = B.n + (B.n - 1) * 0.1;
+    for (const [cls, name] of STYLES) {
+      const f = document.createElement('figure');
+      const pair = document.createElement('div');
+      pair.className = 'pair';
+      for (const theme of ['light', 'dark']) {
+        const panel = document.createElement('div');
+        panel.className = `panel ${theme} ${cls} link-${link}`;
+        const board = document.createElement('div');
+        board.className = 'board';
+        board.style.setProperty('--n', B.n);
+        const svgCls = link === 'over' ? 'over' : 'gaps';
+        board.innerHTML =
+          `<svg class="${svgCls}" viewBox="0 0 ${vb} ${vb}"></svg>` +
+          `<div class="layer faces">${B.letters.split('').map(() => '<div class="face"></div>').join('')}</div>` +
+          `<svg class="over seltrail" viewBox="0 0 ${vb} ${vb}"></svg>` +
+          `<div class="layer letters">${B.letters.split('').map((l) => `<div class="letter"><span>${l}</span></div>`).join('')}</div>`;
+        panel.append(board);
+        pair.append(panel);
+        views.push({
+          faces: [...board.querySelectorAll('.face')],
+          letters: [...board.querySelectorAll('.letter')],
+          links: board.querySelector('svg'),
+          trail: board.querySelector('svg.seltrail'),
+          banked: new Set(),
+        });
+      }
+      f.append(pair);
+      const cap = document.createElement('figcaption');
+      cap.textContent = name;
+      f.append(cap);
+      grid.append(f);
+    }
+  }
+
+  const center = (i, n) => i * 1.1 + 0.5;
+  const pts = (idx, n) => idx.map((i) => `${center(i % n)},${center(Math.floor(i / n))}`).join(' ');
+  const t0 = performance.now();
+
+  function frame(now) {
+    const B = BOARDS[boardIx];
+    const t = (now - t0) % LOOP;
+    // Which claims are live, and how far each has filled.
+    const live = B.claims.map((c, k) => {
+      const at = 400 + k * STAGGER;
+      const p = (t - at) / HOLD;
+      return { ...c, color: k, p, on: p >= 0 && p < 1 };
+    });
+    const selN = Math.max(0, Math.min(B.sel.idx.length, Math.floor((t - SEL_AT) / SEL_STEP) + 1));
+    const selDone = SEL_AT + B.sel.idx.length * SEL_STEP + SEL_HOLD;
+    const sel = t >= SEL_AT && t < selDone ? B.sel.idx.slice(0, selN) : [];
+
+    for (const v of views) {
+      const owner = new Map();
+      for (const c of live) if (c.on) for (const i of c.idx) owner.set(i, c);
+      v.faces.forEach((el, i) => {
+        const c = owner.get(i);
+        const cls = `face${c ? ` claimed c${c.color}` : ''}${sel.includes(i) ? ' sel' : ''}`;
+        if (el.className.replace(' bank', '') !== cls) el.className = cls;
+        if (c) el.style.setProperty('--p', `${(c.p * 100).toFixed(1)}%`);
+      });
+      v.letters.forEach((el, i) => {
+        const c = owner.get(i);
+        const cls = `letter${c ? ` claimed c${c.color}` : ''}`;
+        if (el.className !== cls) el.className = cls;
+        if (c) el.style.setProperty('--p', `${(c.p * 100).toFixed(1)}%`);
+      });
+      // A small pop as each claim banks.
+      for (const c of live) {
+        const key = c.word;
+        if (c.p >= 1 && !v.banked.has(key)) {
+          v.banked.add(key);
+          for (const i of c.idx) { v.faces[i].classList.remove('bank'); void v.faces[i].offsetWidth; v.faces[i].classList.add('bank'); }
+        }
+        if (c.p < 0) v.banked.delete(key);
+      }
+      v.links.innerHTML = live.filter((c) => c.on).map((c) => `<polyline class="claim c${c.color}" points="${pts(c.idx, B.n)}"/>`).join('');
+      v.trail.innerHTML = sel.length > 1 ? `<polyline class="sel" points="${pts(sel, B.n)}"/>` : '';
+    }
+    requestAnimationFrame(frame);
+  }
+
+  build();
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>
