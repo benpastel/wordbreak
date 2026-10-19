@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claim styles</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..800&display=swap" />
+<style>
+  @property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+  :root {
+    --page: oklch(0.985 0.004 85);
+    --tray: oklch(0.902 0.012 85);
+    --tile-face: oklch(0.985 0.004 85);
+    --ink: oklch(0.22 0.01 60);
+    --ink-soft: oklch(0.52 0.008 70);
+    --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+    --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+    --disc: oklch(0.885 0.008 75);
+    --disc-lip: oklch(1 0 0 / 0.7);
+    --selink: oklch(0.55 0.01 70);
+    --pc-l: 0.55; --pf-l: 0;
+  }
+  .dark {
+    --page: oklch(0.2 0.006 70);
+    --tray: oklch(0.165 0.006 70);
+    --tile-face: oklch(0.3 0.008 75);
+    --ink: oklch(0.93 0.01 85);
+    --ink-soft: oklch(0.72 0.01 80);
+    --shadow-1: 0 1px 1px oklch(0 0 0 / 0.35);
+    --shadow-2: 0 2px 5px oklch(0 0 0 / 0.3);
+    --disc: oklch(0.21 0.006 70);
+    --disc-lip: oklch(1 0 0 / 0.07);
+    --selink: oklch(0.72 0.01 80);
+  }
+  .c0 { --hue: 250; --cf: 0.085; --lf: 0.87; --ci: 0.16; }
+  .c1 { --hue: 25; --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+  .c2 { --hue: 148; --cf: 0.12; --lf: 0.845; --ci: 0.14; }
+  .c0, .c1, .c2 { --pf: oklch(var(--lf) var(--cf) var(--hue)); --pc: oklch(0.55 var(--ci) var(--hue)); }
+  .dark :is(.c0, .c1, .c2) {
+    --pf: oklch(calc(var(--lf) - 0.44) calc(var(--cf) * 0.9) var(--hue));
+    --pc: oklch(0.72 var(--ci) var(--hue));
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 20px 60px; background: oklch(0.985 0.004 85); color: oklch(0.22 0.01 60);
+    font-family: Archivo, system-ui, sans-serif;
+  }
+  .pair { display: flex; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px oklch(0.5 0.01 70 / 0.2); width: max-content; }
+  .panel { background: var(--page); padding: 16px; }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 34px 26px;
+    max-width: 1180px; margin: 0 auto;
+  }
+  figure { margin: 0; }
+  figcaption { margin-top: 10px; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  figcaption span { display: block; margin-top: 3px; font-size: 0.78rem; font-weight: 400; text-transform: none; letter-spacing: 0; color: oklch(0.52 0.008 70); }
+
+  .board {
+    --n: 4; --cell: 58px; --gap: calc(var(--cell) * 0.1);
+    position: relative; display: grid; grid-template-columns: repeat(var(--n), var(--cell));
+    gap: var(--gap); padding: var(--gap); border-radius: 12px; background: var(--tray); width: max-content;
+    box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13);
+  }
+  .tile {
+    position: relative; aspect-ratio: 1; border-radius: 13%; display: grid; place-items: center;
+    font-size: calc(var(--cell) * 0.52); font-weight: 700; color: var(--ink); background: var(--tile-face);
+    box-shadow: var(--shadow-1), var(--shadow-2); z-index: 1;
+  }
+  .tile > span { position: relative; z-index: 2; line-height: 1; text-box: trim-both cap alphabetic; }
+  .tile.sel::before {
+    content: ''; position: absolute; z-index: 1; inset: 17%; border-radius: 50%; background: var(--disc);
+    box-shadow: inset 0 1.5px 3px oklch(0.3 0.02 70 / 0.26), inset 0 -1px 0 var(--disc-lip);
+  }
+  svg.trail { position: absolute; inset: var(--gap); width: calc(100% - 2 * var(--gap)); height: calc(100% - 2 * var(--gap)); pointer-events: none; overflow: visible; }
+  svg.trail.under { z-index: 0; }
+  svg.trail.over { z-index: 3; }
+  .trail polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .trail .sel { stroke: var(--selink); stroke-width: 0.062; opacity: 0.75; stroke-dasharray: 0.17 0.13; }
+
+  /* ---- A: now ---- */
+  .v-now .tile.claimed {
+    box-shadow: inset 0 0 0 3px var(--pc), var(--shadow-1), var(--shadow-2);
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 40%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+  .v-now .trail .claim { stroke: var(--pc); stroke-width: 0.05; opacity: 0.4; }
+
+  /* ---- B: hairline ring ---- */
+  .v-hair .tile.claimed {
+    box-shadow: inset 0 0 0 1.5px var(--pc), var(--shadow-1), var(--shadow-2);
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 40%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+
+  /* ---- C: fill only ---- */
+  .v-fill .tile.claimed {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--p), color-mix(in oklab, var(--pf) 22%, var(--tile-face)) calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+
+  /* ---- D: underline that fills ---- */
+  .v-under .tile.claimed::after {
+    content: ''; position: absolute; left: 14%; right: 14%; bottom: 9%; height: 7%; border-radius: 99px;
+    background: linear-gradient(to right, var(--pc) 0 var(--p), color-mix(in oklab, var(--pc) 28%, var(--tile-face)) var(--p));
+  }
+
+  /* ---- E: coloured letter ---- */
+  .v-ink .tile.claimed { color: var(--pc); }
+  .v-ink .tile.claimed::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6%; border-radius: 0 0 99px 99px;
+    background: linear-gradient(to right, var(--pc) 0 var(--p), transparent var(--p));
+    opacity: 0.8;
+  }
+
+  /* ---- F: corner pie ---- */
+  .v-pie .tile.claimed::after {
+    content: ''; position: absolute; top: 8%; right: 8%; width: 20%; height: 20%; border-radius: 50%;
+    background: conic-gradient(var(--pc) 0 var(--p), color-mix(in oklab, var(--pc) 25%, var(--tile-face)) var(--p));
+  }
+
+  /* ---- G: word halo behind the tiles ---- */
+  .v-halo .trail .claim { stroke: var(--pc); stroke-width: 1.16; opacity: 0.55; }
+  .v-halo .tile.claimed::after {
+    content: ''; position: absolute; left: 14%; right: 14%; bottom: 9%; height: 6%; border-radius: 99px;
+    background: linear-gradient(to right, var(--pc) 0 var(--p), transparent var(--p)); opacity: 0.8;
+  }
+
+  /* ---- H: glow in the gaps ---- */
+  .v-glow .tile.claimed {
+    box-shadow: 0 0 0 calc(var(--gap) * 0.5) color-mix(in oklab, var(--pc) 70%, transparent), var(--shadow-1);
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 30%, var(--tile-face)) 0 var(--p), transparent calc(var(--p) + 1.5%)), var(--tile-face);
+  }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+
+<script>
+  const LETTERS = 'STARPONELITEDAMS';
+  const N = 4;
+  // Three claims at different points in their hold, and a trail crossing two of them.
+  const CLAIMS = [
+    { c: 0, tiles: [0, 1, 2, 3], p: 70 },   // STAR
+    { c: 1, tiles: [5, 6, 7], p: 25 },      // ONE
+    { c: 2, tiles: [8, 9, 10], p: 90 },     // LIT
+  ];
+  const SEL = [4, 5, 1];                    // P O T
+  const VARIANTS = [
+    ['v-now', 'Now', 'Ring, rising fill, and a line joining the word.', { line: 'over' }],
+    ['v-hair', 'Hairline', 'The ring cut to a hairline, no joining line.', {}],
+    ['v-fill', 'Fill only', 'No ring. A faint tint says claimed; the rise is the timer.', {}],
+    ['v-under', 'Underline', 'Plain tile. A bar under the letter fills left to right.', {}],
+    ['v-ink', 'Coloured letter', 'The letter takes the colour; a thin bar along the bottom is the timer.', {}],
+    ['v-pie', 'Corner pie', 'Plain tile, a small pie in the corner fills as it banks.', {}],
+    ['v-halo', 'Word halo', 'The word joined by colour behind the tiles, in the gaps. Tiles stay plain.', { line: 'under' }],
+    ['v-glow', 'Gap glow', 'Each tile ringed outside its edge, in the gap, with a faint fill.', {}],
+  ];
+  const center = (i) => i * 1.1 + 0.5;
+  const pts = (idx) => idx.map((i) => `${center(i % N)},${center(Math.floor(i / N))}`).join(' ');
+  const vb = N + (N - 1) * 0.1;
+
+  function board([cls, , , opts]) {
+    const b = document.createElement('div');
+    b.className = `board ${cls}`;
+    const svg = (where, inner) => `<svg class="trail ${where}" viewBox="0 0 ${vb} ${vb}">${inner}</svg>`;
+    let under = '', over = '';
+    if (opts.line) {
+      const lines = CLAIMS.map((c) => `<polyline class="claim c${c.c}" points="${pts(c.tiles)}"/>`).join('');
+      if (opts.line === 'under') under += lines; else over += lines;
+    }
+    over += `<polyline class="sel" points="${pts(SEL)}"/>`;
+    b.innerHTML = svg('under', under) + LETTERS.split('').map((l, i) => {
+      const c = CLAIMS.find((c) => c.tiles.includes(i));
+      return `<div class="tile${c ? ` claimed c${c.c}` : ''}${SEL.includes(i) ? ' sel' : ''}" style="${c ? `--p:${c.p}%` : ''}"><span>${l}</span></div>`;
+    }).join('') + svg('over', over);
+    return b;
+  }
+
+  const grid = document.getElementById('grid');
+  for (const v of VARIANTS) {
+    const f = document.createElement('figure');
+    const pair = document.createElement('div');
+    pair.className = 'pair';
+    for (const theme of ['light', 'dark']) {
+      const panel = document.createElement('div');
+      panel.className = `panel ${theme}`;
+      panel.append(board(v));
+      pair.append(panel);
+    }
+    f.append(pair);
+    const cap = document.createElement('figcaption');
+    cap.innerHTML = `${v[1]}<span>${v[2]}</span>`;
+    f.append(cap);
+    grid.append(f);
+  }
+</script>
+</body>
+</html>
