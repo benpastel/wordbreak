@@ -217,7 +217,7 @@ export class Brain {
     }
     return (
       k.spot3Ms *
-      (word.length === 2 ? k.twoLetter : k.perLetter ** (word.length - 3)) *
+      (word.length === 1 ? k.oneLetter : word.length === 2 ? k.twoLetter : k.perLetter ** (word.length - 3)) *
       Math.max(1, rank / COMMON) ** k.rarity *
       shape ** k.shape
     );

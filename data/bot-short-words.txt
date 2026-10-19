@@ -1,8 +1,8 @@
-# Two- and three-letter words an ordinary player would recognise and play. Bots know
+# One-, two- and three-letter words an ordinary player would recognise and play. Bots know
 # short words outside this list only rarely, and only at high difficulty: the corpus
 # that ranks words by frequency is film subtitles, where names (LEE, ANA), noises
 # (UH, HMM) and abbreviations (SEC, BIO) rank as high as real everyday words.
-to it of is in we me he my on do no be so go if up at oh as an us or by am ok hi
+a i to it of is in we me he my on do no be so go if up at oh as an us or by am ok hi
 ah ma ha ya yo ow aw ho pa ex ye lo ox ax pi
 you the and for was not are can but all get she out him now one her how got see
 did who why let his yes had our man say hey has too way off any two sir day god won

@@ -152,7 +152,7 @@ function main() {
     const st = all.map((g) => g[i]);
     const lengths = st.flatMap((s) => s.lengths);
     const hist: string[] = [];
-    for (let L = 2; L <= 8; L++) {
+    for (let L = 1; L <= 8; L++) {
       const n = lengths.filter((x) => (L === 8 ? x >= 8 : x === L)).length;
       hist.push(`${L === 8 ? '8+' : L}:${Math.round((n / Math.max(1, lengths.length)) * 100)}%`);
     }

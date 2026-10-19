@@ -117,7 +117,7 @@ the public domain, via [ssvivian/WebstersDictionary](https://github.com/ssvivian
 
 ## `bot-short-words.txt`
 
-The two- and three-letter words an ordinary player would think of. The bots rank
+The one-, two- and three-letter words an ordinary player would think of. The bots rank
 words by `word-frequency.txt`, but that corpus is film subtitles, where names
 (LEE, ANA), noises (UH, HMM) and abbreviations (SEC, BIO) rank alongside everyday
 words; short words are where those collect, and short words are what bots play

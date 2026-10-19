@@ -16,13 +16,18 @@ const ANCHORS = {
   // --- spotting -----------------------------------------------------------------
   /** Median ms to spot one particular 3-letter word that is common, reads forwards
    *  and sits in focus. Every other word is this, scaled by the factors below. */
-  spot3Ms: [20_000, 6_000, 3_500, 2_000, 400],
+  spot3Ms: [15_000, 6_000, 3_500, 2_000, 400],
   /** Multiplier on that median per letter beyond three. Above 1 long words hide;
    *  below 1 they jump out, which is what makes the hardest bot reach for them. */
-  perLetter: [4, 2.4, 1.9, 1.5, 0.85],
+  perLetter: [5, 2.4, 1.9, 1.5, 0.85],
   /** Two-letter words are not what people look for, so they run this many times
-   *  slower than a three-letter word rather than faster. */
-  twoLetter: [3, 4, 5, 7, 12],
+   *  slower than a three-letter word rather than faster. A young child is barely
+   *  slower at them, and knowing few longer words, plays them most of all: about
+   *  two in three of its words, the rest split between A or I and three letters. */
+  twoLetter: [1.2, 4, 5, 7, 12],
+  /** A and I, likewise against a three-letter word. Only a young child plays them,
+   *  and then now and again; from beginner up they are as good as never seen. */
+  oneLetter: [1.8, 1_000, 1_000, 1_000, 1_000],
   /** How much path shape matters: the exponent on the per-step direction costs. At
    *  the top a backwards zig-zag is barely harder than a straight line. */
   shape: [3, 1.8, 1.2, 0.8, 0.15],
@@ -86,8 +91,8 @@ export function knobsFor(difficulty: number): Knobs {
   return out;
 }
 
-/** Fixed for every bot: shortest and longest words it will look for. One-letter
- *  words are legal but nobody plays them; past ten the search costs more than the
- *  words are ever found. */
-export const MIN_LEN = 2;
+/** Fixed for every bot: shortest and longest words it will look for. How often the
+ *  short end is played is up to the knobs (oneLetter, twoLetter); past ten the
+ *  search costs more than the words are ever found. */
+export const MIN_LEN = 1;
 export const MAX_LEN = 10;
