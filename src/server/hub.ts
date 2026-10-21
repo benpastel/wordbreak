@@ -2,6 +2,7 @@
 // timer. Clients send intents; the hub validates against current state and pushes
 // a fresh snapshot plus a few animation hints.
 
+import { randomUUID } from 'node:crypto';
 import {
   BOT_LEVELS, COLOR_COUNT, countdownFor, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
   DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
@@ -95,7 +96,7 @@ export class Hub {
     // Nobody signs in as a bot.
     if (p?.bot) p = undefined;
     if (!p) {
-      const id = rid(12);
+      const id = randomUUID();
       p = {
         id,
         // Nameless until they type one. The server inventing "player" here was
@@ -275,7 +276,7 @@ export class Hub {
     // choice rather than five.
     const above = t.playerIds.map((id) => this.store.getPlayer(id)?.bot).filter((b) => b).pop();
     const bot: PlayerRecord = {
-      id: rid(12),
+      id: randomUUID(),
       name: botName(taken),
       color: this.freeColor(t),
       score: 0,
