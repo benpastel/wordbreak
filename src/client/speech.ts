@@ -1,4 +1,4 @@
-// Banked words, read aloud by the browser's own voice. Per device and off by
+// Claimed words, read aloud by the browser's own voice. Per device and off by
 // default: the switch sits beside the preferences button, the volume inside it.
 
 const ON_KEY = 'wordbreak.speech';

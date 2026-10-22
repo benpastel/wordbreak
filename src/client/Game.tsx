@@ -155,8 +155,9 @@ export default function Game({ table, fx, onClaim, onMissed, onLeave }: Props) {
     for (const f of fx.items) {
       if (f.k === 'banked') {
         if (board) playBankFx(board, f, colorOf(f.playerId));
-        say(f.word);
         for (const i of f.idx) reseed.add(i);
+      } else if (f.k === 'claimed') {
+        say(f.word);
       } else if (f.k === 'broken') {
         for (const i of f.idx) broke.add(i);
       }
