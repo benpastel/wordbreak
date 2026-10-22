@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recap directions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..800&display=swap" />
+<style>
+  @property --p { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+  :root {
+    --ground: oklch(0.94 0.008 85);
+    --page: oklch(0.985 0.004 85);
+    --tray: oklch(0.902 0.012 85);
+    --tile-face: oklch(0.985 0.004 85);
+    --ink: oklch(0.22 0.01 60);
+    --ink-soft: oklch(0.52 0.008 70);
+    --ink-mute: oklch(0.7 0.008 70);
+    --hairline: oklch(0.86 0.01 85);
+    --selink: oklch(0.55 0.01 70);
+    --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+    --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+    --edge: inset 0 0 0 1px oklch(0.3 0.02 70 / 0.2);
+    --track-tile: 0.05em;
+    --track-label: 0.08em;
+    --font: 'Archivo', system-ui, sans-serif;
+  }
+  body.dark {
+    --ground: oklch(0.215 0.006 70);
+    --page: oklch(0.2 0.006 70);
+    --tray: oklch(0.165 0.006 70);
+    --tile-face: oklch(0.3 0.008 75);
+    --ink: oklch(0.93 0.01 85);
+    --ink-soft: oklch(0.72 0.01 80);
+    --ink-mute: oklch(0.52 0.01 75);
+    --hairline: oklch(0.33 0.008 75);
+    --selink: oklch(0.72 0.01 80);
+    --shadow-1: 0 1px 1px oklch(0 0 0 / 0.35);
+    --shadow-2: 0 2px 5px oklch(0 0 0 / 0.3);
+    --edge: inset 0 0 0 1px oklch(1 0 0 / 0.13);
+  }
+  .c0 { --hue: 250; --cf: 0.085; --lf: 0.87;  --ci: 0.16; }
+  .c1 { --hue: 25;  --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+  .c2 { --hue: 148; --cf: 0.12;  --lf: 0.845; --ci: 0.14; }
+  .c3 { --hue: 300; --cf: 0.095; --lf: 0.875; --ci: 0.17; }
+  .c0, .c1, .c2, .c3 { --pf: oklch(var(--lf) var(--cf) var(--hue)); --pc: oklch(0.55 var(--ci) var(--hue)); }
+  body.dark :is(.c0, .c1, .c2, .c3) {
+    --pf: oklch(calc(var(--lf) - 0.44) calc(var(--cf) * 0.9) var(--hue));
+    --pc: oklch(0.72 var(--ci) var(--hue));
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font); }
+  .bar {
+    position: sticky; top: 0; z-index: 20; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 10px 16px; background: var(--ground); border-bottom: 1px solid var(--hairline);
+  }
+  .bar b { font-weight: 800; letter-spacing: var(--track-label); text-transform: uppercase; font-size: 0.8rem; margin-right: 8px; }
+  .seg { display: inline-flex; border-radius: 7px; box-shadow: var(--edge); overflow: hidden; }
+  .seg button {
+    font: inherit; font-size: 0.8rem; font-weight: 650; border: 0; padding: 6px 12px; cursor: pointer;
+    background: none; color: var(--ink-soft);
+  }
+  .seg button.on { background: var(--ink); color: var(--page); }
+  .toc { display: flex; gap: 6px; flex-wrap: wrap; font-size: 0.78rem; }
+  .toc a { color: var(--ink-soft); text-decoration: none; padding: 3px 6px; border-radius: 5px; }
+  .toc a:hover { background: var(--tray); color: var(--ink); }
+
+  main { padding: 26px 16px 80px; display: flex; flex-direction: column; align-items: center; gap: 56px; }
+  section.dir { width: 100%; max-width: 820px; scroll-margin-top: 70px; }
+  .dir > h2 { margin: 0 0 4px; font-size: 1rem; font-weight: 800; letter-spacing: var(--track-label); text-transform: uppercase; }
+  .dir > h2 i { font-style: normal; color: var(--ink-mute); margin-right: 8px; }
+  .dir > p { margin: 0 0 14px; font-size: 0.88rem; color: var(--ink-soft); max-width: 640px; line-height: 1.45; }
+  .screen {
+    background: var(--page); border-radius: 12px; box-shadow: var(--shadow-1), var(--shadow-2), var(--edge);
+    width: 760px; max-width: 100%; margin: 0 auto; overflow: hidden; position: relative;
+  }
+  body.phone .screen { width: 390px; }
+
+  /* ---------------------------------------------------------------- standings */
+  .head { display: flex; gap: 12px; padding: 22px 22px 16px; border-bottom: 1px solid var(--hairline); }
+  .who { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+  .who .name { font-weight: 650; color: var(--pc); font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .who .pts { font-weight: 700; color: var(--pc); font-size: 3rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  body.phone .who .name { font-size: 0.92rem; }
+  body.phone .who .pts { font-size: 2.1rem; }
+  .medal { width: 20px; height: 20px; border-radius: 50%; margin-top: 4px;
+    background: radial-gradient(circle at 34% 28%, var(--t-hi), var(--t-lo) 74%);
+    box-shadow: inset 0 -1px 1px oklch(0.25 0.03 70 / 0.35), inset 0 1px 1px oklch(1 0 0 / 0.55), 0 1px 1.5px oklch(0.3 0.02 70 / 0.3); }
+  .medal.gold   { --t-hi: oklch(0.93 0.10 95); --t-lo: oklch(0.70 0.14 78); }
+  .medal.silver { --t-hi: oklch(0.95 0.008 250); --t-lo: oklch(0.70 0.02 250); }
+  .medal.bronze { --t-hi: oklch(0.83 0.08 62); --t-lo: oklch(0.55 0.10 45); }
+  .medal.none { visibility: hidden; }
+  body.phone .medal { width: 15px; height: 15px; }
+
+  /* ---------------------------------------------------------------- timeline (now) */
+  .track { position: relative; display: flex; gap: 12px; margin: 14px 22px 24px; }
+  .col { flex: 1; min-width: 0; position: relative; }
+  .w {
+    position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; line-height: 1; padding: 2px 0;
+    font-size: 0.86rem; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-tile); color: var(--pc);
+  }
+  .strike { position: absolute; left: -2px; right: -2px; top: calc(50% - 1px); height: 2px; border-radius: 1px; background: var(--pc); }
+  .tick { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--hairline); }
+  .tick span { position: absolute; left: -2px; top: -7px; font-size: 0.62rem; color: var(--ink-mute); background: var(--page); padding-right: 4px; font-variant-numeric: tabular-nums; }
+
+  /* ---------------------------------------------------------------- mini board */
+  .mb {
+    --cell: 26px; --gap: calc(var(--cell) * 0.1);
+    position: relative; display: grid; grid-template-columns: repeat(4, var(--cell)); gap: var(--gap);
+    padding: var(--gap); border-radius: calc(var(--cell) * 0.24); background: var(--tray); width: max-content;
+    box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13);
+  }
+  .mt {
+    position: relative; aspect-ratio: 1; border-radius: 13%; display: grid; place-items: center;
+    font-size: calc(var(--cell) * 0.52); font-weight: 700; color: var(--ink); background: var(--tile-face);
+    box-shadow: var(--shadow-1);
+  }
+  .mt > span { line-height: 1; text-box: trim-both cap alphabetic; position: relative; z-index: 4; }
+  .mt.cl {
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--p),
+      color-mix(in oklab, var(--pf) 22%, var(--tile-face)) calc(var(--p) + 1.5%) 100%), var(--tile-face);
+  }
+  .mt.dim { color: var(--ink-mute); }
+  .mb svg { position: absolute; inset: var(--gap); width: calc(100% - 2 * var(--gap)); height: calc(100% - 2 * var(--gap)); pointer-events: none; overflow: visible; z-index: 3; }
+  .mb polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .mb .link { stroke: var(--pc); stroke-width: 0.035; opacity: 0.45; }
+  .mb .move { stroke: var(--pc); stroke-width: 0.085; opacity: 0.6; }
+  .mb .start { fill: var(--pc); opacity: 0.6; }
+  .mb .miss { stroke: var(--ink); stroke-width: 0.08; opacity: 0.55; stroke-dasharray: 0.14 0.12; }
+  .mb .missstart { fill: var(--ink); opacity: 0.55; }
+
+  .cap { font-size: 0.72rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .bigword { font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-tile); color: var(--pc); }
+  .bigword.ink { color: var(--ink); }
+  .vs { font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-tile); font-size: 0.72rem; color: var(--pc); }
+
+  /* ---------------------------------------------------------------- 2: tiles */
+  .tw { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
+  .tw .t {
+    --s: 18px; width: var(--s); height: var(--s); border-radius: 13%; display: grid; place-items: center;
+    font-size: calc(var(--s) * 0.56); font-weight: 700; color: var(--ink); box-shadow: var(--shadow-1);
+    background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--p),
+      color-mix(in oklab, var(--pf) 22%, var(--tile-face)) calc(var(--p) + 1.5%) 100%), var(--tile-face);
+  }
+  .tw .t span { line-height: 1; text-box: trim-both cap alphabetic; }
+  body.phone .tw .t { --s: 13px; }
+  body.phone .tw { gap: 1px; }
+  .tw.broken .t { color: var(--ink-mute); }
+  .tw .crack { position: absolute; left: -3px; right: -3px; top: calc(50% - 1px); height: 2px; border-radius: 1px; background: var(--pc); }
+
+  /* ---------------------------------------------------------------- 3: lanes */
+  .lane { position: absolute; }
+  .lane .bar2 { position: absolute; left: 0; width: 4px; border-radius: 2px; background: var(--pc); }
+  .lane.broken .bar2 { background: color-mix(in oklab, var(--pc) 35%, var(--page)); }
+  .lane .lbl {
+    position: absolute; left: 8px; top: -2px; white-space: nowrap; line-height: 1;
+    font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-tile); color: var(--pc);
+  }
+  body.phone .lane .lbl { font-size: 0.62rem; left: 6px; }
+  .lane.broken .lbl { color: color-mix(in oklab, var(--pc) 55%, var(--page)); }
+  .lane .end { position: absolute; left: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--pc); }
+  .lane .x { position: absolute; left: -2.5px; width: 9px; height: 3px; border-radius: 2px; background: var(--pc); }
+  svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  svg.links path { fill: none; stroke: var(--pc); stroke-width: 1.5; opacity: 0.5; }
+
+  /* ---------------------------------------------------------------- 4: wall */
+  .wall { display: flex; gap: 12px; padding: 22px 22px 0; align-items: flex-end; }
+  .tower { flex: 1; min-width: 0; display: flex; flex-direction: column-reverse; align-items: center; gap: 3px; }
+  .tower .row { display: flex; gap: 2px; }
+  .tower .row .t {
+    --s: 17px; width: var(--s); height: var(--s); border-radius: 13%; display: grid; place-items: center;
+    font-size: calc(var(--s) * 0.56); font-weight: 700; color: var(--ink);
+    background: color-mix(in oklab, var(--pf) 70%, var(--tile-face)); box-shadow: var(--shadow-1);
+  }
+  .tower .row .t span { line-height: 1; text-box: trim-both cap alphabetic; }
+  body.phone .tower .row .t { --s: 12px; }
+  body.phone .tower .row { gap: 1px; }
+  .tower .row.broken .t { background: none; box-shadow: inset 0 0 0 1px var(--hairline); color: var(--ink-mute); }
+  .tower .row.broken { position: relative; }
+  .tower .row.held .t { background: linear-gradient(to top, color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 50%, color-mix(in oklab, var(--pf) 22%, var(--tile-face)) 51%); }
+  .plinth { display: flex; gap: 12px; padding: 10px 22px 22px; border-top: 2px solid var(--ink); margin: 6px 22px 0; padding-left: 0; padding-right: 0; }
+  .plinth .who { gap: 0; }
+
+  /* ---------------------------------------------------------------- 5: prose */
+  .prose { padding: 18px 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+  .para { display: grid; grid-template-columns: 120px 1fr; gap: 0 18px; align-items: start; }
+  body.phone .para { grid-template-columns: 1fr; gap: 6px; }
+  .para .who { align-items: flex-start; text-align: left; }
+  .para .who .pts { font-size: 2.2rem; }
+  body.phone .para .who { flex-direction: row; align-items: baseline; gap: 10px; }
+  body.phone .para .who .pts { font-size: 1.6rem; }
+  .words { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding-top: 6px; }
+  .pw { position: relative; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-tile); color: var(--pc); line-height: 1.25; }
+  .pw.broken { color: color-mix(in oklab, var(--pc) 50%, var(--page)); }
+  .pw .strike { top: calc(50% - 1px); }
+  .min { align-self: stretch; width: 1px; background: var(--hairline); margin: 2px 2px; }
+
+  /* ---------------------------------------------------------------- 6: race */
+  .race { padding: 18px 22px 4px; }
+  .race svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .race .ln { fill: none; stroke: var(--pc); stroke-width: 2.25; stroke-linejoin: round; }
+  .race .ar { fill: color-mix(in oklab, var(--pf) 30%, transparent); }
+  .race .dot { fill: var(--pc); }
+  .race .wl { font-size: 9px; font-weight: 700; letter-spacing: 0.04em; fill: var(--pc); text-transform: uppercase; }
+  .race .ax { stroke: var(--hairline); stroke-width: 1; }
+  .race .axt { font-size: 9px; fill: var(--ink-mute); }
+  .race .nm { font-size: 12px; font-weight: 700; fill: var(--pc); }
+
+  /* ---------------------------------------------------------------- 7 & 9: inline boards */
+  .band { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 18px; }
+  .band .txt { display: flex; flex-direction: column; gap: 3px; min-width: 120px; }
+  .band .txt .bigword { font-size: 1.3rem; }
+  .band::before, .band::after { content: ''; position: absolute; left: 0; right: 0; border-top: 1px solid var(--hairline); }
+  .band::before { top: 0; } .band::after { bottom: 0; }
+  .float { position: absolute; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .float .bigword { font-size: 0.8rem; }
+
+  /* ---------------------------------------------------------------- 8: missed */
+  .gallery { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; padding: 20px 22px 26px; border-top: 1px solid var(--hairline); }
+  .gallery figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .gallery .bigword { font-size: 1.15rem; }
+  .gallery .lbl2 { font-size: 0.7rem; font-weight: 650; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-mute); }
+
+  /* ---------------------------------------------------------------- 10: replay */
+  .stage { display: flex; justify-content: center; align-items: center; gap: 22px; padding: 18px 22px; border-bottom: 1px solid var(--hairline); position: sticky; top: 0; background: var(--page); z-index: 5; }
+  .stage .txt { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+  .stage .bigword { font-size: 1.5rem; }
+  .play { font: inherit; font-size: 0.8rem; font-weight: 650; border: 0; border-radius: 7px; box-shadow: var(--edge); padding: 6px 12px; background: none; color: var(--ink); cursor: pointer; align-self: flex-start; margin-top: 6px; }
+  .rp .w { cursor: pointer; padding: 3px 4px; border-radius: 4px; }
+  .rp .w.on { background: color-mix(in oklab, var(--pf) 45%, var(--page)); }
+  .playhead { position: absolute; left: -10px; right: -10px; height: 0; border-top: 1.5px solid var(--ink); opacity: 0.35; transition: top 0.3s; }
+  .mb .mt { transition: background 0.3s; }
+
+  /* ---------------------------------------------------------------- 11: medley strip */
+  .strip { display: flex; gap: 14px; overflow-x: auto; padding: 16px 22px; border-bottom: 1px solid var(--hairline); scrollbar-width: thin; }
+  .strip figure { margin: 0; display: flex; flex-direction: column; gap: 5px; flex: none; }
+  .strip .bigword { font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>Recap</b>
+  <span class="seg" id="theme"><button class="on" data-v="light">light</button><button data-v="dark">dark</button></span>
+  <span class="seg" id="width"><button class="on" data-v="wide">wide</button><button data-v="phone">phone</button></span>
+  <nav class="toc" id="toc"></nav>
+</div>
+<main id="main"></main>
+
+<script src="match.js"></script>
+<script>
+const M = window.MATCH;
+const N = M.size, HOLD = 13, SECS = M.secs;
+const MEDALS = ['gold', 'silver', 'bronze'];
+const players = M.names.map((name, i) => ({ i, name, color: i, score: M.score[i] }));
+const ranked = [...players].sort((a, b) => b.score - a.score);
+ranked.forEach((p, r) => (p.medal = p.score > 0 ? MEDALS[r] ?? 'none' : 'none'));
+const words = M.claims.map((c) => ({
+  ...c,
+  end: c.brokenAt ?? c.banked ?? SECS,
+  status: c.brokenBy !== undefined ? 'broken' : c.held ? 'held' : 'banked',
+}));
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const phone = () => document.body.classList.contains('phone');
+const esc = (s) => s.toUpperCase();
+const byCol = (fn) => ranked.map((p) => fn(p, words.filter((w) => w.p === p.i)));
+const reached = (w) => (w.status === 'broken' ? Math.round(((w.brokenAt - w.s) / HOLD) * 100) : 100);
+
+// ------------------------------------------------------------------ shared pieces
+const head = (cls = 'head') => `<div class="${cls}">${ranked.map((p) => `
+  <div class="who c${p.color}"><span class="name">${p.name}</span><span class="pts">${p.score}</span><span class="medal ${p.medal}"></span></div>`).join('')}</div>`;
+
+const ctr = (i) => i * 1.1 + 0.5;
+const pts = (idx) => idx.map((i) => `${ctr(i % N)},${ctr(Math.floor(i / N))}`).join(' ');
+const VB = N + (N - 1) * 0.1;
+
+/** A board as it stood: its letters, the claims on it filled as far as they had got,
+ *  and optionally one path drawn over it — a word played, or one that was not. */
+function board(snap, { cell = 26, move = null, color = 0, miss = false, dimOthers = false } = {}) {
+  const live = snap.live;
+  const tiles = snap.letters.split('').map((l, i) => {
+    const c = live.find((c) => c.idx.includes(i));
+    const dim = dimOthers && move && !move.includes(i);
+    return `<div class="mt${c ? ` cl c${c.p}` : ''}${dim ? ' dim' : ''}" style="${c ? `--p:${c.f}%` : ''}"><span>${l}</span></div>`;
+  }).join('');
+  let svg = live.map((c) => c.idx.length > 1 ? `<polyline class="link c${c.p}" points="${pts(c.idx)}"/>` : '').join('');
+  if (move) {
+    const [x, y] = pts([move[0]]).split(',');
+    svg += miss
+      ? `<polyline class="miss" points="${pts(move)}"/><circle class="missstart" cx="${x}" cy="${y}" r="0.11"/>`
+      : `<polyline class="move c${color}" points="${pts(move)}"/><circle class="start c${color}" cx="${x}" cy="${y}" r="0.17"/>`;
+  }
+  return `<div class="mb" style="--cell:${cell}px">${tiles}<svg viewBox="0 0 ${VB} ${VB}">${svg}</svg></div>`;
+}
+
+/** Each word at the moment it was found, nudged down only to clear the one above. */
+function layout(px, row, yOf = (s) => s * px) {
+  return byCol((p, ws) => {
+    let floor = -Infinity;
+    return ws.map((w) => {
+      const top = Math.max(yOf(w.s), floor);
+      floor = top + row;
+      return { ...w, top };
+    });
+  });
+}
+const plainWord = (w) => `<span class="w c${w.p}" style="top:${w.top}px" data-id="${w.id}">${esc(w.w)}${
+  w.status === 'broken' ? `<i class="strike c${w.brokenBy}"></i>` : ''}</span>`;
+const ticks = (px, yOf = (s) => s * px) => [60, 120].map((s) => `<div class="tick" style="top:${yOf(s)}px"><span>${mmss(s)}</span></div>`).join('');
+
+function timeline({ px = 5, row = 20, wordFn = plainWord, extra = '', yOf, height, cls = '', withTicks = false } = {}) {
+  const cols = layout(px, row, yOf);
+  const y = yOf ?? ((s) => s * px);
+  const h = height ?? Math.max(y(SECS), ...cols.map((c) => (c.length ? c[c.length - 1].top + row : 0)));
+  return `<div class="track ${cls}" style="height:${h}px">${withTicks ? ticks(px, y) : ''}${cols.map((ws) => `<div class="col">${ws.map(wordFn).join('')}</div>`).join('')}${extra}</div>`;
+}
+
+// The match's notable moments: plays that broke the most, and the longest.
+const moments = words
+  .map((w) => {
+    const broke = words.filter((v) => w.breaks.includes(v.id));
+    return { w, broke, weight: broke.reduce((a, v) => a + v.w.length, 0) * 1.5 + w.w.length + (broke.length > 1 ? 4 : 0) };
+  })
+  .sort((a, b) => b.weight - a.weight)
+  .slice(0, 3)
+  .sort((a, b) => a.w.s - b.w.s);
+
+// After the claim lands: the claims it broke are gone, it sits at the start of its hold.
+const after = (w) => ({ letters: w.board.letters, live: [...w.board.live.filter((c) => !w.breaks.includes(c.id)), { p: w.p, idx: w.idx, f: 0, w: w.w }] });
+
+const MISSES = [
+  { key: 'longest', label: 'longest unfound', m: M.longest },
+  { key: 'swing', label: 'biggest break', m: M.swing },
+  { key: 'simple', label: 'easiest break', m: M.simple },
+];
+const breakList = (m) => m.breaks.map((b) => `<span class="vs c${b.p}">${esc(b.w)}</span>`).join(' ');
+
+// ------------------------------------------------------------------ directions
+const DIRS = [];
+const dir = (name, blurb, render, after) => DIRS.push({ name, blurb, render, after });
+
+dir('Now', 'The current screen, for reference.', () => head() + timeline());
+
+dir('Tiles',
+  'Same timeline, but each word is set in little tiles in the claim style. The fill is how far through its hold it got: banked words are full, a word broken early is barely tinted, and the strike is the breaker\'s colour.',
+  () => head() + timeline({
+    px: 5.4, row: phone() ? 16 : 22,
+    wordFn: (w) => `<div class="tw c${w.p}${w.status === 'broken' ? ' broken' : ''}" style="top:${w.top}px">${w.w.split('').map((l) => `<div class="t" style="--p:${w.status === 'held' ? 60 : reached(w)}%"><span>${esc(l)}</span></div>`).join('')}${
+      w.status === 'broken' ? `<i class="crack c${w.brokenBy}"></i>` : ''}</div>`,
+  }));
+
+dir('Lanes',
+  'The timeline with each claim\'s hold drawn as a bar running down from the word, so you can see what was alive at once. Banked bars end in a dot; broken ones stop short, and a line runs across to whoever broke them.',
+  () => {
+    const px = 6;
+    const W = phone() ? 346 : 716, gap = 12, colW = (W - gap * (ranked.length - 1)) / ranked.length;
+    const laneW = phone() ? 42 : 80;
+    const placed = [];
+    const cols = byCol((p, ws) => {
+      const lanesEnd = [];
+      return ws.map((w) => {
+        let k = lanesEnd.findIndex((e) => e <= w.s - 1.5);
+        if (k < 0) k = lanesEnd.length;
+        lanesEnd[k] = w.end;
+        const ci = ranked.findIndex((r) => r.i === p.i);
+        const x = ci * (colW + gap) + 6 + k * laneW;
+        const o = { ...w, x, y0: w.s * px, y1: w.end * px };
+        placed.push(o);
+        return o;
+      });
+    });
+    const links = placed.filter((w) => w.status === 'broken').map((w) => {
+      const by = placed.find((v) => v.breaks.includes(w.id));
+      if (!by) return '';
+      const x0 = by.x, x1 = w.x, y = w.y1;
+      if (Math.abs(x0 - x1) < 2) return '';
+      return `<path class="c${by.p}" d="M${x0 + 2} ${by.y0 + 3} C ${(x0 + x1) / 2} ${by.y0 + 3}, ${(x0 + x1) / 2} ${y}, ${x1 + 2} ${y}"/>`;
+    }).join('');
+    const body = cols.flat().map((w) => `<div class="lane c${w.p}${w.status === 'broken' ? ' broken' : ''}" style="left:${w.x}px;top:${w.y0}px">
+      <div class="bar2" style="top:0;height:${w.y1 - w.y0}px"></div><span class="lbl">${esc(w.w)}</span>
+      ${w.status === 'broken' ? `<i class="x c${w.brokenBy}" style="top:${w.y1 - w.y0 - 1.5}px"></i>` : w.status === 'banked' ? `<i class="end" style="top:${w.y1 - w.y0 - 5}px"></i>` : ''}</div>`).join('');
+    return head() + `<div class="track" style="height:${SECS * px + 10}px;display:block">${ticks(px)}${body}<svg class="links">${links}</svg></div>`;
+  });
+
+dir('Wall',
+  'Banked words stack up into a tower of tiles, first word at the bottom, so the height is how much each player built. Broken words stay in the stack as empty outlines where they would have gone. The scores sit on the plinth underneath.',
+  () => `<div class="wall">${byCol((p, ws) => `<div class="tower c${p.color}">${ws.map((w) => `<div class="row ${w.status}">${w.w.split('').map((l) => `<div class="t"><span>${esc(l)}</span></div>`).join('')}${w.status === 'broken' ? `<i class="strike c${w.brokenBy}" style="left:-3px;right:-3px"></i>` : ''}</div>`).join('')}</div>`).join('')}</div>` + head('plinth'));
+
+dir('Prose',
+  'No time axis: each player\'s words run in order like a line of text, struck in the breaker\'s colour. A thin rule marks each minute, which is all the timing most people read off the current screen. Compact enough that the whole match fits without scrolling, even on a phone.',
+  () => `<div class="prose">${byCol((p, ws) => {
+    let out = '', m = 1;
+    for (const w of ws) {
+      while (w.s >= m * 60) { out += '<i class="min"></i>'; m++; }
+      out += `<span class="pw c${w.p}${w.status === 'broken' ? ' broken' : ''}">${esc(w.w)}${w.status === 'broken' ? `<i class="strike c${w.brokenBy}"></i>` : ''}</span>`;
+    }
+    return `<div class="para"><div class="who c${p.color}"><span class="name">${p.name}</span><span class="pts">${p.score}</span></div><div class="words">${out}</div></div>`;
+  }).join('')}</div>`);
+
+dir('Race',
+  'A score race on top: each player\'s line steps up as a word banks, labelled with the word. It shows the shape of the match, the lead changes and the late surges, which the word list cannot. The full in-order list sits below as prose.',
+  () => {
+    const W = phone() ? 346 : 716, H = phone() ? 170 : 210, top = Math.max(...M.score);
+    const x = (s) => (s / SECS) * (W - 90), y = (v) => H - 14 - (v / top) * (H - 30);
+    const lines = ranked.map((p) => {
+      let v = 0, d = `M0 ${y(0)}`;
+      const banks = words.filter((w) => w.p === p.i && w.status !== 'broken').map((w) => ({ t: w.status === 'held' ? SECS : w.banked, w })).sort((a, b) => a.t - b.t);
+      const dots = [];
+      for (const b of banks) { d += ` H${x(b.t)}`; v += b.w.w.length; d += ` V${y(v)}`; dots.push({ cx: x(b.t), cy: y(v), w: b.w.w }); }
+      d += ` H${x(SECS)}`;
+      const lbl = phone() ? '' : dots.filter((o) => o.cx < x(SECS) - 40).map((o, k) => `<text class="wl c${p.color}" x="${o.cx + 3}" y="${o.cy - 4}">${esc(o.w)}</text>`).join('');
+      return `<g class="c${p.color}"><path class="ln" d="${d}"/>${dots.map((o) => `<circle class="dot" cx="${o.cx}" cy="${o.cy}" r="2.5"/>`).join('')}${lbl}<text class="nm" x="${x(SECS) + 10}" y="${y(v) + 4}">${p.name.split(' ')[0]} ${v}</text></g>`;
+    }).join('');
+    const ax = [0, 60, 120, 180].map((s) => `<line class="ax" x1="${x(s)}" x2="${x(s)}" y1="6" y2="${H - 14}"/><text class="axt" x="${x(s)}" y="${H}" text-anchor="middle">${mmss(s)}</text>`).join('');
+    return `<div class="race"><svg viewBox="0 0 ${W} ${H + 4}">${ax}${lines}</svg></div>` + DIRS.find((d) => d.name === 'Prose').render();
+  });
+
+dir('Moments',
+  'The timeline, opened up at the two or three plays that did the most damage: the board as it stood, the word drawn through the claims it broke. The rest of the match flows around them.',
+  () => {
+    const px = 5, row = 20, BH = phone() ? 132 : 150, cell = phone() ? 24 : 28;
+    const floors = ranked.map(() => -Infinity), placed = ranked.map(() => []);
+    const events = [...words.map((w) => ({ t: w.s, w })), ...moments.map((m) => ({ t: m.w.s + 0.05, m }))].sort((a, b) => a.t - b.t);
+    let offset = 0, extra = '';
+    for (const e of events) {
+      if (e.w) {
+        const ci = ranked.findIndex((r) => r.i === e.w.p);
+        const top = Math.max(e.t * px + offset, floors[ci]);
+        floors[ci] = top + row;
+        placed[ci].push({ ...e.w, top });
+      } else {
+        const top = Math.max(e.t * px + offset, ...floors) + 6;
+        const m = e.m;
+        extra += `<div class="band" style="top:${top}px;height:${BH - 12}px">
+      ${board(m.w.board, { cell, move: m.w.idx, color: m.w.p })}
+      <div class="txt"><span class="cap">${mmss(m.w.s)}</span><span class="bigword c${m.w.p}">${esc(m.w.w)}</span><span>${m.broke.map((v) => `<span class="vs c${v.p}">${esc(v.w)}</span>`).join(' ')}</span></div></div>`;
+        offset = top + BH - e.t * px;
+        floors.fill(top + BH);
+      }
+    }
+    const h = Math.max(SECS * px + offset, ...floors);
+    return head() + `<div class="track" style="height:${h}px">${placed.map((ws) => `<div class="col">${ws.map(plainWord).join('')}</div>`).join('')}${extra}</div>`;
+  });
+
+dir('Missed',
+  'The timeline as now, followed by the ones that got away: the longest word anyone could have played, the word that would have broken the most, and the commonest word that would have broken two at once. Dashed, because nobody played them.',
+  () => head() + timeline() + `<div class="gallery">${MISSES.map(({ label, m }) => `<figure>
+      ${board(m.board, { cell: phone() ? 22 : 30, move: m.idx, miss: true })}
+      <span class="bigword ink">${esc(m.w)}</span>
+      <span class="lbl2">${label}</span>
+      ${m.breaks.length ? `<span>${breakList(m)}</span>` : ''}</figure>`).join('')}</div>`);
+
+dir('Fill the gaps',
+  'Boards dropped into the empty stretches of the timeline, at the time they happened, so quiet columns stop being blank. Moments that happened are drawn solid in the player\'s colour; misses are dashed. Whatever fits gets shown, so a busy match shows fewer.',
+  () => {
+    const px = 5, row = 20, cols = layout(px, row);
+    const nCol = ranked.length;
+    const cell = phone() ? 16 : 27, bh = cell * 4 + cell * 0.5 + 34;
+    const cands = [
+      ...moments.map((m) => ({ t: m.w.s, html: () => `${board(m.w.board, { cell, move: m.w.idx, color: m.w.p })}<span class="bigword c${m.w.p}">${esc(m.w.w)}</span>`, pref: ranked.findIndex((r) => r.i === m.w.p) })),
+      ...MISSES.map(({ m }) => ({ t: m.t, html: () => `${board(m.board, { cell, move: m.idx, miss: true })}<span class="bigword ink">${esc(m.w)}</span>` })),
+    ];
+    const taken = cols.map((ws) => ws.map((w) => [w.top - 4, w.top + row + 4]));
+    const free = (ci, a, b) => taken[ci].every(([x, y]) => b < x || a > y);
+    const extra = cands.map((c) => {
+      const y0 = c.t * px;
+      // Nearest free column to the player's own, sliding down a little if needed.
+      for (let dy = 0; dy <= 300; dy += 10) {
+        const order = [...Array(nCol).keys()].sort((a, b) => Math.abs(a - (c.pref ?? 0)) - Math.abs(b - (c.pref ?? 0)));
+        for (const ci of order) {
+          if (!free(ci, y0 + dy, y0 + dy + bh)) continue;
+          taken[ci].push([y0 + dy, y0 + dy + bh]);
+          const left = `calc(${(ci + 0.5) / nCol * 100}% + ${(ci - (nCol - 1) / 2) * 12 / nCol}px)`;
+          return `<div class="float" style="top:${y0 + dy}px;left:${left}">${c.html()}</div>`;
+        }
+      }
+      return '';
+    }).join('');
+    return head() + timeline({ extra, cls: 'gaps' });
+  });
+
+dir('Replay',
+  'A board pinned above the timeline. Tap any word and the board shows that moment, with the word drawn through it and a line across the timeline at that time; play runs through the match from the start.',
+  () => `${head()}<div class="stage"><div id="rpboard"></div><div class="txt"><span class="cap" id="rptime"></span><span class="bigword" id="rpword"></span><span id="rpbroke"></span><button class="play" id="rpplay">play</button></div></div>
+    <div class="rp">${timeline({ extra: '<div class="playhead" id="rphead"></div>' })}</div>`,
+  (root) => {
+    let k = 0, timer = null;
+    const show = (i) => {
+      k = i;
+      const w = words[i];
+      root.querySelector('#rpboard').innerHTML = board(w.board, { cell: phone() ? 34 : 40, move: w.idx, color: w.p });
+      root.querySelector('#rptime').textContent = mmss(w.s);
+      const bw = root.querySelector('#rpword');
+      bw.className = `bigword c${w.p}`; bw.textContent = esc(w.w);
+      root.querySelector('#rpbroke').innerHTML = words.filter((v) => w.breaks.includes(v.id)).map((v) => `<span class="vs c${v.p}">${esc(v.w)}</span>`).join(' ');
+      root.querySelectorAll('.rp .w').forEach((el) => el.classList.toggle('on', el.dataset.id === w.id));
+      const el = root.querySelector(`.rp .w[data-id="${w.id}"]`);
+      root.querySelector('#rphead').style.top = `${el.offsetTop + el.offsetHeight / 2}px`;
+    };
+    root.querySelectorAll('.rp .w').forEach((el) => el.addEventListener('click', () => { stop(); show(words.findIndex((w) => w.id === el.dataset.id)); }));
+    const stop = () => { clearInterval(timer); timer = null; root.querySelector('#rpplay').textContent = 'play'; };
+    root.querySelector('#rpplay').addEventListener('click', () => {
+      if (timer) return stop();
+      if (k >= words.length - 1) k = -1;
+      root.querySelector('#rpplay').textContent = 'pause';
+      timer = setInterval(() => (k >= words.length - 1 ? stop() : show(k + 1)), 650);
+    });
+    show(moments[0] ? words.indexOf(moments[0].w) : 0);
+  });
+
+dir('Film strip',
+  'A row of small boards across the top, one per notable moment and miss, in time order and scrolling sideways if there are many. The timeline below is unchanged. The cheapest way to add boards without disturbing the list.',
+  () => {
+    const items = [
+      ...moments.map((m) => ({ t: m.w.s, html: `${board(m.w.board, { cell: 20, move: m.w.idx, color: m.w.p })}<span class="cap">${mmss(m.w.s)}</span><span class="bigword c${m.w.p}">${esc(m.w.w)}</span>` })),
+      ...MISSES.map(({ m }) => ({ t: m.t, html: `${board(m.board, { cell: 20, move: m.idx, miss: true })}<span class="cap">${mmss(m.t)}</span><span class="bigword ink">${esc(m.w)}</span>` })),
+    ].sort((a, b) => a.t - b.t);
+    return head() + `<div class="strip">${items.map((i) => `<figure>${i.html}</figure>`).join('')}</div>` + timeline();
+  });
+
+// ------------------------------------------------------------------ page
+function render() {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  DIRS.forEach((d, k) => {
+    const s = document.createElement('section');
+    s.className = 'dir'; s.id = `d${k + 1}`;
+    s.innerHTML = `<h2><i>${k + 1}</i>${d.name}</h2><p>${d.blurb}</p><div class="screen">${d.render()}</div>`;
+    main.append(s);
+    d.after?.(s);
+  });
+  document.getElementById('toc').innerHTML = DIRS.map((d, k) => `<a href="#d${k + 1}">${k + 1} ${d.name}</a>`).join('');
+}
+for (const [id, apply] of [['theme', (v) => document.body.classList.toggle('dark', v === 'dark')], ['width', (v) => document.body.classList.toggle('phone', v === 'phone')]]) {
+  document.getElementById(id).addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    document.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle('on', x === b));
+    apply(b.dataset.v);
+    render();
+  });
+}
+render();
+</script>
+</body>
+</html>
