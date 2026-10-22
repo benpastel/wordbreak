@@ -17,6 +17,7 @@ import { isWord } from './dictionary';
 import { define } from './definitions';
 import { MatchLog, MISS_REASONS } from './matchlog';
 import type { MissReason } from './matchlog';
+import { Scout } from './missed';
 import { MemoryStore } from './store';
 import type { PlayerRecord, Store, TableRecord } from './store';
 
@@ -175,6 +176,7 @@ export class Hub {
       startedAt: 0,
       log: new Map(),
       matchLog: null,
+      scout: null,
       recap: null,
       startsAt: null,
       countdownMs: null,
@@ -464,6 +466,8 @@ export class Hub {
       () => t.nextTileId++,
       t.settings.endMode === 'time' ? Date.now() + this.timing.gameMs(t.settings.gameMs) : null,
     );
+    t.scout = new Scout();
+    t.scout.look(t.game, Date.now());
     for (const id of t.playerIds) {
       const p = this.store.getPlayer(id);
       if (p) {
@@ -536,7 +540,9 @@ export class Hub {
         return definition ? { ...w, definition } : w;
       }),
       durationMs: Date.now() - t.startedAt,
+      missed: t.scout?.result() ?? [],
     };
+    t.scout = null;
     t.log = new Map();
     const finals = new Map(standing.map((p) => [p.id, { score: p.score, medal: medals[p.id] }]));
     const top = Math.max(0, ...standing.map((p) => p.score));
@@ -596,6 +602,8 @@ export class Hub {
     }
     t.log.set(claim.id, { playerId, word, at: now - t.startedAt, brokenBy: null });
     if (me) t.matchLog?.claimed(claim.id, this.who(me), word, now);
+    t.scout?.playedWord(word);
+    t.scout?.look(game, now);
 
     const fx: Fx[] = [];
     // Breaking is breaking, whoever held the claim — including you extending your
@@ -637,6 +645,7 @@ export class Hub {
 
     const { points, idx, letters } = R.bankClaim(t.game, claim, () => t.nextTileId++);
     t.matchLog?.banked(claimId, Date.now());
+    t.scout?.look(t.game, Date.now());
     const p = this.store.getPlayer(claim.playerId);
     if (p) {
       p.score += points;

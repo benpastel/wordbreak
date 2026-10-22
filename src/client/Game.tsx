@@ -6,12 +6,9 @@ import { isWord } from './dict';
 import { playBankFx } from './fx';
 import { serverTime } from './net';
 import { FLUSH } from './TableShell';
+import { chevrons, points, viewBoxOf } from './trail';
 import Trophies from './Trophies';
 
-const GAP_RATIO = 0.1; // must match --gap in styles.css
-
-const center = (i: number) => i * (1 + GAP_RATIO) + 0.5;
-const viewBoxOf = (size: number) => size + (size - 1) * GAP_RATIO;
 /** How far from a tile's centre a slide picks it up, as a share of its width. */
 const HIT_RADIUS = 0.42;
 /** The 'tap' input preference (Prefs.tsx): taps build a trail too, with buttons to
@@ -278,26 +275,22 @@ export default function Game({ table, fx, onClaim, onMissed, onLeave }: Props) {
           <svg className="trail" viewBox={`0 0 ${vb} ${vb}`} aria-hidden="true">
             {game.claims
               .filter((c) => !c.tileIds.every((id) => selSet.has(id)))
-              .map((c) => (
-                <polyline
-                  key={c.id}
-                  className={`c${colorOf(c.playerId)}`}
-                  stroke="var(--pc)"
-                  points={c.tileIds
-                    .map((id) => idxOf(id))
-                    .filter((i) => i >= 0)
-                    .map((i) => `${center(i % game.size)},${center(Math.floor(i / game.size))}`)
-                    .join(' ')}
-                />
-              ))}
+              .map((c) => {
+                const idx = c.tileIds.map((id) => idxOf(id)).filter((i) => i >= 0);
+                return (
+                  <g key={c.id} className={`c${colorOf(c.playerId)}`} stroke="var(--pc)">
+                    <polyline points={points(idx, game.size)} />
+                    <path className="dir" d={chevrons(idx, game.size)} />
+                  </g>
+                );
+              })}
             {selection.length > 1 && (
               <polyline
                 className="sel"
-                points={selection
-                  .map((id) => idxOf(id))
-                  .filter((i) => i >= 0)
-                  .map((i) => `${center(i % game.size)},${center(Math.floor(i / game.size))}`)
-                  .join(' ')}
+                points={points(
+                  selection.map((id) => idxOf(id)).filter((i) => i >= 0),
+                  game.size,
+                )}
               />
             )}
           </svg>

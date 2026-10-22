@@ -419,6 +419,11 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .trail polyline {
   fill: none; stroke-width: 0.035; stroke-linecap: round; stroke-linejoin: round; opacity: 0.45;
 }
+/* Which way the word reads: a small chevron in the gap at each step. Drawn as one
+   piece with the link, so it is exactly as quiet. */
+.trail g { opacity: 0.45; }
+.trail g polyline { opacity: 1; }
+.trail path.dir { fill: none; stroke-width: 0.03; stroke-linecap: round; stroke-linejoin: round; }
 .trail polyline.sel {
   stroke: var(--selink); stroke-width: 0.062; opacity: 0.75;
   stroke-dasharray: 0.17 0.13; animation: ants 1.1s linear infinite;
@@ -632,7 +637,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 /* Heads and columns share one padding and one flex split, so each name sits over
    its own column of words. */
-.recaphead, .recaptrack, .setuphead { display: flex; gap: 12px; }
+.recaphead, .wall, .setuphead { display: flex; gap: 12px; }
 .recaphead, .setuphead {
   padding: var(--pad-frame) var(--pad-frame) calc(var(--pad-frame) * 0.8);
   border-bottom: 1px solid var(--hairline);
@@ -661,7 +666,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .setgo > .name::after, .setgo > .who > .name::after {
   content: '✓'; margin-left: 6px; font-size: 0.8em; color: var(--go);
 }
-.recapscroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.recapscroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
 
 /* The settings sit in the middle of whatever room is left, so a short list on a
    tall screen is surrounded by space rather than trailed by it. */
@@ -673,19 +678,87 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .setupbody .setting { margin-bottom: 0; }
 .setupbody .linkrow { margin-top: auto; padding-top: var(--pad-frame); }
-.recaptrack { margin: 14px var(--pad-frame) 24px; }
-.recapcol { flex: 1; min-width: 0; position: relative; }
-.recapword {
-  position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; line-height: 1; padding: 2px 0;
-  font-size: 0.86rem; font-family: var(--font-tile); font-weight: var(--w-tile); text-transform: uppercase;
-  letter-spacing: var(--track-tile); color: var(--pc); cursor: default;
+/* Each player's words stacked into a tower of tiles, first at the bottom, so the
+   height is how much they built. Banked words are solid tiles in the player's
+   colour; a broken word keeps its place as an empty outline, struck through in the
+   breaker's colour. Tiles shrink to fit the longest word in the column. */
+.wall { flex: 1 0 auto; align-items: flex-end; padding: var(--pad-frame) var(--pad-frame) 0; }
+.tower {
+  flex: 1; min-width: 0; container-type: inline-size;
+  display: flex; flex-direction: column-reverse; align-items: center; gap: 3px;
 }
-/* The word keeps its player's colour; the line through it is the breaker's. */
-.recapword .strike {
-  position: absolute; left: -2px; right: -2px; top: calc(50% - 1px); height: 2px;
+.wallrow { position: relative; display: flex; gap: 2px; cursor: default; }
+.wt {
+  --s: min(18px, calc(100cqi / var(--len) - 2px));
+  width: var(--s); height: var(--s); border-radius: 13%; display: grid; place-items: center;
+  font-family: var(--font-tile); font-weight: var(--w-tile); font-size: calc(var(--s) * 0.56);
+  text-transform: uppercase; color: var(--ink);
+  background: color-mix(in oklab, var(--pf) 70%, var(--tile-face)); box-shadow: var(--shadow-1);
+}
+.wt > span { line-height: 1; text-box: trim-both cap alphabetic; }
+.wallrow.broken .wt { background: none; box-shadow: inset 0 0 0 1px var(--hairline); color: var(--ink-mute); }
+.wallrow .strike {
+  position: absolute; left: -3px; right: -3px; top: calc(50% - 1px); height: 2px;
   border-radius: 1px; background: var(--pc);
 }
-.recapword .strike.gone { background: var(--ink-mute); }
+.wallrow .strike.gone { background: var(--ink-mute); }
+
+/* The scores are the plinth the towers stand on. */
+.recaphead.plinth {
+  margin: 8px var(--pad-frame) 0; padding: calc(var(--pad-frame) * 0.6) 0 var(--pad-frame);
+  border-bottom: 0; border-top: 2px solid var(--ink);
+}
+
+/* Words that were there to be played and nobody played, each on its board. */
+.missed {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 22px;
+  padding: var(--pad-frame); border-top: 1px solid var(--hairline);
+}
+.missed figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.missword {
+  margin-top: 4px; font-family: var(--font-tile); font-weight: var(--w-tile); font-size: 1.15rem;
+  text-transform: uppercase; letter-spacing: var(--track-tile);
+}
+.misskind {
+  font-size: 0.7rem; font-weight: var(--w-label); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--ink-mute);
+}
+.missbreaks { display: flex; gap: 6px; }
+.missbreaks > span {
+  font-family: var(--font-tile); font-weight: var(--w-tile); font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: var(--track-tile); color: var(--pc);
+}
+.missbreaks > .gone { color: var(--ink-mute); }
+
+.miniboard {
+  --cell: 30px; --gap: calc(var(--cell) * 0.1);
+  position: relative; display: grid; grid-template-columns: repeat(var(--n), var(--cell));
+  gap: var(--gap); padding: var(--gap); border-radius: calc(var(--cell) * 0.24); background: var(--tray);
+  box-shadow: inset 0 1px 3px oklch(0.3 0.02 70 / 0.13);
+}
+.miniboard .mt {
+  position: relative; aspect-ratio: 1; border-radius: 13%; display: grid; place-items: center;
+  font-family: var(--font-tile); font-weight: var(--w-tile); font-size: calc(var(--cell) * 0.52 * var(--tile-scale));
+  color: var(--ink); background: var(--tile-face); box-shadow: var(--shadow-1);
+}
+.miniboard .mt > span { position: relative; z-index: 2; line-height: 1; text-box: trim-both cap alphabetic; }
+.miniboard .mt.claimed {
+  background:
+    linear-gradient(to top,
+      color-mix(in oklab, var(--pf) 70%, var(--tile-face)) 0 var(--p),
+      color-mix(in oklab, var(--pf) 22%, var(--tile-face)) calc(var(--p) + 1.5%) 100%),
+    var(--tile-face);
+}
+.miniboard .mt.gone { background: var(--tray); }
+.miniboard svg {
+  position: absolute; inset: var(--gap); width: calc(100% - 2 * var(--gap)); height: calc(100% - 2 * var(--gap));
+  pointer-events: none; overflow: visible; z-index: 1;
+}
+.miniboard polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.miniboard .link { stroke: var(--pc); stroke-width: 0.035; opacity: 0.45; }
+.miniboard .link path.dir { fill: none; stroke-width: 0.03; }
+.miniboard .path { stroke: var(--ink); stroke-width: 0.08; opacity: 0.55; stroke-dasharray: 0.14 0.12; }
+.miniboard .start { fill: var(--ink); opacity: 0.55; }
 
 /* The standings, big. Each player is stacked and centred over their own column of
    words, so a lone player sits in the middle rather than against the left edge. */
@@ -710,6 +783,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
      swallow a swipe even when it has nothing to scroll, so the panels stop being
      scrollers and the chat hands its overscroll on to the page. */
   .recapscroll, .setupbody { overflow: visible; }
+  .miniboard { --cell: 24px; }
   .shell .chatlog { overscroll-behavior: auto; }
 }
 

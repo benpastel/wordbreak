@@ -323,6 +323,15 @@ process.on('exit', stop);
     if (longer) check('a broken word says who broke it',
       (recap?.words ?? []).some((w) => w.brokenBy === b.id),
       JSON.stringify(recap?.words.map((w) => `${w.word}:${w.brokenBy}`)));
+    const played = new Set((recap?.words ?? []).map((w) => w.word));
+    check('the recap carries words nobody played, none of them played',
+      (recap?.missed ?? []).length > 0 && recap.missed.every((m) => !played.has(m.word)),
+      JSON.stringify(recap?.missed.map((m) => m.word)));
+    check('each missed word is spelt by its path on its board',
+      (recap?.missed ?? []).every((m) => m.idx.map((i) => m.board.letters[i]).join('').toLowerCase() === m.word));
+    check('each kind of miss appears at most once, each a different word',
+      new Set(recap.missed.map((m) => m.kind)).size === recap.missed.length &&
+        new Set(recap.missed.map((m) => m.word)).size === recap.missed.length);
     check('chat survived the match', a2.table.chat.length >= 2, String(a2.table.chat.length));
 
     section('rematch, on points this time');

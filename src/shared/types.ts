@@ -133,10 +133,34 @@ export interface PlayedWord {
   definition?: string;
 }
 
+/** A board as it stood at one moment: its letters, row-major, and the claims on it,
+ *  each filled as far through its hold as it had got (0 to 1). */
+export interface BoardShot {
+  letters: string;
+  claims: { playerId: string; idx: number[]; fill: number }[];
+}
+
+/** What makes a missed word worth showing: the longest anyone could have played,
+ *  the one that would have broken the most, and the commonest short word that would
+ *  have broken two claims or more. */
+export type MissKind = 'longest' | 'biggest' | 'easiest';
+
+/** A word that was there to be played and nobody played. */
+export interface MissedWord {
+  kind: MissKind;
+  word: string;
+  /** Its path on the board, row-major cell indexes. */
+  idx: number[];
+  board: BoardShot;
+  /** The claims it would have broken. */
+  breaks: { playerId: string; word: string }[];
+}
+
 /** The match that just finished, word by word. */
 export interface Recap {
   words: PlayedWord[];
   durationMs: number;
+  missed: MissedWord[];
 }
 
 export interface TableView {

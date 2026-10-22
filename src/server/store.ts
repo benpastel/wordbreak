@@ -4,6 +4,7 @@
 // a rewrite: the rules in src/shared stay pure, and the hub only ever talks to a Store.
 
 import type { MatchLog } from './matchlog';
+import type { Scout } from './missed';
 import type {
   ChatMessage, GameState, Phase, PlayedWord, Recap, Settings, Trophies,
 } from '../shared/types';
@@ -42,6 +43,8 @@ export interface TableRecord {
   log: Map<string, PlayedWord>;
   /** The match currently running, for the report printed when it ends. */
   matchLog: MatchLog | null;
+  /** Watches the board through the match for the words nobody played. */
+  scout: Scout | null;
   /** The last finished match. */
   recap: Recap | null;
   /** When the agreed countdown fires, or null if nobody is waiting. */
