@@ -5,6 +5,7 @@ import * as S from '../shared/selection';
 import { isWord } from './dict';
 import { playBankFx } from './fx';
 import { serverTime } from './net';
+import { say } from './speech';
 import { FLUSH } from './TableShell';
 import { chevrons, points, viewBoxOf } from './trail';
 import Trophies from './Trophies';
@@ -154,6 +155,7 @@ export default function Game({ table, fx, onClaim, onMissed, onLeave }: Props) {
     for (const f of fx.items) {
       if (f.k === 'banked') {
         if (board) playBankFx(board, f, colorOf(f.playerId));
+        say(f.word);
         for (const i of f.idx) reseed.add(i);
       } else if (f.k === 'broken') {
         for (const i of f.idx) broke.add(i);
