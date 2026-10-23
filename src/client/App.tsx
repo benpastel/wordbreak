@@ -92,7 +92,7 @@ export default function App() {
   }, [onMsg]);
 
   // Shareable table links: the hash is the source of truth for "which table", so a
-  // pasted link joins on arrival and leaving puts you back at #/.
+  // pasted link joins on arrival and leaving puts you back at the bare address.
   useEffect(() => {
     const onHash = () => setWantHash(hashTable());
     window.addEventListener('hashchange', onHash);
@@ -107,9 +107,12 @@ export default function App() {
     send({ t: 'joinTable', tableId: wantHash });
   }, [meId, wantHash, name, table?.id, send]);
 
+  // Only a table needs the hash; the lobby keeps the bare address.
   useEffect(() => {
-    const target = table ? `#/t/${table.id}` : '#/';
-    if (location.hash !== target) history.replaceState(null, '', target);
+    const target = table ? `#/t/${table.id}` : '';
+    if (location.hash !== target) {
+      history.replaceState(null, '', `${location.pathname}${location.search}${target}`);
+    }
     if (!table) setWantHash(null);
   }, [table?.id]);
 
