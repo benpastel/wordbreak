@@ -1,4 +1,6 @@
+import { MAX_PLAYERS } from '../shared/types';
 import type { TableSummary } from '../shared/types';
+import HowTo from './HowTo';
 import NameField from './NameField';
 
 interface Props {
@@ -16,14 +18,7 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
   return (
     <div className="lobby">
       <header className="lobbyhead">
-        <div>
-          <h1>WordBreak</h1>
-          <p className="tag">
-            <a href="/tutorial.html" target="_blank" rel="noreferrer">
-              how to play
-            </a>
-          </p>
-        </div>
+        <h1>WordBreak</h1>
         <NameField name={name} onSetName={onSetName} big />
       </header>
 
@@ -50,7 +45,7 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
                   ))}
                 </span>
                 <span className="meta">
-                  {t.playerCount}/8 · {t.settings.gridSize}×{t.settings.gridSize} ·{' '}
+                  {t.playerCount}/{MAX_PLAYERS} · {t.settings.gridSize}×{t.settings.gridSize} ·{' '}
                   {t.settings.endMode === 'time'
                     ? `${Math.round(t.settings.gameMs / 60_000)} min`
                     : `${t.settings.targetScore} points`}
@@ -63,6 +58,8 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
           ))}
         </ul>
       )}
+
+      <HowTo />
     </div>
   );
 }

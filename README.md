@@ -5,7 +5,7 @@ it, locking those letters; only a strictly **longer** word can **break** the cla
 including one of your own. Survive the hold time and it **banks** — one point per
 letter — then the tiles **reseed**.
 
-Rules in full: [`public/tutorial.html`](public/tutorial.html) (served at `/tutorial.html`).
+How to play is shown on the home page, as three animated boards (`src/client/HowTo.tsx`).
 
 ## Run it locally
 
@@ -39,7 +39,7 @@ npm run build && npm start   # http://localhost:8080
 ## Deploying
 
 `git push origin main` deploys everything. The game lives at **https://wordbreak.games**,
-served by one Render web service: the page, the tutorial and the websocket all come
+served by one Render web service: the page and the websocket both come
 from the same origin, so there is no cross-origin configuration anywhere.
 
 ### Render
@@ -62,7 +62,7 @@ whether it banked, broke or was still held, and each word tried and turned down.
 The game used to be a GitHub Pages project site at `https://benpastel.com/wordbreak/`
 (inheriting the custom domain of the `benpastel.github.io` user site). That address
 now forwards to wordbreak.games: `.github/workflows/pages.yml` publishes
-`redirect/index.html` there as the index, `tutorial.html` and `404.html`, turning
+`redirect/index.html` there as the index, the old `tutorial.html` and `404.html`, turning
 any `#/t/CODE` table link into `/table/CODE`. It only redeploys when that page or the workflow
 changes. Repo Settings → Pages → Source stays on **GitHub Actions**.
 
@@ -73,7 +73,7 @@ changes. Repo Settings → Pages → Source stays on **GitHub Actions**.
 | `src/shared` | types + pure rules, run by both halves |
 | `src/server` | hub (tables, claims, hold timers), store seam, dictionary |
 | `src/client` | React board, lobby, table room |
-| `public` | `tutorial.html`, `words.txt` |
+| `public` | `words.txt`, `favicon.svg` |
 | `mockup` | the static design mockup the visual language came from |
 
 State is in memory on a single server: a restart or deploy ends every game. All access

@@ -12,11 +12,8 @@
     <link rel="canonical" href="https://wordbreak.games/" />
     <meta name="robots" content="noindex" />
     <script>
-      const tutorial = /\/tutorial\.html$/.test(location.pathname);
       const table = location.hash.match(/^#\/t\/([a-z0-9]+)/i);
-      location.replace(
-        'https://wordbreak.games/' + (tutorial ? 'tutorial.html' : table ? 'table/' + table[1] : ''),
-      );
+      location.replace('https://wordbreak.games/' + (table ? 'table/' + table[1] : ''));
     </script>
     <noscript><meta http-equiv="refresh" content="0; url=https://wordbreak.games/" /></noscript>
   </head>
