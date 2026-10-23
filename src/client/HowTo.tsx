@@ -264,30 +264,73 @@ function DemoBoard({ demo, touch }: { demo: Demo; touch: boolean }) {
   );
 }
 
+/** Whether the section is folded away, remembered per device. */
+const FOLDED_KEY = 'wordbreak.howto';
+
+function storedFolded(): boolean {
+  try {
+    return localStorage.getItem(FOLDED_KEY) === 'folded';
+  } catch {
+    return false;
+  }
+}
+
 export default function HowTo() {
   // A phone gets a finger and the word "slide"; a mouse gets a cursor.
   const [touch] = useState(() => window.matchMedia('(pointer: coarse)').matches);
+  const [folded, setFolded] = useState(storedFolded);
+  const toggle = () => {
+    const next = !folded;
+    setFolded(next);
+    try {
+      localStorage.setItem(FOLDED_KEY, next ? 'folded' : 'open');
+    } catch {
+      // Applies for this visit only.
+    }
+  };
   return (
-    <section className="howto">
-      <h2>how to play</h2>
-      <ol>
-        <li>
-          <p>{touch ? 'Slide to claim a word' : 'Click-and-drag to claim a word'}</p>
-          <DemoBoard demo={CLAIM} touch={touch} />
-        </li>
-        <li>
-          <p>
-            <span>
-              <strong>LONGER</strong> words break claims
-            </span>
-          </p>
-          <DemoBoard demo={BREAK} touch={touch} />
-        </li>
-        <li>
-          <p>When filled, you get points</p>
-          <DemoBoard demo={POINTS} touch={touch} />
-        </li>
-      </ol>
+    <section className={folded ? 'howto folded' : 'howto'}>
+      <h2>
+        <button
+          className="howtotoggle"
+          aria-expanded={!folded}
+          aria-controls="howto-steps"
+          onClick={toggle}
+        >
+          how to play
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path
+              d="M4 6l4 4 4-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </h2>
+      {/* Folded, the demos are not drawn at all, so their animations stop too. */}
+      {!folded && (
+        <ol id="howto-steps">
+          <li>
+            <p>{touch ? 'Slide to claim a word' : 'Click-and-drag to claim a word'}</p>
+            <DemoBoard demo={CLAIM} touch={touch} />
+          </li>
+          <li>
+            <p>
+              <span>
+                <strong>LONGER</strong> words break claims
+              </span>
+            </p>
+            <DemoBoard demo={BREAK} touch={touch} />
+          </li>
+          <li>
+            <p>When filled, you get points</p>
+            <DemoBoard demo={POINTS} touch={touch} />
+          </li>
+        </ol>
+      )}
     </section>
   );
 }

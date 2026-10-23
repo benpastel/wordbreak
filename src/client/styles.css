@@ -297,6 +297,18 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .howto h2 {
   margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--hairline);
 }
+.howto.folded h2 { margin-bottom: 0; }
+/* The heading is the switch: the whole row, looking exactly like a heading, with a
+   chevron at its end that points down while open and to the side when folded. */
+.howtotoggle {
+  all: unset; box-sizing: border-box; width: 100%; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
+}
+.howtotoggle svg { color: var(--ink-mute); transition: transform 160ms; }
+.howtotoggle:hover svg { color: var(--ink); }
+.howto.folded .howtotoggle svg { transform: rotate(-90deg); }
+.howtotoggle:focus-visible { outline: 2px solid var(--ink-mute); outline-offset: 4px; border-radius: 2px; }
 .howto ol {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-wrap: wrap; justify-content: center; gap: 32px 28px;
