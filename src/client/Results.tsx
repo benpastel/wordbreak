@@ -24,6 +24,10 @@ interface Tip {
   above: boolean;
 }
 
+/** Narrower than this and a tower's tiles get too small to read, so the players
+ *  split onto more than one shelf instead. */
+const MIN_STAND_PX = 96;
+
 const MISS_LABEL: Record<MissKind, string> = {
   longest: 'longest unfound',
   biggest: 'biggest break',
@@ -41,7 +45,25 @@ export default function Results({ table, meId, fx, onReady, onBackToSetup, onCha
   const popped = useRef(-1);
   const scroller = useRef<HTMLDivElement>(null);
   const plinth = useRef<HTMLDivElement>(null);
+  const stands = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
   const [tip, setTip] = useState<Tip | null>(null);
+
+  useLayoutEffect(() => {
+    const el = stands.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setWidth(el.clientWidth));
+    ro.observe(el);
+    setWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
+  // As many to a shelf as fit, then evened out, so eight on a phone stand 3, 3, 2
+  // rather than 3, 3, 1 and a gap. Leaders on the top shelf.
+  const fit = Math.max(1, Math.floor(width / MIN_STAND_PX)) || ranked.length;
+  const perShelf = Math.ceil(ranked.length / Math.ceil(ranked.length / Math.min(fit, ranked.length)));
+  const shelves: (typeof ranked)[] = [];
+  for (let i = 0; i < ranked.length; i += perShelf) shelves.push(ranked.slice(i, i + perShelf));
 
   // Confetti over the whole screen and a pop from your own name, in your medal's
   // colours if you placed. Fired off the 'ended' event rather than the phase, so
@@ -60,13 +82,13 @@ export default function Results({ table, meId, fx, onReady, onBackToSetup, onCha
   const recap = table.recap;
 
   // The towers grow upward from the scores, so a tall match opens scrolled down to
-  // the plinth rather than at the top of the tallest tower.
+  // the leaders' plinth rather than at the top of the tallest tower.
   useLayoutEffect(() => {
     const s = scroller.current;
     const p = plinth.current;
     if (!s || !p) return;
     s.scrollTop = Math.max(0, p.offsetTop + p.offsetHeight - s.clientHeight);
-  }, [recap]);
+  }, [recap, perShelf]);
 
   const colorOf = (id: string) => table.players.find((p) => p.id === id)?.color;
   const wordsOf = (id: string) => (recap?.words ?? []).filter((w) => w.playerId === id);
@@ -109,31 +131,33 @@ export default function Results({ table, meId, fx, onReady, onBackToSetup, onCha
     >
       <section className="recap">
         <div className="recapscroll" ref={scroller} onScroll={() => setTip(null)}>
-          <div className="wall">
-            {ranked.map((p) => {
-              const words = wordsOf(p.id);
-              const longest = Math.max(5, ...words.map((w) => w.word.length));
-              return (
-                <div
-                  key={p.id}
-                  className={`tower c${p.color}`}
-                  style={{ '--len': longest } as React.CSSProperties}
-                >
-                  {words.map(row)}
-                </div>
-              );
-            })}
-          </div>
-          <div className="recaphead plinth" ref={plinth}>
-            {ranked.map((p) => (
-              <div
-                key={p.id}
-                className={`recapwho c${p.color}${p.ready ? ' setgo' : ''}`}
-                data-player={p.id}
-              >
-                <span className="name">{p.name}</span>
-                <span className="pts">{p.score}</span>
-                <Trophies trophies={p.trophies} />
+          <div
+            className="stands"
+            ref={stands}
+            style={{ '--per-shelf': perShelf } as React.CSSProperties}
+          >
+            {shelves.map((shelf, k) => (
+              <div key={k} className="shelf">
+                {shelf.map((p) => {
+                  const words = wordsOf(p.id);
+                  const longest = Math.max(5, ...words.map((w) => w.word.length));
+                  return (
+                    <div key={p.id} className={`stand c${p.color}`}>
+                      <div className="tower" style={{ '--len': longest } as React.CSSProperties}>
+                        {words.map(row)}
+                      </div>
+                      <div
+                        className={`recapwho plinth${p.ready ? ' setgo' : ''}`}
+                        data-player={p.id}
+                        ref={k === 0 ? plinth : undefined}
+                      >
+                        <span className="pts">{p.score}</span>
+                        <span className="name">{p.name}</span>
+                        <Trophies trophies={p.trophies} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>

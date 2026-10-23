@@ -637,7 +637,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 /* Heads and columns share one padding and one flex split, so each name sits over
    its own column of words. */
-.recaphead, .wall, .setuphead { display: flex; gap: 12px; }
+.recaphead, .setuphead { display: flex; gap: 12px; }
 .recaphead, .setuphead {
   padding: var(--pad-frame) var(--pad-frame) calc(var(--pad-frame) * 0.8);
   border-bottom: 1px solid var(--hairline);
@@ -682,9 +682,25 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
    height is how much they built. Banked words are solid tiles in the player's
    colour; a broken word keeps its place as an empty outline, struck through in the
    breaker's colour. Tiles shrink to fit the longest word in the column. */
-.wall { flex: 1 0 auto; align-items: flex-end; padding: var(--pad-frame) var(--pad-frame) 0; }
+/* Players stand side by side on a shelf, as many as fit (Results.tsx), and a big
+   table takes several shelves, leaders on top. Spare height goes above the first,
+   so a short match still sits on its plinth rather than hanging from the top. */
+.stands {
+  flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-end;
+  gap: calc(var(--pad-frame) * 1.2); padding: var(--pad-frame) var(--pad-frame) 0;
+}
+/* Two rows shared across the shelf, towers then plinths, so every plinth on a shelf
+   starts on the same line whatever its name's length or medal. No gap between
+   stands, so the plinth runs as one unbroken line along it. */
+.shelf {
+  display: grid; grid-template-rows: 1fr auto; grid-auto-flow: column;
+  grid-auto-columns: calc(100% / var(--per-shelf)); justify-content: center;
+}
+.stand {
+  grid-row: span 2; display: grid; grid-template-rows: subgrid; min-width: 0;
+}
 .tower {
-  flex: 1; min-width: 0; container-type: inline-size;
+  min-width: 0; padding: 0 6px; container-type: inline-size;
   display: flex; flex-direction: column-reverse; align-items: center; gap: 3px;
 }
 .wallrow { position: relative; display: flex; gap: 2px; cursor: default; }
@@ -703,11 +719,20 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .wallrow .strike.gone { background: var(--ink-mute); }
 
-/* The scores are the plinth the towers stand on. */
-.recaphead.plinth {
-  margin: 8px var(--pad-frame) 0; padding: calc(var(--pad-frame) * 0.6) 0 var(--pad-frame);
-  border-bottom: 0; border-top: 2px solid var(--ink);
+/* The scores are the plinth the towers stand on: the score first, so every score
+   on a shelf sits on the same line however long the names beneath them are. Sized
+   by the stand's width, so eight across never run into each other. */
+.recapwho.plinth {
+  margin-top: 8px; padding: 6px 6px 0; border-top: 2px solid var(--ink); justify-content: flex-start;
+  /* Its own container, not the stand's: containing the stand would cut it off from
+     the shelf's subgrid. */
+  container-type: inline-size;
 }
+.recapwho.plinth .pts { font-size: clamp(1.8rem, 30cqi, 3.8rem); }
+.recapwho.plinth .name {
+  font-size: clamp(0.72rem, 11cqi, 1.6rem); line-height: 1.15; overflow-wrap: anywhere;
+}
+.recapwho.plinth .trophies { margin-top: 4px; flex-wrap: wrap; }
 
 /* Words that were there to be played and nobody played, each on its board. */
 .missed {
@@ -783,7 +808,12 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
      swallow a swipe even when it has nothing to scroll, so the panels stop being
      scrollers and the chat hands its overscroll on to the page. */
   .recapscroll, .setupbody { overflow: visible; }
-  .miniboard { --cell: 24px; }
+  /* Three across even at 360px, rather than two and an orphan. */
+  .miniboard { --cell: 19px; }
+  .missed { gap: 10px; padding-left: 8px; padding-right: 8px; }
+  .missword { font-size: 0.95rem; }
+  .misskind { font-size: 0.6rem; letter-spacing: 0.05em; }
+  .missbreaks { flex-wrap: wrap; justify-content: center; gap: 2px 6px; max-width: 100px; }
   .shell .chatlog { overscroll-behavior: auto; }
 }
 
