@@ -19,7 +19,7 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
         <div>
           <h1>WordBreak</h1>
           <p className="tag">
-            <a href="tutorial.html" target="_blank" rel="noreferrer">
+            <a href="/tutorial.html" target="_blank" rel="noreferrer">
               how to play
             </a>
           </p>

@@ -5,7 +5,9 @@ import react from '@vitejs/plugin-react';
 // same origin as the websocket, so there is no CORS and no build-time server URL.
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  // Absolute, since a table lives at /table/CODE and relative assets would resolve
+  // under it.
+  base: '/',
   build: {
     outDir: 'dist/client',
     emptyOutDir: true,

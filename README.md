@@ -62,8 +62,8 @@ whether it banked, broke or was still held, and each word tried and turned down.
 The game used to be a GitHub Pages project site at `https://benpastel.com/wordbreak/`
 (inheriting the custom domain of the `benpastel.github.io` user site). That address
 now forwards to wordbreak.games: `.github/workflows/pages.yml` publishes
-`redirect/index.html` there as the index, `tutorial.html` and `404.html`, carrying
-any `#/t/CODE` table link across. It only redeploys when that page or the workflow
+`redirect/index.html` there as the index, `tutorial.html` and `404.html`, turning
+any `#/t/CODE` table link into `/table/CODE`. It only redeploys when that page or the workflow
 changes. Repo Settings → Pages → Source stays on **GitHub Actions**.
 
 ## Layout

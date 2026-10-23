@@ -237,7 +237,7 @@ export default function TableRoom({
   const s = table.settings;
   const locked = table.hostId !== meId;
   const taken = new Set(table.players.filter((p) => p.id !== meId).map((p) => p.color));
-  const link = `${location.origin}${location.pathname}#/t/${table.id}`;
+  const link = `${location.origin}/table/${table.id}`;
 
   const copy = () => {
     navigator.clipboard?.writeText(link).then(

@@ -26,8 +26,11 @@ function storedName(): string {
   return localStorage.getItem(NAME_KEY) ?? '';
 }
 
-function hashTable(): string | null {
-  const m = location.hash.match(/^#\/t\/([a-z0-9]+)/i);
+/** The table a link points at: /table/CODE, or the #/t/CODE that links used to
+ *  be, so an invite sent before the change still lands at its table. */
+function linkedTable(): string | null {
+  const m =
+    location.pathname.match(/^\/table\/([a-z0-9]+)\/?$/i) ?? location.hash.match(/^#\/t\/([a-z0-9]+)/i);
   return m ? m[1] : null;
 }
 
@@ -40,7 +43,7 @@ export default function App() {
   const [fx, setFx] = useState<{ seq: number; items: Fx[] }>({ seq: 0, items: [] });
   const [dict, setDict] = useState(wordsReady());
   const [toast, setToast] = useState<string | null>(null);
-  const [wantHash, setWantHash] = useState(hashTable);
+  const [wantTable, setWantTable] = useState(linkedTable);
 
   const netRef = useRef<Net | null>(null);
   const send = useCallback((m: ClientMsg) => netRef.current?.send(m), []);
@@ -71,6 +74,8 @@ export default function App() {
         setTable(null);
         break;
       case 'error':
+        // A link to a table that is gone or full has done all it can.
+        setWantTable(null);
         setToast(msg.message);
         setTimeout(() => setToast(null), 2600);
         break;
@@ -91,30 +96,43 @@ export default function App() {
     };
   }, [onMsg]);
 
-  // Shareable table links: the hash is the source of truth for "which table", so a
-  // pasted link joins on arrival and leaving puts you back at the bare address.
+  // Shareable table links: the address is the source of truth for "which table", so
+  // a pasted link joins on arrival and leaving puts you back at the bare address.
+  // Back and forward move between them, and an old #/t/CODE pasted in still works.
   useEffect(() => {
-    const onHash = () => setWantHash(hashTable());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
+    const onNav = () => setWantTable(linkedTable());
+    window.addEventListener('popstate', onNav);
+    window.addEventListener('hashchange', onNav);
+    return () => {
+      window.removeEventListener('popstate', onNav);
+      window.removeEventListener('hashchange', onNav);
+    };
   }, []);
 
   // A pasted link still joins on arrival, but not before there is a name to join
   // under: the hash is held until one exists, and typing it lets this through.
   useEffect(() => {
-    if (!meId || !wantHash || !name) return;
-    if (table?.id === wantHash) return;
-    send({ t: 'joinTable', tableId: wantHash });
-  }, [meId, wantHash, name, table?.id, send]);
+    if (!meId || !wantTable || !name) return;
+    if (table?.id === wantTable) return;
+    send({ t: 'joinTable', tableId: wantTable });
+  }, [meId, wantTable, name, table?.id, send]);
 
-  // Only a table needs the hash; the lobby keeps the bare address.
+  // A linked table is wanted until you are sitting at it, or the server turns the
+  // join down. Clearing it any sooner, as this once did on first load, threw the
+  // link away before there was a connection to join over; keeping it any longer
+  // would join you straight back after leaving.
   useEffect(() => {
-    const target = table ? `#/t/${table.id}` : '';
-    if (location.hash !== target) {
-      history.replaceState(null, '', `${location.pathname}${location.search}${target}`);
+    if (table && table.id === wantTable) setWantTable(null);
+  }, [table?.id, wantTable]);
+
+  // The address follows: the table you are at, or the one you are on your way to.
+  useEffect(() => {
+    const id = table?.id ?? wantTable;
+    const target = id ? `/table/${id}` : '/';
+    if (location.pathname !== target || location.hash) {
+      history.replaceState(null, '', `${target}${location.search}`);
     }
-    if (!table) setWantHash(null);
-  }, [table?.id]);
+  }, [table?.id, wantTable]);
 
   const actions = useMemo(
     () => ({
