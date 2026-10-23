@@ -3,10 +3,7 @@ import type { ClientMsg, ServerMsg } from '../shared/types';
 export type NetStatus = 'connecting' | 'open' | 'closed';
 
 function wsUrl(): string {
-  // Same origin unless built with VITE_WS_URL, which the GitHub Pages deploy sets to
-  // the Render origin because the page and the server live on different hosts.
-  const configured = import.meta.env.VITE_WS_URL as string | undefined;
-  if (configured) return configured;
+  // The server that sent the page also runs the game, here and in production.
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${proto}//${location.host}/ws`;
 }

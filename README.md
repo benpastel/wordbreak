@@ -38,25 +38,16 @@ npm run build && npm start   # http://localhost:8080
 
 ## Deploying
 
-Two halves, both triggered by `git push origin main`:
-
-| half | where | what serves it |
-| --- | --- | --- |
-| static client | `https://benpastel.com/wordbreak/` | GitHub Pages, via `.github/workflows/pages.yml` |
-| game server | `https://wordbreak.onrender.com` | Render, as a web service |
-
-The client opens a websocket to the Render origin. That cross-origin URL is the only
-thing the two halves must agree on, and it lives in one place: `VITE_WS_URL` at the
-top of the Pages workflow. The build checks that origin answers `/healthz` first,
-rather than publishing a page that loads but never connects.
-
-`benpastel.com` is the custom domain on the `benpastel.github.io` user site, and
-project sites inherit it — so this repo needs no `CNAME` of its own.
+`git push origin main` deploys everything. The game lives at **https://wordbreak.games**,
+served by one Render web service: the page, the tutorial and the websocket all come
+from the same origin, so there is no cross-origin configuration anywhere.
 
 ### Render
 
 A web service connected to this GitHub repo, auto-deploying from `main`. It builds
-with `npm ci && npm run build` and starts with `npm start`.
+with `npm ci && npm run build` and starts with `npm start`. Its custom domains are
+`wordbreak.games` and `www.wordbreak.games`, the latter redirecting to the former;
+`wordbreak.onrender.com` still answers too.
 
 Keep it at **exactly one instance** — all state is in memory, so a second instance is
 a second, invisible lobby. Every deploy and every restart ends the games in progress.
@@ -66,19 +57,14 @@ Every match prints one line to the service's log when it ends (or is abandoned):
 whether it banked, broke or was still held, and each word tried and turned down. See
 `src/server/matchlog.ts`.
 
-### GitHub Pages
+### The old address
 
-Repo Settings → Pages → Source: **GitHub Actions**. The workflow builds only the
-client (`npm run build:client`) and uploads `dist/client`.
-
-Vite is configured with `base: './'`, so the bundle is path-relative and works under
-`/wordbreak/` with no path baked in.
-
-### Running the whole thing from one origin instead
-
-The server also hosts `dist/client` itself, so `npm run build && npm start` gives you
-both halves on one origin with no `VITE_WS_URL` at all — that is what local
-production testing uses, and it stays a working fallback.
+The game used to be a GitHub Pages project site at `https://benpastel.com/wordbreak/`
+(inheriting the custom domain of the `benpastel.github.io` user site). That address
+now forwards to wordbreak.games: `.github/workflows/pages.yml` publishes
+`redirect/index.html` there as the index, `tutorial.html` and `404.html`, carrying
+any `#/t/CODE` table link across. It only redeploys when that page or the workflow
+changes. Repo Settings → Pages → Source stays on **GitHub Actions**.
 
 ## Layout
 

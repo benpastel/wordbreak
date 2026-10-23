@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- The game moved to wordbreak.games. GitHub Pages still serves this repo at
+     benpastel.com/wordbreak/, so this page stands there instead of the game and
+     forwards anyone with an old link or bookmark. A table link's #/t/CODE carries
+     over, so an invite sent before the move still lands at the same table.
+     Published by .github/workflows/pages.yml as index.html, 404.html (any other
+     path) and tutorial.html. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WordBreak</title>
+    <link rel="canonical" href="https://wordbreak.games/" />
+    <meta name="robots" content="noindex" />
+    <script>
+      const tutorial = /\/tutorial\.html$/.test(location.pathname);
+      location.replace('https://wordbreak.games/' + (tutorial ? 'tutorial.html' : '') + location.hash);
+    </script>
+    <noscript><meta http-equiv="refresh" content="0; url=https://wordbreak.games/" /></noscript>
+  </head>
+  <body>
+    <a href="https://wordbreak.games/">wordbreak.games</a>
+  </body>
+</html>
