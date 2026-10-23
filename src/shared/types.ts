@@ -8,8 +8,8 @@
 
 export const MIN_GRID = 4;
 export const MAX_GRID = 6;
-export const MAX_PLAYERS = 8;
-export const COLOR_COUNT = 8;
+export const MAX_PLAYERS = 10;
+export const COLOR_COUNT = 10;
 /** The difficulties a bot can be set to, easiest first, as points on the dial every
  *  bot knob runs along (server/bot/knobs.ts); the top of it, 1, is beyond any
  *  person and offered nowhere. Playing alone for three minutes on a 4x4 board,

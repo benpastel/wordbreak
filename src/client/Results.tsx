@@ -58,12 +58,18 @@ export default function Results({ table, meId, fx, onReady, onBackToSetup, onCha
     return () => ro.disconnect();
   }, []);
 
-  // As many to a shelf as fit, then evened out, so eight on a phone stand 3, 3, 2
-  // rather than 3, 3, 1 and a gap. Leaders on the top shelf.
-  const fit = Math.max(1, Math.floor(width / MIN_STAND_PX)) || ranked.length;
-  const perShelf = Math.ceil(ranked.length / Math.ceil(ranked.length / Math.min(fit, ranked.length)));
+  // As few shelves as fit everyone, shared out evenly with the fuller ones on top,
+  // so ten on a phone stand 3, 3, 2, 2 rather than 3, 3, 3, 1. Leaders first.
+  const n = ranked.length;
+  const fit = Math.max(1, Math.floor(width / MIN_STAND_PX)) || n;
+  const count = Math.ceil(n / Math.min(fit, n));
+  const perShelf = Math.ceil(n / count);
   const shelves: (typeof ranked)[] = [];
-  for (let i = 0; i < ranked.length; i += perShelf) shelves.push(ranked.slice(i, i + perShelf));
+  for (let k = 0, at = 0; k < count; k++) {
+    const size = Math.floor(n / count) + (k < n % count ? 1 : 0);
+    shelves.push(ranked.slice(at, at + size));
+    at += size;
+  }
 
   // Confetti over the whole screen and a pop from your own name, in your medal's
   // colours if you placed. Fired off the 'ended' event rather than the phase, so

@@ -768,7 +768,7 @@ export class Hub {
       }));
   }
 
-  /** Whole-state snapshots. A 7x7 board with 8 players is a couple of KB, which is
+  /** Whole-state snapshots. A 7x7 board with 10 players is a couple of KB, which is
    *  far cheaper than getting incremental diffs subtly wrong. */
   private pushTable(tableId: string, fx: Fx[]): void {
     const t = this.store.getTable(tableId);

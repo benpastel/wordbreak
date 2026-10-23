@@ -131,13 +131,17 @@
 .c5 { --hue: 195; --cf: 0.095; --lf: 0.86;  --ci: 0.12; }
 .c6 { --hue: 342; --cf: 0.105; --lf: 0.865; --ci: 0.17; }
 .c7 { --hue: 55;  --cf: 0.13;  --lf: 0.87;  --ci: 0.145; }
-.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7 {
+/* The last two go in the widest gaps left, between yellow and green and between
+   cyan and blue, so they come only at the biggest tables. */
+.c8 { --hue: 122; --cf: 0.13;  --lf: 0.88;  --ci: 0.14; }
+.c9 { --hue: 222; --cf: 0.08;  --lf: 0.86;  --ci: 0.12; }
+.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7, .c8, .c9 {
   --pf: oklch(var(--lf) var(--cf) var(--hue));
   --pc: oklch(0.55 var(--ci) var(--hue));
 }
 /* Dark: the fill sinks to a deep tint the light ink still reads on, and the ring and
    names lift so they hold against the dark ground. */
-:root[data-theme='dark'] :is(.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7) {
+:root[data-theme='dark'] :is(.c0, .c1, .c2, .c3, .c4, .c5, .c6, .c7, .c8, .c9) {
   --pf: oklch(calc(var(--lf) - 0.44) calc(var(--cf) * 0.9) var(--hue));
   --pc: oklch(0.72 var(--ci) var(--hue));
 }
