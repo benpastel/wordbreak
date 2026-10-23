@@ -13,8 +13,8 @@ export const COLOR_COUNT = 10;
 /** The difficulties a bot can be set to, easiest first, as points on the dial every
  *  bot knob runs along (server/bot/knobs.ts); the top of it, 1, is beyond any
  *  person and offered nowhere. Playing alone for three minutes on a 4x4 board,
- *  these claim about 2.2, 4.2 and 7.6 words a minute above child, for about 17,
- *  38 and 78 points. */
+ *  child claims about 2.3 words a minute and the rest about 2.9, 4.7 and 7.4, for
+ *  about 14, 22, 43 and 76 points. */
 export const BOT_LEVELS = [
   { name: 'child', difficulty: 0 },
   { name: 'beginner', difficulty: 0.15 },

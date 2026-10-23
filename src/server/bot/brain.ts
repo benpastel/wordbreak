@@ -13,6 +13,10 @@
 // runs through one is noticed exactly as fast as any other, so whether a move breaks
 // a claim is down to where the bot happened to be looking.
 //
+// Pace depends on whether it already holds a claim: with nothing on the board it
+// spots faster (firstBoost), so it never sits idle for long, and with something
+// down it settles to its normal pace, or a touch slower at the top (busySlow).
+//
 // Attention is the limit. Nothing is noticed while selecting tiles or recovering
 // from a claim, and a half-noticed word keeps only part of its progress into the
 // next search.
@@ -88,6 +92,8 @@ export class Brain {
   private phase: 'start' | 'reorient' | 'search' | 'enter' = 'start';
   private until = 0;
   private pending: number[] | null = null;
+  /** Whether it holds a claim on the board right now. */
+  private holding = false;
 
   constructor(
     readonly playerId: string,
@@ -150,6 +156,8 @@ export class Brain {
       this.gridSig = gridSig;
       this.rebuild(game);
     }
+
+    this.holding = game.claims.some((c) => c.playerId === this.playerId);
 
     const byTile = new Map<number, GameState['claims'][number]>();
     for (const c of game.claims) {
@@ -258,7 +266,7 @@ export class Brain {
       for (const i of c.idx) {
         dist = Math.min(dist, Math.hypot((i % game.size) - this.fx, Math.floor(i / game.size) - this.fy));
       }
-      let ms = c.base;
+      let ms = c.base * (this.holding ? k.busySlow : 1 / k.firstBoost);
       if (dist > k.focusRadius) ms *= Math.exp((dist - k.focusRadius) / k.focusFalloff);
 
       // A tile that just appeared has not quite registered yet.
