@@ -15,7 +15,8 @@
     "build:server": "tsc -p tsconfig.server.json",
     "start": "node dist/server/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
-    "test": "npm run build:server && node test/rules.test.mjs && node test/selection.test.mjs && node test/definitions.test.mjs && node test/matchlog.test.mjs && node test/missed.test.mjs && node test/protocol.test.mjs"
+    "test": "npm run build:server && node test/rules.test.mjs && node test/selection.test.mjs && node test/definitions.test.mjs && node test/matchlog.test.mjs && node test/missed.test.mjs && node test/protocol.test.mjs",
+    "howto-frames": "node scripts/howto-frames.mjs"
   },
   "dependencies": {
     "compression": "^1.7.5",
@@ -33,6 +34,7 @@
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.0",
+    "playwright-core": "^1.64.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^5.4.11"

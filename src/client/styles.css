@@ -313,6 +313,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   font-family: var(--font-prose); font-size: 1rem; font-weight: var(--w-label); line-height: 1.3;
   text-align: center; text-wrap: balance;
 }
+.howto strong { font-weight: var(--w-label-strong); letter-spacing: var(--track-label); }
 .demo { position: relative; height: calc(var(--cell) * 4.5); width: 100%; }
 /* Room under the board for the score the letters fly into. */
 .demo.scored { height: calc(var(--cell) * 6.1); }

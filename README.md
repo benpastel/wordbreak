@@ -5,7 +5,9 @@ it, locking those letters; only a strictly **longer** word can **break** the cla
 including one of your own. Survive the hold time and it **banks** — one point per
 letter — then the tiles **reseed**.
 
-How to play is shown on the home page, as three animated boards (`src/client/HowTo.tsx`).
+How to play is shown on the home page, as three animated boards (`src/client/HowTo.tsx`). To check them
+by eye after a change, `npm run howto-frames` films each one at desktop and phone size
+in both themes and prints where the contact sheets went.
 
 ## Run it locally
 

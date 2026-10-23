@@ -2,25 +2,26 @@ import { useEffect, useState } from 'react';
 import { center, chevrons, points, viewBoxOf } from './trail';
 
 // How to play, as three looping demos on one 4x4 board, drawn with the game's own
-// tiles. You are blue throughout:
+// tiles. You are blue, and red already holds DUG along the bottom:
 //
 //   1. you slide O-A-T (a diagonal, then back up) and claim it
-//   2. orange holds T-A-N; you slide R-A-N-T across it and break it
-//   3. your RANT fills, flies into your score, and new letters drop in
+//   2. with OAT still yours, you slide H-U-G-S across red's DUG and break it
+//   3. OAT fills, flies into your score, and new letters drop in; HUGS fills on
 //
+// The fills carry on from one step to the next, so the three read as one game.
 // Each demo is a pure function from time to a frame, so a loop is just time
 // modulo its length, and reduced motion shows one telling frame, still.
 
 const N = 4;
 const LETTERS = 'STOPRANELIDEHUGS'.split('');
 const BLUE = 0;
-const ORANGE = 1;
+const RED = 1;
 
 const OAT = [2, 5, 1];
-const TAN = [1, 5, 6];
-const RANT = [4, 5, 6, 1];
-/** What drops into RANT's tiles once it has banked. */
-const RESEED: Record<number, string> = { 4: 'W', 5: 'E', 6: 'I', 1: 'L' };
+const DUG = [10, 13, 14];
+const HUGS = [12, 13, 14, 15];
+/** What drops into OAT's tiles once it has banked. */
+const RESEED: Record<number, string> = { 2: 'I', 5: 'E', 1: 'W' };
 
 /** Fade out at the end of a loop and back in at the start. */
 const FADE_MS = 300;
@@ -96,11 +97,13 @@ const CLAIM: Demo = {
     const start = 600;
     const release = start + STEP_MS * (OAT.length - 1) + 250;
     const s = slide(OAT, start, t);
+    const dug: Claim = { idx: DUG, color: RED, fill: 0.15 + (t / 4200) * 0.15 };
     if (t < release) {
+      f.claims = [dug];
       f.sel = OAT.slice(0, s.picked);
       f.pointer = { x: s.x, y: s.y, down: t >= start };
     } else {
-      f.claims = [{ idx: OAT, color: BLUE, fill: ((t - release) / 13_000) * 1.4 }];
+      f.claims = [dug, { idx: OAT, color: BLUE, fill: ((t - release) / (4200 - release)) * 0.2 }];
       if (t < release + 500) f.pointer = { x: s.x + 0.2 * ((t - release) / 500), y: s.y + 0.3 * ((t - release) / 500), down: false };
     }
     return f;
@@ -113,16 +116,17 @@ const BREAK: Demo = {
   frame: (t) => {
     const f = blank();
     const start = 700;
-    const release = start + STEP_MS * (RANT.length - 1) + 250;
-    const s = slide(RANT, start, t);
+    const release = start + STEP_MS * (HUGS.length - 1) + 250;
+    const s = slide(HUGS, start, t);
+    const oat: Claim = { idx: OAT, color: BLUE, fill: 0.2 + (t / 5000) * 0.3 };
     if (t < release) {
-      f.claims = [{ idx: TAN, color: ORANGE, fill: 0.25 + (t / 13_000) * 1.2 }];
-      f.sel = RANT.slice(0, s.picked);
+      f.claims = [oat, { idx: DUG, color: RED, fill: 0.3 + (t / 5000) * 0.25 }];
+      f.sel = HUGS.slice(0, s.picked);
       f.pointer = { x: s.x, y: s.y, down: t >= start };
     } else {
-      f.claims = [{ idx: RANT, color: BLUE, fill: ((t - release) / 13_000) * 1.4 }];
+      f.claims = [oat, { idx: HUGS, color: BLUE, fill: ((t - release) / (5000 - release)) * 0.15 }];
       // The broken tiles shake once, as on the board.
-      if (t < release + 420) f.broke = TAN;
+      if (t < release + 420) f.broke = DUG;
       if (t < release + 500) f.pointer = { x: s.x + 0.2 * ((t - release) / 500), y: s.y + 0.3 * ((t - release) / 500), down: false };
     }
     return f;
@@ -140,18 +144,21 @@ const POINTS: Demo = {
     const full = 2600;
     const flyMs = 560;
     const stagger = 90;
+    // HUGS carries on filling underneath the whole time.
+    const hugs: Claim = { idx: HUGS, color: BLUE, fill: 0.15 + (t / 5200) * 0.45 };
     if (t < full) {
-      f.claims = [{ idx: RANT, color: BLUE, fill: 0.1 + 0.9 * ease(t / full) }];
+      f.claims = [{ idx: OAT, color: BLUE, fill: 0.5 + 0.5 * ease(t / full) }, hugs];
       f.score = 0;
       return f;
     }
     // Banked: each letter flies to the score, and new letters come in behind it.
+    f.claims = [hugs];
     const letters = [...LETTERS];
     for (const [i, l] of Object.entries(RESEED)) letters[Number(i)] = l;
     f.letters = letters;
-    if (t < full + 700) f.reseed = RANT;
+    if (t < full + 700) f.reseed = OAT;
     let landed = 0;
-    RANT.forEach((i, n) => {
+    OAT.forEach((i, n) => {
       const k = clamp01((t - full - n * stagger) / flyMs);
       if (k >= 1) {
         landed++;
@@ -269,7 +276,11 @@ export default function HowTo() {
           <DemoBoard demo={CLAIM} touch={touch} />
         </li>
         <li>
-          <p>Break claims with longer words</p>
+          <p>
+            <span>
+              <strong>LONGER</strong> words break claims
+            </span>
+          </p>
           <DemoBoard demo={BREAK} touch={touch} />
         </li>
         <li>
