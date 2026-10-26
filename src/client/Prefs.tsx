@@ -27,10 +27,46 @@ function stored(p: Pref): string {
   return v && (choices as readonly string[]).includes(v) ? v : choices[0];
 }
 
+// Full screen. Safari on iPad still uses the webkit-prefixed names; iPhone offers
+// none at all for a page, so there the button is never shown.
+type WebkitDoc = Document & {
+  webkitFullscreenEnabled?: boolean;
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void>;
+};
+type WebkitEl = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+const doc = document as WebkitDoc;
+const canFullscreen = !!(doc.fullscreenEnabled || doc.webkitFullscreenEnabled);
+const isFullscreen = () => !!(doc.fullscreenElement || doc.webkitFullscreenElement);
+
+function toggleFullscreen(): void {
+  if (isFullscreen()) {
+    void (doc.exitFullscreen?.() ?? doc.webkitExitFullscreen?.());
+  } else {
+    const el = document.documentElement as WebkitEl;
+    void (el.requestFullscreen?.({ navigationUI: 'hide' }) ?? el.webkitRequestFullscreen?.())?.catch?.(() => {
+      // Refused (no gesture, or the browser said no): nothing to undo.
+    });
+  }
+}
+
 export default function Prefs() {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState(() => ({ theme: stored('theme'), input: stored('input') }));
   const [sound, setSound] = useState(soundPrefs);
+  const [full, setFull] = useState(isFullscreen);
+
+  // Kept in step with the browser, which also leaves full screen on Escape or a
+  // swipe, without this button being involved.
+  useEffect(() => {
+    const sync = () => setFull(isFullscreen());
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+    return () => {
+      document.removeEventListener('fullscreenchange', sync);
+      document.removeEventListener('webkitfullscreenchange', sync);
+    };
+  }, []);
   const change = (patch: Partial<SoundPrefs>) => {
     setSoundPrefs(patch);
     setSound(soundPrefs());
@@ -99,6 +135,29 @@ export default function Prefs() {
           )}
         </svg>
       </button>
+      {canFullscreen && (
+        <button
+          className="prefsbtn"
+          aria-label={full ? 'leave full screen' : 'full screen'}
+          aria-pressed={full}
+          onClick={toggleFullscreen}
+        >
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+            <path
+              d={
+                full
+                  ? 'M7.5 3v4.5H3M12.5 3v4.5H17M7.5 17v-4.5H3M12.5 17v-4.5H17'
+                  : 'M3 7.5V3h4.5M17 7.5V3h-4.5M3 12.5V17h4.5M17 12.5V17h-4.5'
+              }
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
       <button
         className="prefsbtn"
         aria-label="preferences"
