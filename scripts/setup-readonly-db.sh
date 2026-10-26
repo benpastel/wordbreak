@@ -43,7 +43,14 @@ render psql "$DB_ID" --confirm -o text -c "
     if not exists (select from pg_roles where rolname = '$ROLE') then create role $ROLE login; end if;
   end \$\$;
   alter role $ROLE with login password '$password' connection limit 3;
-  grant pg_read_all_data to $ROLE;
+  -- Render's owner cannot grant pg_read_all_data, so read access is granted
+  -- directly: on every table now, and by default on every table the owner (the
+  -- app, through its migrations) creates from here on.
+  grant usage on schema public to $ROLE;
+  grant select on all tables in schema public to $ROLE;
+  grant select on all sequences in schema public to $ROLE;
+  alter default privileges in schema public grant select on tables to $ROLE;
+  alter default privileges in schema public grant select on sequences to $ROLE;
   alter role $ROLE set default_transaction_read_only = on;
   alter role $ROLE set statement_timeout = '15s';
   alter role $ROLE set idle_in_transaction_session_timeout = '60s';
