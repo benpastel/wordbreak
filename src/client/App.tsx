@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ClientMsg, Fx, ServerMsg, Settings, TableSummary, TableView } from '../shared/types';
+import type { ClientMsg, Fx, MyRecap, ServerMsg, Settings, TableSummary, TableView } from '../shared/types';
 import { Net } from './net';
 import type { NetStatus } from './net';
 import { loadWords, wordsReady } from './dict';
@@ -40,6 +40,8 @@ export default function App() {
   const [name, setName] = useState(storedName);
   const [tables, setTables] = useState<TableSummary[]>([]);
   const [table, setTable] = useState<TableView | null>(null);
+  /** The private half of the last match's recap: only ever about you. */
+  const [mine, setMine] = useState<MyRecap | null>(null);
   const [fx, setFx] = useState<{ seq: number; items: Fx[] }>({ seq: 0, items: [] });
   const [dict, setDict] = useState(wordsReady());
   const [toast, setToast] = useState<string | null>(null);
@@ -68,6 +70,7 @@ export default function App() {
         break;
       case 'table':
         setTable(msg.table);
+        setMine(msg.mine ?? null);
         if (msg.fx.length) setFx((f) => ({ seq: f.seq + 1, items: msg.fx }));
         break;
       case 'left':
@@ -150,6 +153,7 @@ export default function App() {
       backToSetup: () => send({ t: 'backToSetup' }),
       claim: (tileIds: number[]) => send({ t: 'claim', tileIds }),
       missed: (word: string, why: string) => send({ t: 'missed', word, why }),
+      requestWord: (word: string, requested: boolean) => send({ t: 'requestWord', word, requested }),
       chat: (text: string) => send({ t: 'chat', text }),
       addBot: () => send({ t: 'addBot' }),
       removeBot: (botId: string) => send({ t: 'removeBot', botId }),
@@ -174,6 +178,8 @@ export default function App() {
         onBackToSetup={actions.backToSetup}
         onChat={actions.chat}
         onLeave={actions.leave}
+        mine={mine}
+        onRequestWord={actions.requestWord}
       />
     );
   } else if (table && table.phase === 'playing' && table.game) {

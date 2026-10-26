@@ -113,6 +113,9 @@ wss.on('connection', (ws: WebSocket) => {
       case 'missed':
         hub.missed(playerId, msg.word, msg.why);
         break;
+      case 'requestWord':
+        hub.requestWord(playerId, msg.word, msg.requested);
+        break;
       case 'chat':
         hub.chat(playerId, msg.text);
         break;

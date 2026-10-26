@@ -4,7 +4,7 @@
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { section, check, done } from './harness.mjs';
+import { section, check, equal, done } from './harness.mjs';
 
 const require = createRequire(import.meta.url);
 const WebSocket = require('ws');
@@ -31,7 +31,7 @@ class Client {
         const m = JSON.parse(d);
         if (m.t === 'welcome') { this.id = m.playerId; resolve(); }
         if (m.t === 'lobby') { this.lobby = m.tables; this.table = null; }
-        if (m.t === 'table') { this.table = m.table; if (m.fx.length) this.fx.push(...m.fx); }
+        if (m.t === 'table') { this.table = m.table; this.mine = m.mine ?? null; if (m.fx.length) this.fx.push(...m.fx); }
         if (m.t === 'left') this.table = null;
         if (m.t === 'error') this.errors.push(m.message);
       });
@@ -251,6 +251,15 @@ process.on('exit', stop);
     await sleep(120);
     check('ready is ignored mid-match', a2.table.players.every((p) => !p.ready));
 
+    // Slides that were not words, as each client reports them, for the recap's
+    // private half. A refusal for being too short is about the board, not the
+    // dictionary, so it should not be offered for requesting.
+    a2.send({ t: 'missed', word: 'qzx', why: 'not-a-word' });
+    a2.send({ t: 'missed', word: 'qzx', why: 'not-a-word' });
+    a2.send({ t: 'missed', word: 'zzv', why: 'not-a-word' });
+    a2.send({ t: 'missed', word: 'at', why: 'not-long-enough' });
+    b.send({ t: 'missed', word: 'bqq', why: 'not-a-word' });
+
     // Give the trailing player something too, so the standings are not a walkover.
     const w = findWord(a2.game, { minLen: 3, maxLen: 5 });
     if (w) { a2.send({ t: 'claim', tileIds: w }); await sleep(HOLD + 200); }
@@ -333,6 +342,23 @@ process.on('exit', stop);
       new Set(recap.missed.map((m) => m.kind)).size === recap.missed.length &&
         new Set(recap.missed.map((m) => m.word)).size === recap.missed.length);
     check('chat survived the match', a2.table.chat.length >= 2, String(a2.table.chat.length));
+
+    section('your misses, and asking for them');
+    equal('you are sent your own words that were not words, with tries, in order',
+      a2.mine?.misses, [{ word: 'qzx', tries: 2, requested: false }, { word: 'zzv', tries: 1, requested: false }]);
+    equal('and nobody else\'s', b.mine?.misses.map((m) => m.word), ['bqq']);
+    a2.send({ t: 'requestWord', word: 'qzx', requested: true });
+    await sleep(120);
+    check('asking marks it requested', a2.mine?.misses[0].requested === true, JSON.stringify(a2.mine));
+    check('for you alone', b.mine?.misses.every((m) => !m.requested));
+    a2.send({ t: 'requestWord', word: 'cat', requested: true });
+    a2.send({ t: 'requestWord', word: 'bqq', requested: true });
+    await sleep(120);
+    equal('a word you never tried cannot be asked for, even someone else\'s',
+      a2.mine?.misses.map((m) => m.word), ['qzx', 'zzv']);
+    a2.send({ t: 'requestWord', word: 'qzx', requested: false });
+    await sleep(120);
+    check('and an ask can be taken back', a2.mine?.misses[0].requested === false);
 
     section('rematch, on points this time');
     const kept = Object.fromEntries(

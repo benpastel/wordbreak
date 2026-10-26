@@ -29,7 +29,22 @@ export const MIGRATIONS: string[] = [
      report jsonb not null
    );
    create index matches_ended_at on matches (ended_at);`,
+  // 2. Words players asked to have added, one row per word per player, so asking
+  //    twice counts once. Only words they actually tried and were refused.
+  `create table word_requests (
+     word text not null,
+     player_id text not null,
+     table_id text not null,
+     requested_at timestamptz not null default now(),
+     primary key (word, player_id)
+   );`,
 ];
+
+export interface WordRequest {
+  word: string;
+  playerId: string;
+  tableId: string;
+}
 
 export interface FinishedMatch {
   tableId: string;
@@ -71,16 +86,35 @@ export class Db {
 
   /** Keep a match for good. Never throws. */
   saveMatch(m: FinishedMatch): Promise<void> {
+    return this.write(
+      'insert into matches (table_id, ended_at, how, player_ids, report) values ($1, $2, $3, $4, $5)',
+      [m.tableId, m.endedAt, m.how, m.playerIds, m.report],
+      `could not save match ${m.tableId}`,
+    );
+  }
+
+  /** Ask for a word to be added, or take the ask back. Never throws. */
+  requestWord(r: WordRequest, requested: boolean): Promise<void> {
+    return requested
+      ? this.write(
+          'insert into word_requests (word, player_id, table_id) values ($1, $2, $3) on conflict do nothing',
+          [r.word, r.playerId, r.tableId],
+          `could not record the request for ${r.word}`,
+        )
+      : this.write(
+          'delete from word_requests where word = $1 and player_id = $2',
+          [r.word, r.playerId],
+          `could not withdraw the request for ${r.word}`,
+        );
+  }
+
+  /** One statement once the schema is current; a failure is logged, never thrown. */
+  private write(text: string, params: unknown[], failure: string): Promise<void> {
     return this.ready
-      .then(() =>
-        this.sql.query(
-          'insert into matches (table_id, ended_at, how, player_ids, report) values ($1, $2, $3, $4, $5)',
-          [m.tableId, m.endedAt, m.how, m.playerIds, m.report],
-        ),
-      )
+      .then(() => this.sql.query(text, params))
       .then(
         () => undefined,
-        (e) => console.error(`database: could not save match ${m.tableId}: ${e}`),
+        (e) => console.error(`database: ${failure}: ${e}`),
       );
   }
 }

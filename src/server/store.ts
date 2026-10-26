@@ -47,6 +47,10 @@ export interface TableRecord {
   scout: Scout | null;
   /** The last finished match. */
   recap: Recap | null;
+  /** Its private half: each player's attempts that were not words (word -> tries),
+   *  and which of them they have asked to have added. Sent only to that player. */
+  misses: Map<string, Map<string, number>>;
+  requested: Map<string, Set<string>>;
   /** When the agreed countdown fires, or null if nobody is waiting. */
   startsAt: number | null;
   /** The span that countdown covers, held so the clients can draw it. */

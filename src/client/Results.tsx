@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { Fx, MissKind, PlayedWord, TableView } from '../shared/types';
+import type { Fx, MissKind, MyRecap, PlayedWord, TableView } from '../shared/types';
 import { burst, rain } from './burst';
 import type { BurstKind } from './burst';
 import MiniBoard from './MiniBoard';
+import Misses from './Misses';
 import TableShell from './TableShell';
 import Trophies from './Trophies';
 
@@ -14,6 +15,9 @@ interface Props {
   onBackToSetup: () => void;
   onChat: (text: string) => void;
   onLeave: () => void;
+  /** Your own misses from the match, if you had any. */
+  mine: MyRecap | null;
+  onRequestWord: (word: string, requested: boolean) => void;
 }
 
 interface Tip {
@@ -40,7 +44,17 @@ const MISS_LABEL: Record<MissKind, string> = {
  * A broken word keeps its place as an empty outline, struck through in the colour of
  * whoever broke it. Below, a few words that were there and nobody played.
  */
-export default function Results({ table, meId, fx, onReady, onBackToSetup, onChat, onLeave }: Props) {
+export default function Results({
+  table,
+  meId,
+  fx,
+  onReady,
+  onBackToSetup,
+  onChat,
+  onLeave,
+  mine,
+  onRequestWord,
+}: Props) {
   const ranked = [...table.players].sort((a, b) => b.score - a.score);
   const popped = useRef(-1);
   const scroller = useRef<HTMLDivElement>(null);
@@ -190,6 +204,7 @@ export default function Results({ table, meId, fx, onReady, onBackToSetup, onCha
               ))}
             </div>
           )}
+          {mine && <Misses mine={mine} onRequest={onRequestWord} />}
         </div>
       </section>
 

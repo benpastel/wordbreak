@@ -156,6 +156,12 @@ export interface MissedWord {
   breaks: { playerId: string; word: string }[];
 }
 
+/** The part of the last match only its own player is sent: the words they tried
+ *  that were not words, so they can ask for any to be let in. */
+export interface MyRecap {
+  misses: { word: string; tries: number; requested: boolean }[];
+}
+
 /** The match that just finished, word by word. */
 export interface Recap {
   words: PlayedWord[];
@@ -222,6 +228,9 @@ export type ClientMsg =
   | { t: 'claim'; tileIds: number[] }
   /** A slid word that was not one, for the server's match report. */
   | { t: 'missed'; word: string; why: string }
+  /** After a match: ask for one of your own misses to be added to the dictionary,
+   *  or take the request back. */
+  | { t: 'requestWord'; word: string; requested: boolean }
   | { t: 'addBot' }
   | { t: 'removeBot'; botId: string }
   | { t: 'setBotDifficulty'; botId: string; difficulty: number }
@@ -230,6 +239,6 @@ export type ClientMsg =
 export type ServerMsg =
   | { t: 'welcome'; playerId: string; name: string }
   | { t: 'lobby'; tables: TableSummary[] }
-  | { t: 'table'; table: TableView; serverNow: number; fx: Fx[] }
+  | { t: 'table'; table: TableView; serverNow: number; fx: Fx[]; mine?: MyRecap }
   | { t: 'left' }
   | { t: 'error'; message: string };

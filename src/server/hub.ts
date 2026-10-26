@@ -8,7 +8,7 @@ import {
   DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
 } from '../shared/types';
 import type {
-  EndMode, Fx, Medal, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
+  EndMode, Fx, Medal, MyRecap, Player, ServerMsg, Settings, TableSummary, TableView, Trophies,
 } from '../shared/types';
 import * as R from '../shared/rules';
 import { Brain } from './bot/brain';
@@ -181,6 +181,8 @@ export class Hub {
       matchLog: null,
       scout: null,
       recap: null,
+      misses: new Map(),
+      requested: new Map(),
       startsAt: null,
       countdownMs: null,
     };
@@ -458,6 +460,8 @@ export class Hub {
     t.startedAt = Date.now();
     t.log = new Map();
     t.recap = null;
+    t.misses = new Map();
+    t.requested = new Map();
     const who = t.playerIds.flatMap((id) => {
       const p = this.store.getPlayer(id);
       return p ? [this.who(p)] : [];
@@ -546,6 +550,8 @@ export class Hub {
       missed: t.scout?.result() ?? [],
     };
     t.scout = null;
+    t.misses = t.matchLog?.notWords() ?? new Map();
+    t.requested = new Map();
     t.log = new Map();
     const finals = new Map(standing.map((p) => [p.id, { score: p.score, medal: medals[p.id] }]));
     const top = Math.max(0, ...standing.map((p) => p.score));
@@ -677,6 +683,24 @@ export class Hub {
     return 0;
   }
 
+  /** After a match, ask for one of your own refused words to be added, or take the
+   *  ask back. Only words you actually tried count, so this cannot be used to stuff
+   *  the requests with anything else. */
+  requestWord(playerId: string, word: unknown, requested: unknown): void {
+    const t = this.tableOf(playerId);
+    if (!t || t.phase !== 'ended' || typeof word !== 'string' || typeof requested !== 'boolean') return;
+    if (!t.misses.get(playerId)?.has(word)) return;
+    const mine = t.requested.get(playerId) ?? new Set<string>();
+    if (mine.has(word) === requested) return;
+    if (requested) mine.add(word);
+    else mine.delete(word);
+    t.requested.set(playerId, mine);
+    console.log(`word-request ${JSON.stringify({ word, requested, table: t.id })}`);
+    void this.db?.requestWord({ word, playerId, tableId: t.id }, requested);
+    this.store.putTable(t);
+    this.pushFor(playerId);
+  }
+
   /** A word slid and let go of that was not one, as the player's client saw it. */
   missed(playerId: string, word: string, why: string): void {
     const t = this.tableOf(playerId);
@@ -785,8 +809,20 @@ export class Hub {
   private pushTable(tableId: string, fx: Fx[]): void {
     const t = this.store.getTable(tableId);
     if (!t) return;
-    const msg: ServerMsg = { t: 'table', table: this.tableView(t), serverNow: Date.now(), fx };
-    for (const id of t.playerIds) this.send(id, msg);
+    const table = this.tableView(t);
+    const serverNow = Date.now();
+    // The same table to everyone, plus to each player alone their own misses.
+    for (const id of t.playerIds) this.send(id, { t: 'table', table, serverNow, fx, mine: this.mine(t, id) });
+  }
+
+  private mine(t: TableRecord, playerId: string): MyRecap | undefined {
+    if (t.phase !== 'ended') return undefined;
+    const tally = t.misses.get(playerId);
+    if (!tally?.size) return undefined;
+    const asked = t.requested.get(playerId);
+    return {
+      misses: [...tally].map(([word, tries]) => ({ word, tries, requested: !!asked?.has(word) })),
+    };
   }
 
   private pushLobby(): void {

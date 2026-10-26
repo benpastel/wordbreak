@@ -100,6 +100,21 @@ export class MatchLog {
     this.misses.push({ s: this.secs(now), p, w: word, why, ...(server ? { server: true as const } : {}) });
   }
 
+  /** Each player's attempts that were not words, by id: word -> how many tries, in
+   *  the order first tried. Other refusals (too short, not adjacent) are about the
+   *  board, not the dictionary, and are left out. */
+  notWords(): Map<string, Map<string, number>> {
+    const out = new Map<string, Map<string, number>>();
+    for (const m of this.misses) {
+      if (m.why !== 'not-a-word') continue;
+      const id = this.players[m.p].id;
+      const tally = out.get(id) ?? new Map<string, number>();
+      tally.set(m.w, (tally.get(m.w) ?? 0) + 1);
+      out.set(id, tally);
+    }
+    return out;
+  }
+
   /** Everyone who played, by id, in the order the report lists them. */
   playerIds(): string[] {
     return this.players.map((p) => p.id);

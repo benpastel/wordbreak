@@ -41,6 +41,20 @@ section('a finished match');
   check('at the time it ended', rows[0].ended_at.toISOString() === '2026-10-26T12:00:00.000Z');
 }
 
+section('word requests');
+{
+  const db = new Db(sql);
+  await quiet(() => db.whenReady())();
+  const r = { word: 'rizz', playerId: 'a', tableId: 't1' };
+  await db.requestWord(r, true);
+  await db.requestWord(r, true);
+  await db.requestWord({ ...r, playerId: 'b' }, true);
+  const count = async () => (await pg.query("select count(*)::int as n from word_requests where word = 'rizz'")).rows[0].n;
+  equal('one ask per player, however many times they ask', await count(), 2);
+  await db.requestWord(r, false);
+  equal('and taking one back removes only theirs', await count(), 1);
+}
+
 section('when the database fails');
 {
   const db = new Db(sql);

@@ -37,6 +37,20 @@ section('a match, start to finish');
   check('and which were the server refusing', r.misses[1].server === true && r.misses[0].server === undefined);
 }
 
+section('words that were not words');
+{
+  const log = new MatchLog('t3', settings, 0, [ann, bot]);
+  log.missed(ann, 'qzx', 'not-a-word', 100);
+  log.missed(ann, 'zzv', 'not-a-word', 200);
+  log.missed(ann, 'qzx', 'not-a-word', 300);
+  log.missed(ann, 'at', 'not-long-enough', 400);
+  log.missed(bot, 'bqq', 'not-a-word', 500, true);
+  const nw = log.notWords();
+  equal('tallied per player, in the order first tried', [...nw.get('a')], [['qzx', 2], ['zzv', 1]]);
+  equal('refusals about the board are left out', nw.get('a').has('at'), false);
+  equal('bots and server refusals count too', [...nw.get('b')], [['bqq', 1]]);
+}
+
 section('limits');
 {
   const log = new MatchLog('t2', settings, 0, [ann]);

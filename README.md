@@ -68,6 +68,18 @@ from inside Render: its IP allow list is empty. The service finds it through
 Play never touches it. Everything during a match stays in memory; when a match ends
 (or is abandoned), its report and the ids of everyone who played are written to
 `matches`, fire-and-forget, so a slow or missing database cannot stall a game.
+After a match each player can open their own misses (words they slid that were
+not words) at the bottom of the results and request any for inclusion; those land in
+`word_requests`, one row per word per player, and also print a `word-request {…}`
+log line. The most-asked first, from a shell on the service:
+
+```sh
+render ssh srv-db3rsj8473hc73f47f6g
+psql "$DATABASE_URL" -c "select word, count(*) from word_requests group by word order by 2 desc"
+```
+
+Accepted words go in `data/modern-words.txt`.
+
 Migrations live in `src/server/db.ts` and run at startup, each once. Without
 `DATABASE_URL`, as locally and in the tests, nothing is kept; `test/db.test.mjs` checks
 the SQL against PGlite instead.
