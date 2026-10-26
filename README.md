@@ -59,6 +59,19 @@ Every match prints one line to the service's log when it ends (or is abandoned):
 whether it banked, broke or was still held, and each word tried and turned down. See
 `src/server/matchlog.ts`.
 
+### Database
+
+Render Postgres `wordbreak-db` (Basic-256mb, Ohio, beside the service), reachable only
+from inside Render: its IP allow list is empty. The service finds it through
+`DATABASE_URL`, set to the database's internal connection string.
+
+Play never touches it. Everything during a match stays in memory; when a match ends
+(or is abandoned), its report and the ids of everyone who played are written to
+`matches`, fire-and-forget, so a slow or missing database cannot stall a game.
+Migrations live in `src/server/db.ts` and run at startup, each once. Without
+`DATABASE_URL`, as locally and in the tests, nothing is kept; `test/db.test.mjs` checks
+the SQL against PGlite instead.
+
 ### The old address
 
 The game used to be a GitHub Pages project site at `https://benpastel.com/wordbreak/`

@@ -5,6 +5,7 @@ import compression from 'compression';
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import type { WebSocket } from 'ws';
+import { openDb } from './db';
 import { loadDictionary } from './dictionary';
 import { loadDefinitions } from './definitions';
 import { loadFrequencies } from './frequency';
@@ -40,10 +41,17 @@ const sockets = new Map<string, WebSocket>();
 // Set only by the end-to-end test, so it can play whole matches in seconds.
 const timing = process.env.WORDBREAK_FAST_CLOCK === '1' ? FAST_TIMING : REAL_TIMING;
 
-const hub = new Hub((playerId, msg: ServerMsg) => {
-  const ws = sockets.get(playerId);
-  if (ws && ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
-}, timing);
+const db = openDb();
+if (!db) console.log('database: DATABASE_URL not set, finished matches are not kept');
+
+const hub = new Hub(
+  (playerId, msg: ServerMsg) => {
+    const ws = sockets.get(playerId);
+    if (ws && ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg));
+  },
+  timing,
+  db,
+);
 
 wss.on('connection', (ws: WebSocket) => {
   let playerId: string | null = null;

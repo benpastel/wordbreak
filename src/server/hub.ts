@@ -17,6 +17,7 @@ import { isWord } from './dictionary';
 import { define } from './definitions';
 import { MatchLog, MISS_REASONS } from './matchlog';
 import type { MissReason } from './matchlog';
+import type { Db } from './db';
 import { Scout } from './missed';
 import { MemoryStore } from './store';
 import type { PlayerRecord, Store, TableRecord } from './store';
@@ -81,6 +82,8 @@ export class Hub {
   constructor(
     private send: Send,
     private timing: Timing = REAL_TIMING,
+    /** Where finished matches are kept, if anywhere (db.ts). */
+    private db: Db | null = null,
   ) {
     setInterval(() => this.reap(), 30_000).unref();
   }
@@ -699,7 +702,16 @@ export class Hub {
     finals: Map<string, { score: number; medal?: Medal }>,
   ): void {
     if (!t.matchLog) return;
-    console.log(`match ${t.matchLog.report(how, Date.now(), finals)}`);
+    const now = Date.now();
+    const report = t.matchLog.report(how, now, finals);
+    console.log(`match ${report}`);
+    void this.db?.saveMatch({
+      tableId: t.id,
+      endedAt: new Date(now),
+      how,
+      playerIds: t.matchLog.playerIds(),
+      report,
+    });
     t.matchLog = null;
   }
 

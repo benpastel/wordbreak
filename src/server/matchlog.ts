@@ -100,6 +100,11 @@ export class MatchLog {
     this.misses.push({ s: this.secs(now), p, w: word, why, ...(server ? { server: true as const } : {}) });
   }
 
+  /** Everyone who played, by id, in the order the report lists them. */
+  playerIds(): string[] {
+    return this.players.map((p) => p.id);
+  }
+
   /** The finished report. `how` is what ended it; final scores and medals belong to
    *  whoever is still at the table. */
   report(
