@@ -20,6 +20,20 @@ Open http://localhost:5173. Vite serves the client and proxies `/ws` to the game
 server on :8080. Open a second window to play against yourself — a table works with
 one player, and you can join mid-game.
 
+### With a local database
+
+Without one, everything works but nothing outlives a restart. To keep matches and
+ratings locally, the same way production does, run Postgres 18 and point a git-ignored
+`.env` at it; `npm run dev` reads it, and deleting it goes back to no database.
+
+```sh
+brew install postgresql@18 && brew services start postgresql@18
+/opt/homebrew/opt/postgresql@18/bin/createdb wordbreak
+echo 'DATABASE_URL=postgresql://localhost/wordbreak' > .env
+```
+
+The server applies any new migrations on startup, here as in production.
+
 ## Tests
 
 ```sh
@@ -80,9 +94,19 @@ psql "$DATABASE_URL" -c "select word, count(*) from word_requests group by word 
 
 Accepted words go in `data/modern-words.txt`.
 
-Migrations live in `src/server/db.ts` and run at startup, each once. Without
-`DATABASE_URL`, as locally and in the tests, nothing is kept; `test/db.test.mjs` checks
-the SQL against PGlite instead.
+Migrations are `migrations/NNN-name.sql`, applied at startup in order, each once,
+all in one transaction under a lock so two servers starting together take turns.
+They are append-only and additive: during a deploy the old server briefly runs
+against the new schema, so removing or renaming anything takes two deploys (stop
+using it, then drop it). Writes go through one ordered queue that retries while the
+database is unreachable, so the ratings in memory and in the database cannot drift
+apart over a blip. Without `DATABASE_URL`, nothing is kept; the tests run the real
+SQL against PGlite.
+
+`npm run rerate` rebuilds every rating from the stored matches and shows what would
+change; `npm run rerate -- --service wordbreak-ro` does the same against production,
+read-only. Applying it in production is `node dist/server/rerate.js --write` from
+`render ssh`, then `render restart`, since the running server holds ratings in memory.
 
 ### Players and ratings
 

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "concurrently -n server,client -c cyan,magenta \"npm:dev:server\" \"npm:dev:client\"",
-    "dev:server": "tsx watch src/server/index.ts",
+    "dev:server": "tsx watch --env-file-if-exists=.env src/server/index.ts",
     "dev:client": "vite",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
@@ -17,7 +17,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
     "test": "npm run build:server && node test/rules.test.mjs && node test/selection.test.mjs && node test/definitions.test.mjs && node test/matchlog.test.mjs && node test/missed.test.mjs && node test/db.test.mjs && node test/rating.test.mjs && node test/ledger.test.mjs && node test/protocol.test.mjs",
     "howto-frames": "node scripts/howto-frames.mjs",
-    "tournament": "tsx src/server/bot/tournament.ts"
+    "tournament": "tsx src/server/bot/tournament.ts",
+    "rerate": "npm run build:server && node --env-file-if-exists=.env dist/server/rerate.js"
   },
   "dependencies": {
     "compression": "^1.7.5",

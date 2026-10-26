@@ -152,9 +152,11 @@ export class Ledger {
       before: before[i],
       ...(rated ? { after: { rating: r.rating, rd: r.rd, volatility: r.volatility } } : {}),
     }));
+    // Queued, not awaited: the queue keeps them in order and retries them, and the
+    // leaderboard should not wait on the database to show the new ratings.
     if (this.db) {
-      await this.db.savePlayers(rows.filter((r) => r.kind !== 'bot'));
-      await this.db.saveMatch({
+      void this.db.savePlayers(rows.filter((r) => r.kind !== 'bot'));
+      void this.db.saveMatch({
         tableId: m.tableId,
         endedAt: m.endedAt,
         how: m.how,

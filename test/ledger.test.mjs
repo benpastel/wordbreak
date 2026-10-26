@@ -1,15 +1,14 @@
 // Players, ratings and the leaderboard, kept in a real Postgres (PGlite), and the
 // promise that stored matches are enough to rebuild every rating.
 import { createRequire } from 'node:module';
-import { PGlite } from '@electric-sql/pglite';
 import { section, check, equal, done } from './harness.mjs';
 const require = createRequire(import.meta.url);
 const { Db } = require('../dist/server/db.js');
 const { Ledger, replay } = require('../dist/server/ledger.js');
 const { BOT_LEVELS } = require('../dist/shared/types.js');
 
-const pg = new PGlite();
-const sql = { query: (t, p) => pg.query(t, p), exec: (t) => pg.exec(t) };
+import { pglite } from './pglite.mjs';
+const { pg, sql } = pglite();
 const log = console.log;
 console.log = () => {};
 const db = new Db(sql);
@@ -33,6 +32,7 @@ await ledger.record(match([seat('ann', 'dev1', 30), seat('bob', 'dev1', 10)]));
 await ledger.record(match([seat('Ann', 'dev1', 30), seat('cal', 'dev2', 20), seat('intermediate', null, 25, 0.35)]));
 await ledger.record(match([seat('cal', 'dev2', null), seat('bob', 'dev1', 5)]));
 await ledger.record(match([seat('ann', 'dev1', null), seat('dee', 'dev3', null)], 'abandoned'));
+await db.drained();
 
 const ann = ledger.guestId('dev1', 'ann');
 check('two people on one browser are two guests', ann && ledger.guestId('dev1', 'bob') && ann !== ledger.guestId('dev1', 'bob'));
