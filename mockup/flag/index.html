@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flag your misses</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..800&display=swap" />
+<style>
+  :root {
+    --ground: oklch(0.94 0.008 85);
+    --page: oklch(0.985 0.004 85);
+    --tray: oklch(0.902 0.012 85);
+    --tile-face: oklch(0.985 0.004 85);
+    --ink: oklch(0.22 0.01 60);
+    --ink-soft: oklch(0.52 0.008 70);
+    --ink-mute: oklch(0.7 0.008 70);
+    --hairline: oklch(0.86 0.01 85);
+    --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+    --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+    --edge: inset 0 0 0 1px oklch(0.3 0.02 70 / 0.2);
+    --go: oklch(0.55 0.12 148);
+    --go-tint: oklch(0.93 0.05 148);
+    --track-tile: 0.05em;
+    --track-label: 0.08em;
+    --font: 'Archivo', system-ui, sans-serif;
+  }
+  body.dark {
+    --ground: oklch(0.215 0.006 70);
+    --page: oklch(0.2 0.006 70);
+    --tray: oklch(0.165 0.006 70);
+    --tile-face: oklch(0.3 0.008 75);
+    --ink: oklch(0.93 0.01 85);
+    --ink-soft: oklch(0.72 0.01 80);
+    --ink-mute: oklch(0.52 0.01 75);
+    --hairline: oklch(0.33 0.008 75);
+    --shadow-1: 0 1px 1px oklch(0 0 0 / 0.35);
+    --shadow-2: 0 2px 5px oklch(0 0 0 / 0.3);
+    --edge: inset 0 0 0 1px oklch(1 0 0 / 0.13);
+    --go: oklch(0.7 0.12 148);
+    --go-tint: oklch(0.32 0.05 148);
+  }
+  .c0 { --hue: 250; --cf: 0.085; --lf: 0.87;  --ci: 0.16; }
+  .c1 { --hue: 25;  --cf: 0.105; --lf: 0.855; --ci: 0.165; }
+  .c2 { --hue: 148; --cf: 0.12;  --lf: 0.845; --ci: 0.14; }
+  .c3 { --hue: 300; --cf: 0.095; --lf: 0.875; --ci: 0.17; }
+  .c0, .c1, .c2, .c3 { --pf: oklch(var(--lf) var(--cf) var(--hue)); --pc: oklch(0.55 var(--ci) var(--hue)); }
+  body.dark :is(.c0, .c1, .c2, .c3) {
+    --pf: oklch(calc(var(--lf) - 0.44) calc(var(--cf) * 0.9) var(--hue));
+    --pc: oklch(0.72 var(--ci) var(--hue));
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font); }
+  .bar {
+    position: sticky; top: 0; z-index: 20; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 10px 16px; background: var(--ground); border-bottom: 1px solid var(--hairline);
+  }
+  .bar b { font-weight: 800; letter-spacing: var(--track-label); text-transform: uppercase; font-size: 0.8rem; margin-right: 8px; }
+  .seg { display: inline-flex; border-radius: 7px; box-shadow: var(--edge); overflow: hidden; }
+  .seg button { font: inherit; font-size: 0.8rem; font-weight: 650; border: 0; padding: 6px 12px; cursor: pointer; background: none; color: var(--ink-soft); }
+  .seg button.on { background: var(--ink); color: var(--page); }
+  .toc { display: flex; gap: 6px; flex-wrap: wrap; font-size: 0.78rem; }
+  .toc a { color: var(--ink-soft); text-decoration: none; padding: 3px 6px; border-radius: 5px; }
+  .toc a:hover { background: var(--tray); color: var(--ink); }
+
+  main { padding: 26px 16px 80px; display: flex; flex-direction: column; align-items: center; gap: 56px; }
+  section.dir { width: 100%; max-width: 820px; scroll-margin-top: 70px; }
+  .dir > h2 { margin: 0 0 4px; font-size: 1rem; font-weight: 800; letter-spacing: var(--track-label); text-transform: uppercase; }
+  .dir > h2 i { font-style: normal; color: var(--ink-mute); margin-right: 8px; }
+  .dir > p { margin: 0 0 14px; font-size: 0.88rem; color: var(--ink-soft); max-width: 660px; line-height: 1.45; }
+  .screen {
+    background: var(--page); border-radius: 12px; box-shadow: var(--shadow-1), var(--shadow-2), var(--edge);
+    width: 760px; max-width: 100%; margin: 0 auto; overflow: hidden; position: relative;
+  }
+  body.phone .screen { width: 390px; }
+
+  /* ---------------------------------------------------------------- the results screen as it is */
+  .stands { padding: 22px 22px 0; }
+  .shelf { display: grid; grid-template-rows: 1fr auto; grid-auto-flow: column; grid-auto-columns: 1fr; }
+  .stand { grid-row: span 2; display: grid; grid-template-rows: subgrid; min-width: 0; }
+  .tower { display: flex; flex-direction: column-reverse; align-items: center; gap: 3px; padding: 0 6px; }
+  .row { position: relative; display: flex; gap: 2px; }
+  .t {
+    --s: 17px; width: var(--s); height: var(--s); border-radius: 13%; display: grid; place-items: center;
+    font-size: calc(var(--s) * 0.56); font-weight: 700; color: var(--ink); text-transform: uppercase;
+    background: color-mix(in oklab, var(--pf) 70%, var(--tile-face)); box-shadow: var(--shadow-1);
+  }
+  body.phone .t { --s: 12px; }
+  body.phone .row { gap: 1px; }
+  .t span { line-height: 1; text-box: trim-both cap alphabetic; }
+  .row.broken .t { background: none; box-shadow: inset 0 0 0 1px var(--hairline); color: var(--ink-mute); }
+  .strike { position: absolute; left: -3px; right: -3px; top: calc(50% - 1px); height: 2px; border-radius: 1px; background: var(--pc); }
+  .plinth { margin-top: 8px; padding: 6px 6px 18px; border-top: 2px solid var(--ink); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+  .plinth .pts { font-weight: 700; color: var(--pc); font-size: 2.6rem; line-height: 1.05; }
+  .plinth .name { font-weight: 650; color: var(--pc); text-transform: uppercase; letter-spacing: var(--track-label); font-size: 0.95rem; }
+  body.phone .plinth .pts { font-size: 1.8rem; }
+  body.phone .plinth .name { font-size: 0.68rem; }
+
+  .missed { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; padding: 20px 22px 24px; border-top: 1px solid var(--hairline); }
+  .missed figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .mb { --cell: 24px; --gap: calc(var(--cell) * 0.1); display: grid; grid-template-columns: repeat(4, var(--cell)); gap: var(--gap); padding: var(--gap); border-radius: 6px; background: var(--tray); }
+  body.phone .mb { --cell: 18px; }
+  .mt { aspect-ratio: 1; border-radius: 13%; display: grid; place-items: center; font-size: calc(var(--cell) * 0.52); font-weight: 700; background: var(--tile-face); box-shadow: var(--shadow-1); }
+  .missword { font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-tile); font-size: 1rem; }
+  .misskind { font-size: 0.64rem; font-weight: 650; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-mute); }
+
+  /* ---------------------------------------------------------------- shared bits for the variants */
+  .label { font-size: 0.7rem; font-weight: 650; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink-mute); }
+  .flag { width: 13px; height: 13px; flex: none; }
+  .flag path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+  .on .flag path.cloth { fill: currentColor; }
+  .n { font-size: 0.68rem; color: var(--ink-mute); font-weight: 650; font-variant-numeric: tabular-nums; }
+  :where(button.reset) { all: unset; cursor: pointer; }
+
+  /* 1: chips */
+  .v1 { padding: 18px 22px 22px; border-top: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 99px; box-shadow: var(--edge);
+    font-weight: 700; font-size: 0.82rem; letter-spacing: var(--track-tile); text-transform: uppercase; color: var(--ink-soft);
+  }
+  .chip .flag { color: var(--ink-mute); }
+  .chip.on { background: var(--ink); color: var(--page); box-shadow: none; }
+  .chip.on .flag, .chip.on .n { color: var(--page); }
+
+  /* 2: ghost tiles */
+  .v2 { padding: 18px 22px 22px; border-top: 1px solid var(--hairline); display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 18px; }
+  .ghost { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ghost .tiles { display: flex; gap: 2px; }
+  .gt {
+    width: 22px; height: 22px; border-radius: 13%; display: grid; place-items: center; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; color: var(--ink-mute); box-shadow: inset 0 0 0 1px var(--hairline); transition: background 0.2s, color 0.2s;
+  }
+  .ghost.on .gt { background: var(--go-tint); color: var(--ink); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--go) 50%, transparent); }
+  .ghost .mark { height: 14px; font-size: 0.66rem; font-weight: 650; color: var(--go); letter-spacing: var(--track-label); text-transform: uppercase; }
+
+  /* 3: checklist */
+  .v3 { padding: 16px 22px 20px; border-top: 1px solid var(--hairline); }
+  .v3 ul { list-style: none; margin: 8px auto 0; padding: 0; max-width: 360px; }
+  .v3 li { display: flex; align-items: center; gap: 10px; padding: 7px 2px; border-bottom: 1px solid var(--hairline); }
+  .v3 li:last-child { border-bottom: 0; }
+  .v3 .w { flex: 1; font-weight: 700; text-transform: uppercase; letter-spacing: var(--track-tile); font-size: 0.9rem; color: var(--ink-soft); }
+  .v3 .tog { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 6px; box-shadow: var(--edge); color: var(--ink-mute); font-size: 0.72rem; font-weight: 650; letter-spacing: var(--track-label); text-transform: uppercase; }
+  .v3 .on .tog { background: var(--ink); color: var(--page); box-shadow: none; }
+  .v3 .on .w { color: var(--ink); }
+
+  /* 4: beside your own tower */
+  .stand.me { position: relative; }
+  .sidestack { position: absolute; display: flex; flex-direction: column-reverse; gap: 3px; align-items: flex-start; }
+  .v4wrap .stand.me .tower { align-items: center; }
+  .side { display: flex; align-items: center; gap: 4px; font-size: 0.66rem; font-weight: 700; letter-spacing: var(--track-tile); text-transform: uppercase; color: var(--ink-mute); white-space: nowrap; }
+  .side.on { color: var(--ink); }
+  .side .flag { width: 10px; height: 10px; }
+  body.phone .side { font-size: 0.56rem; }
+
+  /* 5: under your name */
+  .plinth .mine { margin-top: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; max-width: 100%; }
+  .plinth .mine button { font-size: 0.68rem; font-weight: 700; letter-spacing: var(--track-tile); text-transform: uppercase; color: var(--ink-mute); text-decoration: line-through; text-decoration-color: color-mix(in oklab, var(--ink-mute) 60%, transparent); }
+  .plinth .mine button.on { color: var(--go); text-decoration: none; }
+  .plinth .mine button.on::before { content: '⚑ '; }
+  body.phone .plinth .mine button { font-size: 0.56rem; }
+
+  /* 6: folded */
+  .v6 { border-top: 1px solid var(--hairline); }
+  .v6 .head { display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; padding: 14px 22px; color: var(--ink-mute); }
+  .v6 .head svg { transition: transform 0.15s; }
+  .v6.open .head svg { transform: rotate(90deg); }
+  .v6 .body { display: none; padding: 0 22px 20px; }
+  .v6.open .body { display: block; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>Flag your misses</b>
+  <span class="seg" id="theme"><button class="on" data-v="light">light</button><button data-v="dark">dark</button></span>
+  <span class="seg" id="width"><button class="on" data-v="wide">wide</button><button data-v="phone">phone</button></span>
+  <nav class="toc" id="toc"></nav>
+</div>
+<main id="main"></main>
+
+<script src="../recap/match.js"></script>
+<script>
+const M = window.MATCH;
+const ME = 0; // benji, blue
+const players = M.names.map((name, i) => ({ i, name, score: M.score[i] }));
+const ranked = [...players].sort((a, b) => b.score - a.score);
+const up = (s) => s.toUpperCase();
+
+// Your slides this match that were not words, in the order first tried, with how
+// many times. Real slang and plain slips, mixed, as the game would really see them.
+const MISSES = [
+  { w: 'oatn', n: 1 }, { w: 'rizz', n: 2 }, { w: 'tane', n: 1 }, { w: 'sus', n: 3 },
+  { w: 'hugd', n: 1 }, { w: 'vax', n: 1 }, { w: 'lol', n: 1 }, { w: 'sope', n: 2 }, { w: 'toda', n: 1 },
+];
+// Flags are shared across the variants, so trying one shows the state in all.
+const flagged = new Set(['rizz']);
+
+const FLAG = `<svg class="flag" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 13V1.5"/><path class="cloth" d="M3 2h8l-2 3 2 3H3z"/></svg>`;
+
+function tower(p) {
+  const ws = M.claims.filter((c) => c.p === p.i);
+  return `<div class="tower c${p.i}">${ws.map((w) => {
+    const broken = w.brokenBy !== undefined;
+    return `<div class="row${broken ? ' broken' : ''}">${w.w.split('').map((l) => `<div class="t"><span>${l}</span></div>`).join('')}${broken ? `<i class="strike c${w.brokenBy}"></i>` : ''}</div>`;
+  }).join('')}</div>`;
+}
+
+function wall({ mineUnderName = false, besideTower = false } = {}) {
+  return `<div class="stands ${besideTower ? 'v4wrap' : ''}"><div class="shelf">${ranked.map((p) => `
+    <div class="stand c${p.i}${p.i === ME ? ' me' : ''}">
+      ${tower(p)}
+      <div class="plinth c${p.i}">
+        <span class="pts">${p.score}</span><span class="name">${p.name}</span>
+        ${mineUnderName && p.i === ME ? `<div class="mine">${MISSES.map((m) => `<button class="reset${flagged.has(m.w) ? ' on' : ''}" data-w="${m.w}">${up(m.w)}</button>`).join('')}</div>` : ''}
+      </div>
+    </div>`).join('')}</div></div>`;
+}
+
+function missedBoards() {
+  const items = [['longest unfound', M.longest], ['biggest break', M.swing], ['easiest break', M.simple]];
+  return `<div class="missed">${items.map(([label, m]) => `<figure>
+    <div class="mb">${m.board.letters.split('').map((l) => `<div class="mt">${l}</div>`).join('')}</div>
+    <span class="missword">${up(m.w)}</span><span class="misskind">${label}</span></figure>`).join('')}</div>`;
+}
+
+const count = (m) => (m.n > 1 ? `<span class="n">×${m.n}</span>` : '');
+
+const DIRS = [
+  ['Chips', 'Below the scores, before the missed boards. Each word is a pill with a flag; tap to flag it, tap again to take it back. Flagged pills go solid. A small label says whose these are.',
+    () => wall() + `<div class="v1"><span class="label">your misses</span><div class="chips">${MISSES.map((m) =>
+      `<button class="reset chip${flagged.has(m.w) ? ' on' : ''}" data-w="${m.w}">${FLAG}${up(m.w)}${count(m)}</button>`).join('')}</div></div>` + missedBoards()],
+
+  ['Ghost tiles', 'Each word drawn as empty tiles, like a broken word in the towers, so it reads as part of the game rather than a form. Tap and it fills in green, as if asking to be let in. No label at all.',
+    () => wall() + `<div class="v2">${MISSES.map((m) => `<button class="reset ghost${flagged.has(m.w) ? ' on' : ''}" data-w="${m.w}">
+      <span class="tiles">${m.w.split('').map((l) => `<span class="gt">${l}</span>`).join('')}</span>
+      <span class="mark">${flagged.has(m.w) ? 'asked' : m.n > 1 ? `×${m.n}` : ''}</span></button>`).join('')}</div>` + missedBoards()],
+
+  ['Checklist', 'A short list, one word per line with a flag button at the end. The plainest and easiest to hit on a phone, and the clearest about what tapping does; also the most like a settings page.',
+    () => wall() + `<div class="v3"><div class="label" style="text-align:center">your misses</div><ul>${MISSES.map((m) =>
+      `<li class="${flagged.has(m.w) ? 'on' : ''}"><span class="w">${up(m.w)}</span>${count(m)}<button class="reset tog" data-w="${m.w}">${FLAG}${flagged.has(m.w) ? 'flagged' : 'flag'}</button></li>`).join('')}</ul></div>` + missedBoards()],
+
+  ['Beside your tower', 'Your misses stand in a faint column right next to your own tower, where your words already are, so there is nothing new to find and no label needed. Only you see your own; tap one to flag it. Gets cramped at big tables and on phones.',
+    () => {
+      const html = wall({ besideTower: true });
+      return html + missedBoards();
+    }],
+
+  ['Under your name', 'Struck through, in small type, under your own score on the plinth. The smallest change to the screen: they are yours because they are under your name. Tap to flag; a flagged one turns green with a flag.',
+    () => wall({ mineUnderName: true }) + missedBoards()],
+
+  ['Folded', 'Only a count, until you open it: the screen stays as it is now for anyone who does not care. Opens to the chips from 1.',
+    () => wall() + `<div class="v6"><button class="reset head" data-fold>
+      <span class="label">${MISSES.length} misses</span>
+      <svg viewBox="0 0 16 16" width="14" height="14"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="body"><div class="chips">${MISSES.map((m) =>
+        `<button class="reset chip${flagged.has(m.w) ? ' on' : ''}" data-w="${m.w}">${FLAG}${up(m.w)}${count(m)}</button>`).join('')}</div></div></div>` + missedBoards()],
+];
+
+// Variant 4 needs its column placed after layout, beside the real tower.
+function placeSide(section) {
+  const me = section.querySelector('.stand.me');
+  if (!me) return;
+  const tw = me.querySelector('.tower');
+  const col = document.createElement('div');
+  col.className = 'sidestack';
+  col.innerHTML = MISSES.map((m) => `<button class="reset side${flagged.has(m.w) ? ' on' : ''}" data-w="${m.w}">${up(m.w)}${flagged.has(m.w) ? FLAG : ''}</button>`).join('');
+  me.append(col);
+  // Just past the widest row, its foot level with the tower's.
+  const right = Math.max(...[...tw.querySelectorAll('.row')].map((r) => r.offsetLeft + r.offsetWidth));
+  col.style.left = `${tw.offsetLeft + right + 8}px`;
+  col.style.bottom = `${me.offsetHeight - tw.offsetTop - tw.offsetHeight}px`;
+}
+
+const opened = new Set();
+function render() {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  DIRS.forEach(([name, blurb, fn], k) => {
+    const s = document.createElement('section');
+    s.className = 'dir'; s.id = `d${k + 1}`;
+    s.innerHTML = `<h2><i>${k + 1}</i>${name}</h2><p>${blurb}</p><div class="screen">${fn()}</div>`;
+    main.append(s);
+    if (name === 'Beside your tower') placeSide(s);
+    if (opened.has(k)) s.querySelector('.v6')?.classList.add('open');
+    s.addEventListener('click', (e) => {
+      const fold = e.target.closest('[data-fold]');
+      if (fold) {
+        opened.has(k) ? opened.delete(k) : opened.add(k);
+        return render();
+      }
+      const b = e.target.closest('[data-w]');
+      if (!b) return;
+      const w = b.dataset.w;
+      flagged.has(w) ? flagged.delete(w) : flagged.add(w);
+      const y = window.scrollY;
+      render();
+      window.scrollTo(0, y);
+    });
+  });
+  document.getElementById('toc').innerHTML = DIRS.map(([n], k) => `<a href="#d${k + 1}">${k + 1} ${n}</a>`).join('');
+}
+for (const [id, apply] of [['theme', (v) => document.body.classList.toggle('dark', v === 'dark')], ['width', (v) => document.body.classList.toggle('phone', v === 'phone')]]) {
+  document.getElementById(id).addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    document.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle('on', x === b));
+    apply(b.dataset.v);
+    render();
+  });
+}
+render();
+</script>
+</body>
+</html>
