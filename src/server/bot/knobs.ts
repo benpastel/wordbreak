@@ -12,7 +12,7 @@
 /** Values at difficulty 0, 0.25, 0.5, 0.75 and 1. */
 type Anchor = [number, number, number, number, number];
 
-const ANCHORS = {
+export const ANCHORS = {
   // --- spotting -----------------------------------------------------------------
   /** Median ms to spot one particular 3-letter word that is common, reads forwards
    *  and sits in focus. Every other word is this, scaled by the factors below. */

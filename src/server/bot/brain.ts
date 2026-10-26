@@ -97,10 +97,12 @@ export class Brain {
 
   constructor(
     readonly playerId: string,
-    difficulty: number,
+    /** A point on the difficulty dial, or every knob set by hand (the tournament's
+     *  varied bots, bot/tournament.ts). */
+    difficulty: number | Knobs,
     private seed: number,
   ) {
-    this.knobs = knobsFor(difficulty);
+    this.knobs = typeof difficulty === 'number' ? knobsFor(difficulty) : difficulty;
     this.rng = seeded(seed);
   }
 

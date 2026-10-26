@@ -10,6 +10,7 @@ import { HOLD_MS } from '../../shared/types';
 import { isWord, loadDictionary } from '../dictionary';
 import { corpusRank, loadFrequencies } from '../frequency';
 import { Brain } from './brain';
+import type { Knobs } from './knobs';
 import { seeded } from './rng';
 
 const DT = 50;
@@ -43,7 +44,14 @@ const fmtT = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${Math.floor((ms % 1000) / 100)}`;
 };
 
-function playOne(ds: number[], size: number, secs: number, target: number, seed: number, log: boolean): Stat[] {
+export function playOne(
+  ds: (number | Knobs)[],
+  size: number,
+  secs: number,
+  target: number,
+  seed: number,
+  log: boolean,
+): Stat[] {
   Math.random = seeded(seed); // the board's letters, so a match can be replayed
   let nextId = 1;
   const alloc = () => nextId++;
@@ -56,7 +64,7 @@ function playOne(ds: number[], size: number, secs: number, target: number, seed:
   const order = ds.map((_, i) => i);
   const rng = seeded(seed ^ 0x5eed);
   const who = (id: string) => Number(id.slice(1));
-  const name = (i: number) => `b${i}(${ds[i]})`;
+  const name = (i: number) => `b${i}(${typeof ds[i] === 'number' ? ds[i] : 'custom'})`;
   let seq = 1;
   let t = 0;
 
