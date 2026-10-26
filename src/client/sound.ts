@@ -115,12 +115,22 @@ const EFFECTS: Record<Sfx, (out: AudioNode) => void> = {
     tone(out, { freq: 880, slideTo: 640, dur: 0.11, gain: 0.32 });
     tone(out, { freq: 2200, dur: 0.02, gain: 0.06, type: 'triangle' });
   },
-  // A muted thud, low and short: not a word.
-  invalid: (out) => tone(out, { freq: 170, slideTo: 110, dur: 0.14, gain: 0.35 }),
-  // Two dull taps: a word, but something longer is in the way.
+  // A muted thud, low and short: not a word. Phone and laptop speakers barely play
+  // anything this low, so two quiet overtones go with it; from those the ear still
+  // hears the low note the speaker cannot make, and on headphones they hardly
+  // change the sound.
+  invalid: (out) => {
+    tone(out, { freq: 170, slideTo: 110, dur: 0.14, gain: 0.35 });
+    tone(out, { freq: 340, slideTo: 220, dur: 0.12, gain: 0.1 });
+    tone(out, { freq: 510, slideTo: 330, dur: 0.09, gain: 0.05 });
+  },
+  // Two dull taps: a word, but something longer is in the way. Each with a faint
+  // octave above, for the same reason.
   blocked: (out) => {
     tone(out, { freq: 300, dur: 0.06, gain: 0.22, type: 'triangle' });
+    tone(out, { freq: 600, dur: 0.05, gain: 0.06 });
     tone(out, { freq: 260, at: 0.075, dur: 0.07, gain: 0.22, type: 'triangle' });
+    tone(out, { freq: 520, at: 0.075, dur: 0.06, gain: 0.06 });
   },
   // A small rising chime, a fifth apart: your claim banked.
   bank: (out) => {
