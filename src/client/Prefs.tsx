@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { canSpeak, setSpeechOn, setSpeechVolume, speechOn, speechVolume } from './speech';
+import { setSoundPrefs, soundPrefs, wakeAudio } from './sound';
+import type { SoundPrefs } from './sound';
+import { canSpeak, hushSpeech, primeSpeech } from './speech';
 
 /**
  * Per-device preferences. Each is an attribute on <html> and the stylesheet does the
@@ -28,8 +30,11 @@ function stored(p: Pref): string {
 export default function Prefs() {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState(() => ({ theme: stored('theme'), input: stored('input') }));
-  const [speaking, setSpeaking] = useState(speechOn);
-  const [volume, setVolume] = useState(speechVolume);
+  const [sound, setSound] = useState(soundPrefs);
+  const change = (patch: Partial<SoundPrefs>) => {
+    setSoundPrefs(patch);
+    setSound(soundPrefs());
+  };
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,32 +67,38 @@ export default function Prefs() {
 
   return (
     <div className="prefs" ref={ref}>
-      {canSpeak && (
-        <button
-          className="prefsbtn"
-          aria-label="read words aloud"
-          aria-pressed={speaking}
-          onClick={() => {
-            setSpeechOn(!speaking);
-            setSpeaking(!speaking);
-          }}
-        >
-          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-            <path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor" />
-            {speaking ? (
-              <path
-                d="M13 7.5a3.5 3.5 0 0 1 0 5M15.2 5.3a6.6 6.6 0 0 1 0 9.4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            ) : (
-              <path d="M13 8l4 4M17 8l-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            )}
-          </svg>
-        </button>
-      )}
+      {/* Everything audible at once: spoken words and effects, each also with its
+          own checkbox and volume in the menu. Switching on happens inside the tap,
+          which is what browsers need before they will make any sound. */}
+      <button
+        className="prefsbtn"
+        aria-label="sound"
+        aria-pressed={sound.on}
+        onClick={() => {
+          if (!sound.on) {
+            wakeAudio();
+            primeSpeech();
+          } else {
+            hushSpeech();
+          }
+          change({ on: !sound.on });
+        }}
+      >
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+          <path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor" />
+          {sound.on ? (
+            <path
+              d="M13 7.5a3.5 3.5 0 0 1 0 5M15.2 5.3a6.6 6.6 0 0 1 0 9.4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          ) : (
+            <path d="M13 8l4 4M17 8l-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          )}
+        </svg>
+      </button>
       <button
         className="prefsbtn"
         aria-label="preferences"
@@ -115,24 +126,45 @@ export default function Prefs() {
             </div>
           ))}
           {canSpeak && (
-            <div className="setting">
-              <label htmlFor="volume">volume</label>
+            <div className="setting sound">
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={sound.spoken}
+                  onChange={(e) => change({ spoken: e.target.checked })}
+                />
+                spoken words
+              </label>
               <input
-                id="volume"
+                aria-label="spoken words volume"
                 className="volume"
                 type="range"
                 min={0}
                 max={1}
                 step={0.05}
-                value={volume}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  setSpeechVolume(v);
-                  setVolume(v);
-                }}
+                value={sound.spokenVolume}
+                disabled={!sound.spoken}
+                onChange={(e) => change({ spokenVolume: Number(e.target.value) })}
               />
             </div>
           )}
+          <div className="setting sound">
+            <label className="check">
+              <input type="checkbox" checked={sound.sfx} onChange={(e) => change({ sfx: e.target.checked })} />
+              sound effects
+            </label>
+            <input
+              aria-label="sound effects volume"
+              className="volume"
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={sound.sfxVolume}
+              disabled={!sound.sfx}
+              onChange={(e) => change({ sfxVolume: Number(e.target.value) })}
+            />
+          </div>
         </div>
       )}
     </div>

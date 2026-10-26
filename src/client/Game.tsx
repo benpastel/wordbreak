@@ -5,6 +5,7 @@ import * as S from '../shared/selection';
 import { isWord } from './dict';
 import { playBankFx } from './fx';
 import { serverTime } from './net';
+import { sfx } from './sound';
 import { say } from './speech';
 import { FLUSH } from './TableShell';
 import { chevrons, points, viewBoxOf } from './trail';
@@ -18,6 +19,7 @@ const tapInput = () => document.documentElement.dataset.input === 'tap';
 
 interface Props {
   table: TableView;
+  meId: string;
   fx: { seq: number; items: Fx[] };
   onClaim: (tileIds: number[]) => void;
   /** Reports a slid word that was not one, and why, for the server's match log. */
@@ -25,7 +27,7 @@ interface Props {
   onLeave: () => void;
 }
 
-export default function Game({ table, fx, onClaim, onMissed, onLeave }: Props) {
+export default function Game({ table, meId, fx, onClaim, onMissed, onLeave }: Props) {
   const game = table.game!;
   const boardRef = useRef<HTMLDivElement>(null);
   const [selection, setSelectionState] = useState<number[]>([]);
@@ -133,6 +135,9 @@ export default function Game({ table, fx, onClaim, onMissed, onLeave }: Props) {
       if (sel.length > 1) {
         setRejected((r) => ({ word: w, n: (r?.n ?? 0) + 1 }));
         onMissedRef.current(w, isWord(w) ? (pathErr ?? 'not-a-word') : 'not-a-word');
+        // A word, but held by an equal or longer claim, sounds different from no
+        // word at all.
+        sfx(isWord(w) ? 'blocked' : 'invalid');
       }
     }
   }, [setSelection]);
@@ -155,9 +160,11 @@ export default function Game({ table, fx, onClaim, onMissed, onLeave }: Props) {
     for (const f of fx.items) {
       if (f.k === 'banked') {
         if (board) playBankFx(board, f, colorOf(f.playerId));
+        if (f.playerId === meId) sfx('bank');
         for (const i of f.idx) reseed.add(i);
       } else if (f.k === 'claimed') {
         say(f.word);
+        if (f.playerId === meId) sfx('claim');
       } else if (f.k === 'broken') {
         for (const i of f.idx) broke.add(i);
       }

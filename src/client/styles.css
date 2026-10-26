@@ -1111,6 +1111,12 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .prefspop .setting label { width: 52px; }
 /* Read aloud, switched on: the icon takes the ink rather than staying muted. */
 .prefsbtn[aria-pressed='true'] { color: var(--ink); }
+/* Sound: a checkbox naming each kind, its volume beside it. */
+.prefspop .setting.sound label.check {
+  width: 10.5rem; display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap;
+}
+.prefspop .setting.sound input[type='checkbox'] { margin: 0; accent-color: var(--ink); width: 15px; height: 15px; }
+.prefspop .volume:disabled { opacity: 0.35; }
 .prefspop .volume {
   flex: 1; min-width: 0; margin: 0; padding: 0; height: 20px; accent-color: var(--ink);
   background: none; border: 0; box-shadow: none;

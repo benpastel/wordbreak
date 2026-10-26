@@ -214,6 +214,7 @@ export default function App() {
     body = dict ? (
       <Game
         table={table}
+        meId={meId}
         fx={fx}
         onClaim={actions.claim}
         onMissed={actions.missed}
