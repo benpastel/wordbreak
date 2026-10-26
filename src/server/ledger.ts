@@ -42,7 +42,7 @@ export interface MatchRecord {
 export const nameKey = (name: string) => name.trim().toLowerCase();
 
 /** The named level a bot's difficulty belongs to. */
-function levelOf(difficulty: number) {
+export function levelOf(difficulty: number) {
   return BOT_LEVELS.reduce((a, b) => (Math.abs(b.difficulty - difficulty) < Math.abs(a.difficulty - difficulty) ? b : a));
 }
 
@@ -76,11 +76,11 @@ export class Ledger {
     const changed: PlayerRow[] = [];
     for (const l of BOT_LEVELS) {
       const had = this.byId.get(l.id);
-      if (had && had.rating === l.rating && had.rd === 0) continue;
+      if (had && had.rating === l.rating && had.rd === 0 && had.name === l.persona) continue;
       const row: PlayerRow = {
         id: l.id,
         kind: 'bot',
-        name: l.name,
+        name: l.persona,
         deviceHash: null,
         nameKey: null,
         rating: l.rating,

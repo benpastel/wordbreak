@@ -12,14 +12,13 @@ import type {
 } from '../shared/types';
 import * as R from '../shared/rules';
 import { Brain } from './bot/brain';
-import { botName } from './bot/names';
 import { isWord } from './dictionary';
 import { define } from './definitions';
 import { MatchLog, MISS_REASONS } from './matchlog';
 import type { MissReason } from './matchlog';
 import { createHash } from 'node:crypto';
 import type { Db } from './db';
-import { Ledger } from './ledger';
+import { Ledger, levelOf } from './ledger';
 import { Scout } from './missed';
 import { MemoryStore } from './store';
 import type { PlayerRecord, Store, TableRecord } from './store';
@@ -30,6 +29,8 @@ const DISCONNECT_GRACE_MS = 120_000;
 /** How often the bots at a table look at the board. */
 const BOT_TICK_MS = 100;
 const DEFAULT_BOT_DIFFICULTY = 0.35;
+/** Numerals for a second, third... bot of one level at a table. */
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // no look-alikes, these end up in URLs
 
 function rid(n: number): string {
@@ -293,13 +294,12 @@ export class Hub {
     const t = this.tableOf(playerId);
     if (!t || t.hostId !== playerId || t.phase === 'playing') return;
     if (t.playerIds.length >= MAX_PLAYERS) return;
-    const taken = new Set(t.playerIds.map((id) => this.store.getPlayer(id)?.name.toLowerCase() ?? ''));
     // A new bot plays like the one listed above it, so a table of five experts is one
     // choice rather than five.
     const above = t.playerIds.map((id) => this.store.getPlayer(id)?.bot).filter((b) => b).pop();
     const bot: PlayerRecord = {
       id: randomUUID(),
-      name: botName(taken),
+      name: '', // given by nameBots, below
       color: this.freeColor(t),
       score: 0,
       trophies: noTrophies(),
@@ -311,9 +311,25 @@ export class Hub {
     };
     this.store.putPlayer(bot);
     t.playerIds.push(bot.id);
+    this.nameBots(t);
     this.store.putTable(t);
     this.pushTable(t.id, []);
     this.pushLobby();
+  }
+
+  /** Each bot is its level's poet; a second of the same level at the table is II, a
+   *  third III, in seat order, renumbered whenever the table's bots change. */
+  private nameBots(t: TableRecord): void {
+    const seen = new Map<string, number>();
+    for (const id of t.playerIds) {
+      const p = this.store.getPlayer(id);
+      if (!p?.bot) continue;
+      const persona = levelOf(p.bot.difficulty).persona;
+      const n = (seen.get(persona) ?? 0) + 1;
+      seen.set(persona, n);
+      p.name = n === 1 ? persona : `${persona} ${ROMAN[n]}`;
+      this.store.putPlayer(p);
+    }
   }
 
   removeBot(playerId: string, botId: string): void {
@@ -323,6 +339,8 @@ export class Hub {
     if (!bot?.bot || bot.tableId !== t.id) return;
     this.leaveTable(botId, { quiet: true });
     this.store.deletePlayer(botId);
+    this.nameBots(t);
+    this.pushTable(t.id, []);
     this.pushLobby();
   }
 
@@ -336,6 +354,7 @@ export class Hub {
     );
     bot.bot = { ...bot.bot, difficulty: level };
     this.store.putPlayer(bot);
+    this.nameBots(t);
     this.pushTable(t.id, []);
   }
 

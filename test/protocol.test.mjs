@@ -431,7 +431,8 @@ process.on('exit', stop);
     const you = b.board?.rows.find((r) => r.id === b.board.you);
     check('back in the lobby, the leaderboard arrives, with you on it', !!you && you.name === 'benji', JSON.stringify(b.board?.you));
     check('rated after the matches you played', you?.matches >= 2, JSON.stringify(you));
-    check('the bot levels are on it too', ['child', 'beginner', 'intermediate', 'expert'].every((n) => b.board.rows.some((r) => r.bot && r.name === n)));
+    check('the bot levels are on it too, as their poets',
+      ['Edward Lear', 'Christina Rossetti', 'Emily Dickinson', 'Gerard Manley Hopkins'].every((n) => b.board.rows.some((r) => r.bot && r.name === n)));
     check('best first', b.board.rows.every((r, i, rs) => i === 0 || rs[i - 1].rating >= r.rating));
     b.send({ t: 'setName', name: 'benji2' });
     await sleep(150);
@@ -462,6 +463,7 @@ process.on('exit', stop);
     const bots = () => h.table.players.filter((p) => p.bot);
     check('the host can seat bots, and only the host', bots().length === 2, String(bots().length));
     check('a bot starts in the middle', bots().every((p) => p.bot.difficulty === 0.35));
+    equal('each is its level\'s poet, a second one numbered', bots().map((p) => p.name), ['Emily Dickinson', 'Emily Dickinson II']);
     check('a bot is ready from the start', bots().every((p) => p.ready));
     check('bots take their own colours',
       new Set(h.table.players.map((p) => p.color)).size === h.table.players.length);
@@ -474,6 +476,7 @@ process.on('exit', stop);
     check('difficulty is clamped, and only the host sets it',
       bots()[0].bot.difficulty === 0.62, JSON.stringify(bots().map((p) => p.bot)));
     check('the host can remove a bot', bots().length === 1 && bots()[0].id === hard.id);
+    equal('changing its level makes it that level\'s poet', bots()[0].name, 'Gerard Manley Hopkins');
     h.send({ t: 'setBotDifficulty', botId: hard.id, difficulty: 0.4 });
     await sleep(100);
     check('difficulty snaps to the nearest level', bots()[0].bot.difficulty === 0.35,

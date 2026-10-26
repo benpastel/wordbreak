@@ -17,13 +17,17 @@ export const COLOR_COUNT = 10;
  *  about 14, 22, 43 and 76 points.
  *
  *  Each also has a fixed rating, measured in the bot tournament (bot/tournament.ts,
- *  40,000 games, about ±20) with intermediate pinned at 1500, and a fixed id so it is one player across every
- *  match and on the leaderboard. */
+ *  40,000 games, about ±20) with intermediate pinned at 1500, and a fixed id so it
+ *  is one player across every match and on the leaderboard.
+ *
+ *  And each is a poet, the same one at every table and on the leaderboard, from
+ *  nonsense verse up to sprung rhythm. A second of the same level at one table is
+ *  II, a third III. */
 export const BOT_LEVELS = [
-  { name: 'child', difficulty: 0, rating: -482, id: '00000000-0000-4000-8000-0000000000b0' },
-  { name: 'beginner', difficulty: 0.15, rating: 305, id: '00000000-0000-4000-8000-0000000000b1' },
-  { name: 'intermediate', difficulty: 0.35, rating: 1500, id: '00000000-0000-4000-8000-0000000000b2' },
-  { name: 'expert', difficulty: 0.62, rating: 2868, id: '00000000-0000-4000-8000-0000000000b3' },
+  { name: 'child', persona: 'Edward Lear', difficulty: 0, rating: -482, id: '00000000-0000-4000-8000-0000000000b0' },
+  { name: 'beginner', persona: 'Christina Rossetti', difficulty: 0.15, rating: 305, id: '00000000-0000-4000-8000-0000000000b1' },
+  { name: 'intermediate', persona: 'Emily Dickinson', difficulty: 0.35, rating: 1500, id: '00000000-0000-4000-8000-0000000000b2' },
+  { name: 'expert', persona: 'Gerard Manley Hopkins', difficulty: 0.62, rating: 2868, id: '00000000-0000-4000-8000-0000000000b3' },
 ] as const;
 
 export const DEFAULT_GRID = 4;
