@@ -17,7 +17,9 @@ import { isWord } from './dictionary';
 import { define } from './definitions';
 import { MatchLog, MISS_REASONS } from './matchlog';
 import type { MissReason } from './matchlog';
+import { createHash } from 'node:crypto';
 import type { Db } from './db';
+import { Ledger } from './ledger';
 import { Scout } from './missed';
 import { MemoryStore } from './store';
 import type { PlayerRecord, Store, TableRecord } from './store';
@@ -84,7 +86,11 @@ export class Hub {
     private timing: Timing = REAL_TIMING,
     /** Where finished matches are kept, if anywhere (db.ts). */
     private db: Db | null = null,
+    /** Players and ratings (ledger.ts). */
+    private ledger: Ledger = new Ledger(db),
   ) {
+    // Once ratings are loaded, anyone already in the lobby gets the board.
+    void this.ledger.ready.then(() => this.pushLeaderboards());
     setInterval(() => this.reap(), 30_000).unref();
   }
 
@@ -95,10 +101,15 @@ export class Hub {
    *
    *  `bind` runs once the id is known but before anything is sent, so the caller can
    *  wire up the socket in time to receive the welcome. */
-  hello(existingId: string | null, name: string, bind: (playerId: string) => void): string {
+  hello(existingId: string | null, device: unknown, name: string, bind: (playerId: string) => void): string {
+    const deviceHash =
+      typeof device === 'string' && device.length >= 16 && device.length <= 200
+        ? createHash('sha256').update(device).digest('hex')
+        : undefined;
     let p = existingId ? this.store.getPlayer(existingId) : undefined;
-    // Nobody signs in as a bot.
-    if (p?.bot) p = undefined;
+    // Nobody signs in as a bot, and an id alone is not enough: it is shown to
+    // everyone at a table, so resuming also takes the browser's own secret.
+    if (p?.bot || !deviceHash || p?.device !== deviceHash) p = undefined;
     if (!p) {
       const id = randomUUID();
       p = {
@@ -114,6 +125,7 @@ export class Hub {
         ready: false,
         tableId: null,
         lastSeen: Date.now(),
+        device: deviceHash,
       };
     } else {
       if (name.trim()) p.name = cleanName(name, p.name);
@@ -150,6 +162,8 @@ export class Hub {
     this.store.putPlayer(p);
     if (p.tableId) this.pushTable(p.tableId, []);
     this.pushLobby();
+    // A different name on the same browser is a different guest.
+    this.pushLeaderboard(p.id, { onlyIfYouChanged: true });
   }
 
   // ------------------------------------------------------------------ tables
@@ -257,6 +271,7 @@ export class Hub {
     if (!opts.quiet) {
       this.send(playerId, { t: 'left' });
       this.pushLobby();
+      this.pushLeaderboard(playerId);
     }
   }
 
@@ -716,7 +731,25 @@ export class Hub {
   }
 
   private who(p: PlayerRecord) {
-    return { id: p.id, name: p.name, bot: p.bot?.difficulty ?? null };
+    return { id: p.id, name: p.name, bot: p.bot?.difficulty ?? null, device: p.device ?? null };
+  }
+
+  /** Which guest each lobby player was last told they are, so a keystroke in the
+   *  name field resends the board only when that changes. */
+  private toldYou = new Map<string, string | null>();
+
+  /** The leaderboard, to a player in the lobby, with their own row marked. */
+  private pushLeaderboard(playerId: string, opts: { onlyIfYouChanged?: boolean } = {}): void {
+    const p = this.store.getPlayer(playerId);
+    if (!p || p.bot || p.tableId) return;
+    const you = this.ledger.guestId(p.device, p.name);
+    if (opts.onlyIfYouChanged && this.toldYou.get(playerId) === you) return;
+    this.toldYou.set(playerId, you);
+    this.send(playerId, { t: 'leaderboard', board: this.ledger.leaderboard(you) });
+  }
+
+  private pushLeaderboards(): void {
+    for (const p of this.store.allPlayers()) if (!p.tableId && !p.bot) this.pushLeaderboard(p.id);
   }
 
   /** One JSON line per match, for the host's log viewer (src/server/matchlog.ts). */
@@ -729,13 +762,16 @@ export class Hub {
     const now = Date.now();
     const report = t.matchLog.report(how, now, finals);
     console.log(`match ${report}`);
-    void this.db?.saveMatch({
-      tableId: t.id,
-      endedAt: new Date(now),
-      how,
-      playerIds: t.matchLog.playerIds(),
-      report,
-    });
+    const seats = t.matchLog.seats().map((w) => ({
+      device: w.device ?? null,
+      name: w.name,
+      bot: w.bot,
+      score: finals.get(w.id)?.score ?? null,
+    }));
+    void this.ledger
+      .record({ tableId: t.id, endedAt: new Date(now), how, seats, report })
+      .then(() => this.pushLeaderboards())
+      .catch((e) => console.error(`ledger: could not record match on ${t.id}: ${e}`));
     t.matchLog = null;
   }
 
@@ -834,7 +870,10 @@ export class Hub {
     const p = this.store.getPlayer(playerId);
     if (!p) return;
     if (p.tableId) this.pushTable(p.tableId, []);
-    else this.send(playerId, { t: 'lobby', tables: this.lobbyView() });
+    else {
+      this.send(playerId, { t: 'lobby', tables: this.lobbyView() });
+      this.pushLeaderboard(playerId);
+    }
   }
 
   private reap(): void {

@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ClientMsg, Fx, MyRecap, ServerMsg, Settings, TableSummary, TableView } from '../shared/types';
+import type {
+  ClientMsg,
+  Fx,
+  Leaderboard,
+  MyRecap,
+  ServerMsg,
+  Settings,
+  TableSummary,
+  TableView,
+} from '../shared/types';
 import { Net } from './net';
 import type { NetStatus } from './net';
 import { loadWords, wordsReady } from './dict';
@@ -10,6 +19,20 @@ import Results from './Results';
 import Prefs from './Prefs';
 
 const ID_KEY = 'wordbreak.playerId';
+/** This browser's secret: never shown, and shared by everyone who plays on it. With
+ *  the name typed, it is which guest is playing; with the player id, it is what
+ *  lets a refreshed tab take its seat back. */
+const DEVICE_KEY = 'wordbreak.device';
+
+function deviceSecret(): string {
+  let s = localStorage.getItem(DEVICE_KEY);
+  if (!s) {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    s = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem(DEVICE_KEY, s);
+  }
+  return s;
+}
 /** The name the player typed, remembered across visits. */
 const NAME_KEY = 'wordbreak.name';
 
@@ -40,6 +63,7 @@ export default function App() {
   const [name, setName] = useState(storedName);
   const [tables, setTables] = useState<TableSummary[]>([]);
   const [table, setTable] = useState<TableView | null>(null);
+  const [board, setBoard] = useState<Leaderboard | null>(null);
   /** The private half of the last match's recap: only ever about you. */
   const [mine, setMine] = useState<MyRecap | null>(null);
   const [fx, setFx] = useState<{ seq: number; items: Fx[] }>({ seq: 0, items: [] });
@@ -68,6 +92,9 @@ export default function App() {
         setTables(msg.tables);
         setTable(null);
         break;
+      case 'leaderboard':
+        setBoard(msg.board);
+        break;
       case 'table':
         setTable(msg.table);
         setMine(msg.mine ?? null);
@@ -89,6 +116,7 @@ export default function App() {
     const net = new Net(onMsg, setStatus, () => ({
       t: 'hello',
       playerId: localStorage.getItem(ID_KEY),
+      device: deviceSecret(),
       name: storedName(),
     }));
     netRef.current = net;
@@ -215,6 +243,7 @@ export default function App() {
       <Lobby
         name={name}
         tables={tables}
+        board={board}
         onSetName={actions.setName}
         onCreate={actions.create}
         onJoin={actions.join}

@@ -293,22 +293,43 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 
 /* How to play: three small looping boards (HowTo.tsx), side by side where they fit
    and stacked on a phone, each under the one line it shows. */
-.howto { margin-top: 56px; }
-.howto h2 {
-  margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--hairline);
-}
-.howto.folded h2 { margin-bottom: 0; }
-/* The heading is the switch: the whole row, looking exactly like a heading, with a
-   chevron at its end that points down while open and to the side when folded. */
-.howtotoggle {
+/* A front-page section that folds away under its heading (Fold.tsx): the whole
+   heading row is the switch, looking exactly like a heading, with a chevron at its
+   end that points down while open and to the side when folded. */
+.fold { margin-top: 56px; }
+.fold h2 { margin: 0 0 20px; padding-bottom: 10px; border-bottom: 1px solid var(--hairline); }
+.fold.folded h2 { margin-bottom: 0; }
+.foldtoggle {
   all: unset; box-sizing: border-box; width: 100%; cursor: pointer;
   display: flex; justify-content: space-between; align-items: center;
   font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
 }
-.howtotoggle svg { color: var(--ink-mute); transition: transform 160ms; }
-.howtotoggle:hover svg { color: var(--ink); }
-.howto.folded .howtotoggle svg { transform: rotate(-90deg); }
-.howtotoggle:focus-visible { outline: 2px solid var(--ink-mute); outline-offset: 4px; border-radius: 2px; }
+.foldtoggle svg { color: var(--ink-mute); transition: transform 160ms; }
+.foldtoggle:hover svg { color: var(--ink); }
+.fold.folded .foldtoggle svg { transform: rotate(-90deg); }
+.foldtoggle:focus-visible { outline: 2px solid var(--ink-mute); outline-offset: 4px; border-radius: 2px; }
+/* The leaderboard: rank, name and rating, in a narrow column, yours marked. */
+.leaders ol { list-style: none; margin: 0 auto; padding: 0; max-width: 460px; }
+.leaders li {
+  position: relative; display: grid; grid-template-columns: 3ch 1fr auto; align-items: baseline; gap: 14px;
+  padding: 8px 10px; border-radius: var(--r-ctl);
+}
+.leaders li + li { border-top: 1px solid var(--hairline); }
+.leaders li.you { background: var(--tray); border-top-color: transparent; }
+.leaders li.you + li { border-top-color: transparent; }
+.leaders .rank { color: var(--ink-mute); font-variant-numeric: tabular-nums; text-align: right; font-size: 0.85rem; }
+.leaders .name {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: flex; align-items: center; gap: 8px;
+  font-weight: var(--w-label); text-transform: uppercase; letter-spacing: var(--track-label); font-size: 0.9rem;
+}
+.leaders .name .badge { flex: none; }
+.leaders .rating { font-family: var(--font-tile); font-weight: var(--w-tile); font-variant-numeric: tabular-nums; }
+/* Your own row, when it is far below the rest of the list: a break before it. */
+.leaders .gap { position: absolute; left: 0; right: 0; top: -14px; text-align: center; }
+.leaders .gap::before { content: '⋯'; color: var(--ink-mute); }
+.leaders li:has(.gap) { margin-top: 22px; }
+
 .howto ol {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-wrap: wrap; justify-content: center; gap: 32px 28px;

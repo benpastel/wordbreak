@@ -1,17 +1,19 @@
 import { MAX_PLAYERS } from '../shared/types';
-import type { TableSummary } from '../shared/types';
+import type { Leaderboard, TableSummary } from '../shared/types';
 import HowTo from './HowTo';
+import LeaderboardView from './Leaderboard';
 import NameField from './NameField';
 
 interface Props {
   name: string;
   tables: TableSummary[];
+  board: Leaderboard | null;
   onSetName: (n: string) => void;
   onCreate: (n: string) => void;
   onJoin: (id: string) => void;
 }
 
-export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Props) {
+export default function Lobby({ name, tables, board, onSetName, onCreate, onJoin }: Props) {
   // Nothing at a table happens anonymously, so the name gates both ways in.
   const named = name.trim().length > 0;
 
@@ -60,6 +62,7 @@ export default function Lobby({ name, tables, onSetName, onCreate, onJoin }: Pro
       )}
 
       <HowTo />
+      {board && <LeaderboardView board={board} />}
     </div>
   );
 }

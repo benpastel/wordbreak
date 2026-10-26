@@ -19,6 +19,9 @@ export interface PlayerRecord {
   ready: boolean;
   tableId: string | null;
   lastSeen: number;
+  /** Hash of the browser's secret. Resuming this player takes the secret, not just
+   *  the id, which everyone at a table can see. */
+  device?: string;
   /** Set only for a bot. Its seed fixes its vocabulary for as long as it exists. */
   bot?: { difficulty: number; seed: number };
 }

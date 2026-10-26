@@ -69,7 +69,7 @@ wss.on('connection', (ws: WebSocket) => {
     }
 
     if (msg.t === 'hello') {
-      playerId = hub.hello(msg.playerId, msg.name, (id) => {
+      playerId = hub.hello(msg.playerId, msg.device, msg.name, (id) => {
         // A second tab for the same identity takes over the seat.
         const prev = sockets.get(id);
         if (prev && prev !== ws) prev.close(4000, 'replaced');

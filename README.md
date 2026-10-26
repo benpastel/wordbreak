@@ -84,6 +84,27 @@ Migrations live in `src/server/db.ts` and run at startup, each once. Without
 `DATABASE_URL`, as locally and in the tests, nothing is kept; `test/db.test.mjs` checks
 the SQL against PGlite instead.
 
+### Players and ratings
+
+A guest is a browser and a name together: each browser keeps a secret
+(`wordbreak.device` in local storage, stored server-side only as a hash), and every
+name played under on it is a separate player, so people sharing a browser are rated
+apart. The secret is also what lets a refreshed tab take its seat back; the player
+id everyone at a table sees is not enough on its own.
+
+Ratings are Glicko-2 (`src/server/rating.ts`), one match per rating period. A match
+of several players is every pair of them: the higher score wins, equal is a draw,
+leaving early loses to everyone who stayed. The leaderboard shows the cautious
+rating, rating − 2 × RD, so newcomers start low and climb. Bot levels are fixed
+players with no uncertainty, at ratings measured in the bot tournament (below).
+
+Ratings live in memory (`src/server/ledger.ts`), loaded from `players` at startup
+and written back after each match. Every match row keeps its players' ids and the
+report with everyone's rating before and after, and `replay()` in `ledger.ts`
+recomputes every rating from those rows alone; `test/ledger.test.mjs` checks it
+matches exactly. Signing in by emailed link will use `login_links` and `sessions`,
+already in the schema and not yet used.
+
 ### The old address
 
 The game used to be a GitHub Pages project site at `https://benpastel.com/wordbreak/`
@@ -92,6 +113,24 @@ now forwards to wordbreak.games: `.github/workflows/pages.yml` publishes
 `redirect/index.html` there as the index, the old `tutorial.html` and `404.html`, turning
 any `#/t/CODE` table link into `/table/CODE`. It only redeploys when that page or the workflow
 changes. Repo Settings → Pages → Source stays on **GitHub Actions**.
+
+## Bot tournament
+
+`npm run tournament` keeps a standing population of varied bots and every game they
+have played, in `data/bots/`: each bot a full set of knobs drawn around a base
+difficulty, each game a random board (4×4 to 6×6, points or time, two to four bots)
+between bots near each other's rating. Ratings are fitted to all games at once,
+intermediate pinned at 1500, so they share a scale with players' ratings; the named
+levels' ratings in `BOT_LEVELS` come from here. Games are stamped with a hash of the
+bot code, and only games from the current code count, the previous fit becoming the
+starting point after a change.
+
+```sh
+npm run tournament -- grow --bots 100      # more bots
+npm run tournament -- play --games 20000   # play (all cores), refitting as it goes
+npm run tournament -- report               # named levels, what each knob is worth
+npm run tournament -- pick 0,800,1500      # bots nearest those ratings
+```
 
 ## Layout
 

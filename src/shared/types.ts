@@ -14,12 +14,16 @@ export const COLOR_COUNT = 10;
  *  bot knob runs along (server/bot/knobs.ts); the top of it, 1, is beyond any
  *  person and offered nowhere. Playing alone for three minutes on a 4x4 board,
  *  child claims about 2.3 words a minute and the rest about 2.9, 4.7 and 7.4, for
- *  about 14, 22, 43 and 76 points. */
+ *  about 14, 22, 43 and 76 points.
+ *
+ *  Each also has a fixed rating, measured in the bot tournament (bot/tournament.ts,
+ *  40,000 games, about ±20) with intermediate pinned at 1500, and a fixed id so it is one player across every
+ *  match and on the leaderboard. */
 export const BOT_LEVELS = [
-  { name: 'child', difficulty: 0 },
-  { name: 'beginner', difficulty: 0.15 },
-  { name: 'intermediate', difficulty: 0.35 },
-  { name: 'expert', difficulty: 0.62 },
+  { name: 'child', difficulty: 0, rating: -482, id: '00000000-0000-4000-8000-0000000000b0' },
+  { name: 'beginner', difficulty: 0.15, rating: 305, id: '00000000-0000-4000-8000-0000000000b1' },
+  { name: 'intermediate', difficulty: 0.35, rating: 1500, id: '00000000-0000-4000-8000-0000000000b2' },
+  { name: 'expert', difficulty: 0.62, rating: 2868, id: '00000000-0000-4000-8000-0000000000b3' },
 ] as const;
 
 export const DEFAULT_GRID = 4;
@@ -156,6 +160,23 @@ export interface MissedWord {
   breaks: { playerId: string; word: string }[];
 }
 
+/** One place on the leaderboard. The rating is the cautious one: as low as the
+ *  player's true rating plausibly is (server/rating.ts). */
+export interface LeaderRow {
+  rank: number;
+  id: string;
+  name: string;
+  bot: boolean;
+  rating: number;
+  matches: number;
+}
+
+export interface Leaderboard {
+  rows: LeaderRow[];
+  /** Your own id on it, as the name you are using now, if you have played. */
+  you: string | null;
+}
+
 /** The part of the last match only its own player is sent: the words they tried
  *  that were not words, so they can ask for any to be let in. */
 export interface MyRecap {
@@ -215,7 +236,9 @@ export type Fx =
   | { k: 'ended'; medals: Record<string, Medal> };
 
 export type ClientMsg =
-  | { t: 'hello'; playerId: string | null; name: string }
+  /** `device` is this browser's secret, never shown to anyone: with it, a returning
+   *  tab resumes its player, and with the name it says which guest is playing. */
+  | { t: 'hello'; playerId: string | null; device: string; name: string }
   | { t: 'setName'; name: string }
   | { t: 'createTable'; name: string }
   | { t: 'joinTable'; tableId: string }
@@ -241,4 +264,5 @@ export type ServerMsg =
   | { t: 'lobby'; tables: TableSummary[] }
   | { t: 'table'; table: TableView; serverNow: number; fx: Fx[]; mine?: MyRecap }
   | { t: 'left' }
+  | { t: 'leaderboard'; board: Leaderboard }
   | { t: 'error'; message: string };

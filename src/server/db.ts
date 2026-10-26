@@ -38,12 +38,67 @@ export const MIGRATIONS: string[] = [
      requested_at timestamptz not null default now(),
      primary key (word, player_id)
    );`,
+  // 3. Players, and their ratings. A guest is a browser and a name together: the
+  //    browser's secret is kept only as a hash, and several people can share one
+  //    browser by playing under different names. A bot level is one fixed player.
+  //    An account (username and email, signing in by emailed link) will take over a
+  //    guest's row when it is claimed; the two tables after it are for that, and
+  //    unused until then.
+  //
+  //    Ratings here are a cache of the matches: every match keeps its players' ids
+  //    and the report, enough to recompute every rating from the start under any
+  //    rules.
+  `create table players (
+     id uuid primary key,
+     kind text not null check (kind in ('guest', 'account', 'bot')),
+     name text not null,
+     device_hash text,
+     name_key text,
+     username text unique,
+     email text unique,
+     rating double precision not null,
+     rd double precision not null,
+     volatility double precision not null,
+     rated_matches int not null default 0,
+     first_seen timestamptz not null default now(),
+     last_seen timestamptz not null default now(),
+     unique (device_hash, name_key)
+   );
+   create table login_links (
+     token_hash text primary key,
+     email text not null,
+     player_id uuid references players (id),
+     created_at timestamptz not null default now(),
+     expires_at timestamptz not null,
+     used_at timestamptz
+   );
+   create table sessions (
+     token_hash text primary key,
+     player_id uuid not null references players (id),
+     created_at timestamptz not null default now(),
+     last_used timestamptz not null default now()
+   );
+   create index matches_player_ids on matches using gin (player_ids);`,
 ];
 
 export interface WordRequest {
   word: string;
   playerId: string;
   tableId: string;
+}
+
+/** A player as stored, and as the ratings keep them in memory. */
+export interface PlayerRow {
+  id: string;
+  kind: 'guest' | 'account' | 'bot';
+  name: string;
+  deviceHash: string | null;
+  nameKey: string | null;
+  rating: number;
+  rd: number;
+  volatility: number;
+  ratedMatches: number;
+  lastSeen: Date;
 }
 
 export interface FinishedMatch {
@@ -106,6 +161,41 @@ export class Db {
           [r.word, r.playerId],
           `could not withdraw the request for ${r.word}`,
         );
+  }
+
+  /** Every player, for the ratings to hold in memory. */
+  async loadPlayers(): Promise<PlayerRow[]> {
+    await this.ready;
+    const { rows } = await this.sql.query(
+      `select id, kind, name, device_hash, name_key, rating, rd, volatility, rated_matches, last_seen
+       from players`,
+    );
+    return rows.map((r) => ({
+      id: String(r.id),
+      kind: r.kind as PlayerRow['kind'],
+      name: String(r.name),
+      deviceHash: (r.device_hash as string | null) ?? null,
+      nameKey: (r.name_key as string | null) ?? null,
+      rating: Number(r.rating),
+      rd: Number(r.rd),
+      volatility: Number(r.volatility),
+      ratedMatches: Number(r.rated_matches),
+      lastSeen: new Date(r.last_seen as string),
+    }));
+  }
+
+  /** Insert or update players, as they stand after a match. Never throws. */
+  async savePlayers(players: PlayerRow[]): Promise<void> {
+    for (const p of players) {
+      await this.write(
+        `insert into players (id, kind, name, device_hash, name_key, rating, rd, volatility, rated_matches, last_seen)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         on conflict (id) do update set name = $3, rating = $6, rd = $7, volatility = $8,
+           rated_matches = $9, last_seen = $10`,
+        [p.id, p.kind, p.name, p.deviceHash, p.nameKey, p.rating, p.rd, p.volatility, p.ratedMatches, p.lastSeen],
+        `could not save player ${p.id}`,
+      );
+    }
   }
 
   /** One statement once the schema is current; a failure is logged, never thrown. */

@@ -20,19 +20,21 @@ const WORDS = new Set(
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 class Client {
-  constructor(name) {
-    Object.assign(this, { name, table: null, id: null, lobby: [], fx: [], errors: [] });
+  /** `device` is the browser's secret; a second tab of the same browser shares it. */
+  constructor(name, device = require('node:crypto').randomBytes(32).toString('hex')) {
+    Object.assign(this, { name, device, table: null, id: null, lobby: [], fx: [], errors: [], board: null });
   }
   connect(asId = null) {
     return new Promise((resolve) => {
       this.ws = new WebSocket(WS);
-      this.ws.on('open', () => this.send({ t: 'hello', playerId: asId, name: this.name }));
+      this.ws.on('open', () => this.send({ t: 'hello', playerId: asId, device: this.device, name: this.name }));
       this.ws.on('message', (d) => {
         const m = JSON.parse(d);
         if (m.t === 'welcome') { this.id = m.playerId; resolve(); }
         if (m.t === 'lobby') { this.lobby = m.tables; this.table = null; }
         if (m.t === 'table') { this.table = m.table; this.mine = m.mine ?? null; if (m.fx.length) this.fx.push(...m.fx); }
         if (m.t === 'left') this.table = null;
+        if (m.t === 'leaderboard') this.board = m.board;
         if (m.t === 'error') this.errors.push(m.message);
       });
     });
@@ -230,7 +232,12 @@ process.on('exit', stop);
   const board = Object.fromEntries(a.table.players.map((p) => [p.id, p.score]));
   a.close();
   await sleep(250);
-  const a2 = new Client('ana');
+  // Someone who saw ana's id at the table, on another browser, cannot become her.
+  const thief = new Client('ana');
+  await thief.connect(savedId);
+  check('an id alone does not resume a player', thief.id !== savedId);
+  thief.close();
+  const a2 = new Client('ana', a.device);
   await a2.connect(savedId);
   await sleep(250);
   check('same identity', a2.id === savedId);
@@ -418,6 +425,21 @@ process.on('exit', stop);
   b.send({ t: 'leaveTable' });
   await sleep(200);
   check('leaver is removed', a2.table.players.length === 1);
+
+  section('the leaderboard');
+  {
+    const you = b.board?.rows.find((r) => r.id === b.board.you);
+    check('back in the lobby, the leaderboard arrives, with you on it', !!you && you.name === 'benji', JSON.stringify(b.board?.you));
+    check('rated after the matches you played', you?.matches >= 2, JSON.stringify(you));
+    check('the bot levels are on it too', ['child', 'beginner', 'intermediate', 'expert'].every((n) => b.board.rows.some((r) => r.bot && r.name === n)));
+    check('best first', b.board.rows.every((r, i, rs) => i === 0 || rs[i - 1].rating >= r.rating));
+    b.send({ t: 'setName', name: 'benji2' });
+    await sleep(150);
+    check('a new name on the same browser is a different guest, not yet rated', b.board.you === null, JSON.stringify(b.board.you));
+    b.send({ t: 'setName', name: 'Benji' });
+    await sleep(150);
+    check('and back again, the name is matched without regard to case', b.board.you === you?.id);
+  }
   a2.send({ t: 'leaveTable' });
   await sleep(250);
   check('the empty table is cleaned up', !a2.lobby.some((t) => t.id === tableId));

@@ -26,6 +26,8 @@ interface Who {
   id: string;
   name: string;
   bot: number | null;
+  /** Hash of the player's browser secret, for the ledger. Never printed. */
+  device?: string | null;
 }
 
 interface ClaimEntry {
@@ -115,9 +117,9 @@ export class MatchLog {
     return out;
   }
 
-  /** Everyone who played, by id, in the order the report lists them. */
-  playerIds(): string[] {
-    return this.players.map((p) => p.id);
+  /** Everyone who played, in the order the report lists them. */
+  seats(): Who[] {
+    return this.players.map((p) => ({ ...p }));
   }
 
   /** The finished report. `how` is what ended it; final scores and medals belong to
