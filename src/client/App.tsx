@@ -9,7 +9,7 @@ import type {
   TableSummary,
   TableView,
 } from '../shared/types';
-import { Net, serverTime } from './net';
+import { Net } from './net';
 import type { NetStatus } from './net';
 import { loadWords, wordsReady } from './dict';
 import Lobby from './Lobby';
@@ -58,6 +58,11 @@ function linkedTable(): string | null {
   return m ? m[1] : null;
 }
 
+/** A code from another browser's leaderboard, opened here as /link/CODE: sent once
+ *  connected, so this browser plays as that guest. Read before the address is put
+ *  back to the front page. */
+let pendingLink = location.pathname.match(/^\/link\/([a-z0-9]+)\/?$/i)?.[1] ?? null;
+
 export default function App() {
   const [status, setStatus] = useState<NetStatus>('connecting');
   const [meId, setMeId] = useState<string | null>(null);
@@ -65,6 +70,8 @@ export default function App() {
   const [tables, setTables] = useState<TableSummary[]>([]);
   const [table, setTable] = useState<TableView | null>(null);
   const [board, setBoard] = useState<Leaderboard | null>(null);
+  /** The code you are showing, to open on another browser. */
+  const [linkOffer, setLinkOffer] = useState<{ code: string; expiresAt: number } | null>(null);
   /** The private half of the last match's recap: only ever about you. */
   const [mine, setMine] = useState<MyRecap | null>(null);
   const [fx, setFx] = useState<{ seq: number; items: Fx[] }>({ seq: 0, items: [] });
@@ -88,6 +95,18 @@ export default function App() {
         localStorage.setItem(ID_KEY, msg.playerId);
         setMeId(msg.playerId);
         setName(msg.name);
+        if (pendingLink) {
+          netRef.current?.send({ t: 'link', code: pendingLink });
+          pendingLink = null;
+        }
+        break;
+      case 'linkCode':
+        setLinkOffer({ code: msg.code, expiresAt: msg.expiresAt });
+        break;
+      case 'linked':
+        localStorage.setItem(NAME_KEY, msg.name);
+        setName(msg.name);
+        setLinkOffer(null);
         break;
       case 'lobby':
         setTables(msg.tables);
@@ -166,16 +185,10 @@ export default function App() {
     }
   }, [table?.id, wantTable]);
 
-  // Music through the menu and a table's setup, carrying on between them, and
-  // fading out over the countdown so the board arrives in quiet. A countdown called
-  // off brings it back; one too short to fade over still gets a moment.
-  const atSetup = !!meId && (!table || table.phase === 'lobby');
-  const startsAt = table?.startsAt ?? null;
-  useEffect(() => {
-    if (!atSetup) music(false, 0.4);
-    else if (startsAt !== null) music(false, Math.max(0.4, (startsAt - serverTime()) / 1000));
-    else music(true);
-  }, [atSetup, startsAt]);
+  // One piece of music for now, carrying on everywhere once connected: the menu, a
+  // table's setup, and the match itself.
+  const connected = !!meId;
+  useEffect(() => music(connected), [connected]);
 
   const actions = useMemo(
     () => ({
@@ -257,6 +270,9 @@ export default function App() {
         name={name}
         tables={tables}
         board={board}
+        linkOffer={linkOffer}
+        onLink={() => send({ t: 'linkCode' })}
+        onCloseLink={() => setLinkOffer(null)}
         onSetName={actions.setName}
         onCreate={actions.create}
         onJoin={actions.join}

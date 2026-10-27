@@ -8,12 +8,15 @@ interface Props {
   name: string;
   tables: TableSummary[];
   board: Leaderboard | null;
+  linkOffer: { code: string; expiresAt: number } | null;
+  onLink: () => void;
+  onCloseLink: () => void;
   onSetName: (n: string) => void;
   onCreate: (n: string) => void;
   onJoin: (id: string) => void;
 }
 
-export default function Lobby({ name, tables, board, onSetName, onCreate, onJoin }: Props) {
+export default function Lobby({ name, tables, board, linkOffer, onLink, onCloseLink, onSetName, onCreate, onJoin }: Props) {
   // Nothing at a table happens anonymously, so the name gates both ways in.
   const named = name.trim().length > 0;
 
@@ -62,7 +65,7 @@ export default function Lobby({ name, tables, board, onSetName, onCreate, onJoin
       )}
 
       <HowTo />
-      {board && <LeaderboardView board={board} />}
+      {board && <LeaderboardView board={board} linkOffer={linkOffer} onLink={onLink} onCloseLink={onCloseLink} />}
     </div>
   );
 }

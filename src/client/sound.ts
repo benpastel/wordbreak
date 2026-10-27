@@ -1,7 +1,6 @@
 // Everything the game plays aloud: spoken words (speech.ts), small sound effects,
-// and music on the menu and at a table before a match, all under one switch beside
-// the preferences button, each with its own checkbox and volume inside the menu.
-// Per device; off until switched on.
+// and music, all under one switch beside the preferences button, each with its own
+// checkbox and volume inside the menu. Per device; off until switched on.
 //
 // The effects are synthesized, not recorded: a few lines of Web Audio each, so
 // there is nothing to download and every one can be tuned right here. Any of them

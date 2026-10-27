@@ -324,6 +324,26 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   font-weight: var(--w-label); text-transform: uppercase; letter-spacing: var(--track-label); font-size: 0.9rem;
 }
 .leaders .name .badge { flex: none; }
+.leaders .nametext { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* Your row's link to another device: quiet beside your name until hovered. */
+.leaders .linkbtn {
+  flex: none; width: 26px; height: 26px; margin: -6px 0; padding: 0; display: grid; place-items: center;
+  background: none; color: var(--ink-mute);
+}
+.leaders .linkbtn:hover { color: var(--ink); }
+.leaders .linkbtn:not(:disabled):active { transform: none; }
+/* The code to open on that device: a QR to scan, its address to type. The QR keeps
+   white behind it in the dark theme too, which is what cameras read best. */
+.linkback {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px;
+  background: oklch(0 0 0 / 0.35);
+}
+.linkcard {
+  display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px;
+  background: var(--tile-face); border-radius: var(--r-ctl-lg); box-shadow: var(--shadow-1), var(--shadow-lift);
+}
+.linkcard .qr { display: block; width: min(240px, 70vw); height: auto; border-radius: 4px; }
+.linkcard .linkurl { font-size: 0.85rem; color: var(--ink-mute); user-select: all; overflow-wrap: anywhere; text-align: center; }
 .leaders .rating { font-family: var(--font-tile); font-weight: var(--w-tile); font-variant-numeric: tabular-nums; }
 /* Your own row, when it is far below the rest of the list: a break before it. */
 .leaders .gap { position: absolute; left: 0; right: 0; top: -14px; text-align: center; }
