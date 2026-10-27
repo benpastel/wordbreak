@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rating Change Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ground: oklch(0.94 0.008 85);
+    --tray: oklch(0.902 0.012 85);
+    --tile-face: oklch(0.985 0.004 85);
+    --ink: oklch(0.22 0.01 60);
+    --ink-soft: oklch(0.52 0.008 70);
+    --ink-mute: oklch(0.7 0.008 70);
+    --hairline: oklch(0.86 0.01 85);
+    --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+    --up: oklch(0.55 0.13 150);
+    --down: oklch(0.55 0.15 25);
+    --font: 'Archivo', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font); }
+  header.top { padding: 28px 24px 8px; max-width: 1400px; margin: 0 auto; }
+  header.top h1 { margin: 0 0 6px; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  header.top p { margin: 0; color: var(--ink-soft); max-width: 760px; line-height: 1.45; }
+  section { max-width: 1400px; margin: 0 auto; padding: 28px 24px; border-top: 1px solid var(--hairline); }
+  section h2 { margin: 0 0 4px; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  section h2 i { font-style: normal; color: var(--ink-mute); margin-right: 10px; }
+  section > p { margin: 0 0 18px; color: var(--ink-soft); max-width: 760px; line-height: 1.45; }
+  .frames { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  .frame { background: var(--tile-face); border-radius: 14px; box-shadow: 0 2px 10px oklch(0.3 0.02 70 / 0.12); overflow: hidden; }
+  .frame.phone { width: 390px; }
+  .frame.wide { width: 860px; max-width: 100%; }
+  .frame .cap { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); padding: 8px 12px 0; }
+  .screen { padding: 14px 14px 22px; }
+
+  /* the wall, simplified from styles.css */
+  .shelf { display: grid; grid-template-rows: 1fr auto; grid-auto-flow: column; grid-auto-columns: calc(100% / var(--n)); }
+  .stand { grid-row: span 2; display: grid; grid-template-rows: subgrid; min-width: 0; }
+  .tower { padding: 0 5px; container-type: inline-size; display: flex; flex-direction: column-reverse; align-items: center; gap: 3px; }
+  .row { position: relative; display: flex; gap: 2px; }
+  .wt {
+    --s: min(18px, calc(100cqi / var(--len) - 2px));
+    width: var(--s); height: var(--s); border-radius: 13%; display: grid; place-items: center;
+    font-weight: 800; font-size: calc(var(--s) * 0.56); text-transform: uppercase;
+    background: color-mix(in oklab, var(--pf) 70%, var(--tile-face)); box-shadow: var(--shadow-1);
+  }
+  .row.broken .wt { background: none; box-shadow: inset 0 0 0 1px var(--hairline); color: var(--ink-mute); }
+  .row .strike { position: absolute; left: -3px; right: -3px; top: calc(50% - 1px); height: 2px; border-radius: 1px; background: var(--sc); }
+  .plinth {
+    margin-top: 8px; padding: 6px 6px 0; border-top: 2px solid var(--ink);
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px;
+    container-type: inline-size; min-width: 0;
+  }
+  .plinth .pts { font-weight: 800; font-size: clamp(1.8rem, 30cqi, 3.8rem); line-height: 1.05; color: var(--pc); font-variant-numeric: tabular-nums; }
+  .plinth .name { font-weight: 650; font-size: clamp(0.72rem, 11cqi, 1.6rem); line-height: 1.15; color: var(--pc); overflow-wrap: anywhere; }
+  .badge { font-size: 0.6rem; font-weight: 650; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); background: var(--tray); padding: 2px 5px; border-radius: 4px; vertical-align: middle; }
+  .you-mark .name::after { content: ''; }
+
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .flat { color: var(--ink-mute); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* 1: rating under the name */
+  .o1 .rate { margin-top: 3px; font-size: clamp(0.72rem, 10cqi, 1.05rem); font-weight: 650; color: var(--ink-soft); white-space: nowrap; }
+  .o1 .rate .d { margin-left: 0.4em; }
+
+  /* 2: change beside the score */
+  .o2 .pts { position: relative; }
+  .o2 .d { position: absolute; left: 100%; top: 0.25em; margin-left: 3px; font-size: clamp(0.62rem, 9cqi, 0.95rem); font-weight: 700; white-space: nowrap; }
+
+  /* 3: yours alone */
+  .mine { margin: 22px auto 0; display: flex; justify-content: center; align-items: baseline; gap: 12px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .mine .was { font-size: 1.3rem; color: var(--ink-mute); }
+  .mine .arrow { color: var(--ink-mute); font-weight: 400; }
+  .mine .now { font-size: 2rem; }
+  .mine .d { font-size: 1.1rem; }
+
+  /* 4: a ratings table */
+  .rtab { margin: 24px auto 0; max-width: 460px; }
+  .rtab h3 { margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .rtab .r { display: grid; grid-template-columns: 1fr auto auto 3.4em; gap: 10px; align-items: baseline; padding: 7px 10px; border-radius: 7px; }
+  .rtab .r + .r { border-top: 1px solid var(--hairline); }
+  .rtab .r.you { background: var(--tray); border-top-color: transparent; }
+  .rtab .r.you + .r { border-top-color: transparent; }
+  .rtab .who { font-weight: 650; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--pc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rtab .was { color: var(--ink-mute); font-size: 0.85rem; }
+  .rtab .now { font-weight: 800; }
+  .rtab .d { text-align: right; font-weight: 700; font-size: 0.9rem; }
+  .rtab .rank { color: var(--ink-mute); font-size: 0.75rem; }
+
+  /* 5: counting */
+  .o5 .rate { margin-top: 3px; font-size: clamp(0.72rem, 10cqi, 1.05rem); font-weight: 650; color: var(--ink-soft); white-space: nowrap; }
+  .o5 .d { display: inline-block; margin-left: 0.35em; opacity: 0; transform: translateY(4px); transition: opacity 400ms, transform 400ms; }
+  .o5 .d.show { opacity: 1; transform: none; }
+  .replay { margin-top: 14px; font: inherit; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 12px; border-radius: 7px; border: 0; background: var(--tray); cursor: pointer; }
+
+  /* 6: a rating line */
+  .track { --top: calc(var(--lanes) * 34px); margin: 26px 8px 4px; position: relative; height: calc(var(--top) + 76px); }
+  .track .axis { position: absolute; left: 0; right: 0; top: calc(var(--top) + 46px); height: 2px; background: var(--hairline); }
+  .track .tick { position: absolute; top: calc(var(--top) + 40px); width: 2px; height: 14px; background: var(--ink-mute); transform: translateX(-1px); }
+  .track .tick b { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 0.62rem; font-weight: 650; color: var(--ink-mute); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em; }
+  .track .move { position: absolute; height: 4px; top: calc(var(--top) + 45px); border-radius: 2px; background: var(--pc); opacity: 0.35; }
+  .track .dot { position: absolute; top: calc(var(--top) + 40px); width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 0 2px var(--tile-face); }
+  .track .lab { position: absolute; top: calc((var(--lanes) - var(--lane)) * 34px + 6px); transform: translateX(-50%); font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pc); white-space: nowrap; text-align: center; line-height: 1.2; }
+  .track .lab.up1::after { content: ''; position: absolute; left: 50%; top: 100%; height: calc(var(--lane) * 34px + 4px); border-left: 1px solid var(--pc); opacity: 0.5; }
+  .track .lab span { display: block; font-weight: 800; color: var(--ink); letter-spacing: 0; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Rating change, after a match</h1>
+  <p>
+    The same match throughout: maya won, you (benji) came second, the expert bot third, and sam,
+    playing their second game, last. Ratings are the shown ones, rating − 2·RD. Sam lost to everyone and
+    still goes <b>up</b>: a new player's RD shrinks fast, which lifts the shown rating more than the
+    loss lowers it. Every option has to look sensible when that happens. Bots never move, so each option
+    shows them with no change.
+  </p>
+</header>
+<main id="main"></main>
+
+<script>
+const PLAYERS = [
+  { name: 'maya', hue: 25, score: 35, was: 1484, now: 1521, words: [['lantern'], ['tens'], ['rope', 'x'], ['oars'], ['planet'], ['ten']] },
+  { name: 'benji', you: true, hue: 250, score: 30, was: 1460, now: 1472, words: [['tops'], ['opera', 'x'], ['canter'], ['rat'], ['spine'], ['lip']] },
+  { name: 'John Keats', bot: true, hue: 145, score: 22, was: 2162, now: 2162, words: [['dendron'], ['toot', 'x'], ['ore'], ['pan']] },
+  { name: 'sam', hue: 75, score: 10, was: 412, now: 455, words: [['era', 'x'], ['cat'], ['top'], ['sip', 'x']] },
+];
+const RANK = { maya: [5, 4], benji: [6, 5], 'John Keats': [2, 2], sam: [14, 14] };
+
+const pc = (p) => `oklch(0.52 0.13 ${p.hue})`;
+const pf = (p) => `oklch(0.82 0.09 ${p.hue})`;
+const delta = (p) => p.now - p.was;
+const fmt = (d) => (d > 0 ? `+${d}` : d < 0 ? `−${-d}` : '±0');
+const cls = (d) => (d > 0 ? 'up' : d < 0 ? 'down' : 'flat');
+
+function tower(p, i) {
+  return p.words.map(([w, broken]) => {
+    const breaker = PLAYERS[(i + 1) % PLAYERS.length];
+    return `<div class="row${broken ? ' broken' : ''}" style="--len:7">${[...w].map((c) => `<div class="wt"><span>${c}</span></div>`).join('')}${broken ? `<i class="strike" style="--sc:${pc(breaker)}"></i>` : ''}</div>`;
+  }).join('');
+}
+
+function wall(plinthExtra = () => '', ptsExtra = () => '') {
+  return `<div class="shelf" style="--n:${PLAYERS.length}">${PLAYERS.map((p, i) => `
+    <div class="stand" style="--pc:${pc(p)};--pf:${pf(p)}">
+      <div class="tower">${tower(p, i)}</div>
+      <div class="plinth">
+        <div class="pts num">${p.score}${ptsExtra(p)}</div>
+        <div class="name">${p.name}${p.bot ? ' <span class="badge">bot</span>' : ''}</div>
+        ${plinthExtra(p)}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+const OPTIONS = [
+  {
+    name: 'On the plinth, under the name',
+    blurb: 'Each player\'s new rating and its change, one quiet line under their name. Everything about a player stays in one column.',
+    cls: 'o1',
+    render: () => wall((p) => `<div class="rate num">${p.now}${p.bot ? '' : `<span class="d ${cls(delta(p))}">${fmt(delta(p))}</span>`}</div>`),
+  },
+  {
+    name: 'Change only, beside the score',
+    blurb: 'Just the change, small, beside the score. The rating itself is on the leaderboard. Fewest new pixels, but a +43 beside last place may look odd.',
+    cls: 'o2',
+    render: () => wall(() => '', (p) => (p.bot ? '' : `<span class="d ${cls(delta(p))}">${fmt(delta(p))}</span>`)),
+  },
+  {
+    name: 'Yours alone, under the wall',
+    blurb: 'Only your own rating, before and after. Other players\' ratings stay private to them, and the wall is untouched.',
+    cls: 'o3',
+    render: () => {
+      const me = PLAYERS.find((p) => p.you);
+      return wall() + `<div class="mine"><span class="was">${me.was}</span><span class="arrow">→</span><span class="now">${me.now}</span><span class="d ${cls(delta(me))}">${fmt(delta(me))}</span></div>`;
+    },
+  },
+  {
+    name: 'A ratings list under the wall',
+    blurb: 'A short list in the leaderboard\'s style: before, after, change, and where it puts you on the leaderboard. The most information, and the most page.',
+    cls: 'o4',
+    render: () => wall() + `<div class="rtab"><h3>ratings</h3>${PLAYERS.map((p) => `
+      <div class="r${p.you ? ' you' : ''}" style="--pc:${pc(p)}">
+        <span class="who">${p.name}${p.bot ? ' <span class="badge">bot</span>' : ''}</span>
+        <span class="was num">${p.bot ? '' : `${p.was} →`}</span>
+        <span class="now num">${p.now}</span>
+        <span class="d num ${cls(delta(p))}">${p.bot ? '' : fmt(delta(p))}</span>
+      </div>`).join('')}</div>`,
+  },
+  {
+    name: 'On the plinth, counting',
+    blurb: 'Option 1, but each rating counts from where it was to where it is as the results arrive, and the change appears when it lands. A small moment, then still.',
+    cls: 'o5',
+    render: () => wall((p) => `<div class="rate num"><span class="n" data-was="${p.was}" data-now="${p.now}">${p.was}</span>${p.bot ? '' : `<span class="d ${cls(delta(p))}">${fmt(delta(p))}</span>`}</div>`) + `<button class="replay">replay</button>`,
+  },
+  {
+    name: 'A rating line under the wall',
+    blurb: 'Everyone placed on one line by rating, each sliding from where they were to where they are, with the bots as fixed marks. Shows who you played against as well as how you moved.',
+    cls: 'o6',
+    render: () => {
+      const all = [...PLAYERS.flatMap((p) => [p.was, p.now]), 305, 1500, 2162, 2868];
+      const lo = Math.min(...all) - 100;
+      const hi = Math.max(...all) + 100;
+      const x = (r) => `${((r - lo) / (hi - lo)) * 100}%`;
+      const bots = [['Rossetti', 305], ['Dickinson', 1500], ['Hopkins', 2868]];
+      // Labels too close to share a row go up a row.
+      const lanes = [];
+      const lane = new Map();
+      [...PLAYERS].sort((a, b) => a.now - b.now).forEach((p) => {
+        const at = (p.now - lo) / (hi - lo);
+        let l = 0;
+        while (lanes[l] !== undefined && at - lanes[l] < 0.16) l++;
+        lanes[l] = at;
+        lane.set(p, l);
+      });
+      return wall() + `<div class="track" style="--lanes:${lanes.length - 1}"><div class="axis"></div>
+        ${bots.map(([n, r]) => `<div class="tick" style="left:${x(r)}"><b>${n}</b></div>`).join('')}
+        ${PLAYERS.map((p) => {
+          const a = Math.min(p.was, p.now), b = Math.max(p.was, p.now);
+          return `<div class="move" style="--pc:${pc(p)};left:${x(a)};width:calc(${x(b)} - ${x(a)})"></div>
+            <div class="dot" style="--pc:${pc(p)};left:${x(p.now)}"></div>
+            <div class="lab${lane.get(p) ? ' up1' : ''}" style="--pc:${pc(p)};--lane:${lane.get(p)};left:${x(p.now)}">${p.name}<span class="num">${p.now}${p.bot ? '' : ` <em class="${cls(delta(p))}" style="font-style:normal">${fmt(delta(p))}</em>`}</span></div>`;
+        }).join('')}</div>`;
+    },
+  },
+];
+
+const main = document.getElementById('main');
+OPTIONS.forEach((o, k) => {
+  const s = document.createElement('section');
+  s.innerHTML = `<h2><i>${k + 1}</i>${o.name}</h2><p>${o.blurb}</p>
+    <div class="frames">
+      <div class="frame phone"><div class="cap">phone</div><div class="screen ${o.cls}">${o.render()}</div></div>
+      <div class="frame wide"><div class="cap">desktop</div><div class="screen ${o.cls}">${o.render()}</div></div>
+    </div>`;
+  main.appendChild(s);
+});
+
+// Option 5: count each rating up (or down) to its new value, then show the change.
+function count(root) {
+  root.querySelectorAll('.d').forEach((d) => d.classList.remove('show'));
+  root.querySelectorAll('.n').forEach((n) => {
+    const was = +n.dataset.was, now = +n.dataset.now, t0 = performance.now() + 500, dur = 1100;
+    n.textContent = was;
+    const step = (t) => {
+      const k = Math.min(1, Math.max(0, (t - t0) / dur));
+      const e = 1 - (1 - k) ** 3;
+      n.textContent = Math.round(was + (now - was) * e);
+      if (k < 1) requestAnimationFrame(step);
+      else n.parentElement.querySelector('.d')?.classList.add('show');
+    };
+    requestAnimationFrame(step);
+  });
+}
+document.querySelectorAll('.o5').forEach((root) => {
+  count(root);
+  root.querySelector('.replay').onclick = () => count(root);
+});
+</script>
+</body>
+</html>
