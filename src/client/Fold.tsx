@@ -18,7 +18,7 @@ function storedFolded(key: string): boolean {
 }
 
 /**
- * A front-page section that folds away under its own heading: the whole heading row
+ * A section that folds away under its own heading: the whole heading row
  * is the switch, with a chevron at its end. Folded, its contents are not drawn at all.
  */
 export default function Fold({ title, storageKey, className, children }: Props) {

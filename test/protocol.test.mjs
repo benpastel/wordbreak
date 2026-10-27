@@ -527,6 +527,11 @@ process.on('exit', stop);
     check('the bot played real words', played.length > 0 && played.every((w) => WORDS.has(w.word)),
       played.map((w) => w.word).join(' '));
     check('the bot is ready again for the next match', bots()[0].ready);
+    const rated = h.table.recap?.ratings ?? [];
+    check('once rated, the recap lists everyone\'s rating, the bot\'s unmoved',
+      rated.length === 3 && rated.find((r) => r.playerId === hard.id)?.change === null &&
+        rated.filter((r) => !r.bot).every((r) => Number.isInteger(r.rating) && Number.isInteger(r.change)),
+      JSON.stringify(rated));
 
     const botTable = h.table.id;
     h.send({ t: 'leaveTable' });

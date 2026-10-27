@@ -178,8 +178,10 @@ export class Ledger {
     return row;
   }
 
-  /** Rate a finished match and keep it. Abandoned matches are kept but not rated. */
-  async record(m: MatchRecord): Promise<void> {
+  /** Rate a finished match and keep it. Abandoned matches are kept but not rated.
+   *  Returns each seat's shown rating after and how far it moved, in seat order, or
+   *  null for a match not rated. */
+  async record(m: MatchRecord): Promise<{ rating: number; change: number }[] | null> {
     await this.ready;
     const rows = m.seats.map((s) => this.seatRow(s, m.endedAt));
     const before = rows.map((r): Rating => ({ rating: r.rating, rd: r.rd, volatility: r.volatility }));
@@ -222,6 +224,9 @@ export class Ledger {
         report: JSON.stringify(report),
       });
     }
+    return rated
+      ? rows.map((r, i) => ({ rating: Math.round(shown(r)), change: Math.round(shown(r)) - Math.round(shown(before[i])) }))
+      : null;
   }
 
   /** The top of the board by shown rating, bots included, with you added at the

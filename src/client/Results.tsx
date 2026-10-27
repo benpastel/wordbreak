@@ -4,6 +4,7 @@ import { burst, rain } from './burst';
 import type { BurstKind } from './burst';
 import MiniBoard from './MiniBoard';
 import Misses from './Misses';
+import Ratings from './Ratings';
 import TableShell from './TableShell';
 import Trophies from './Trophies';
 
@@ -181,6 +182,7 @@ export default function Results({
               </div>
             ))}
           </div>
+          {recap?.ratings && <Ratings ratings={recap.ratings} meId={meId} colorOf={colorOf} />}
           {recap && recap.missed.length > 0 && (
             <div className="missed">
               {recap.missed.map((m) => (

@@ -193,6 +193,19 @@ export interface Recap {
   words: PlayedWord[];
   durationMs: number;
   missed: MissedWord[];
+  /** Everyone's shown rating after the match, best score first. Arrives a moment
+   *  after the rest, once the match is rated; never, for one that was not. */
+  ratings?: RatingChange[];
+}
+
+export interface RatingChange {
+  /** The seat at the table, which someone who left no longer has. */
+  playerId: string;
+  name: string;
+  bot: boolean;
+  rating: number;
+  /** Null for a bot, whose rating never moves. */
+  change: number | null;
 }
 
 export interface TableView {

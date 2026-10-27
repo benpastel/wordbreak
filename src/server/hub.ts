@@ -837,15 +837,35 @@ export class Hub {
     const now = Date.now();
     const report = t.matchLog.report(how, now, finals);
     console.log(`match ${report}`);
-    const seats = t.matchLog.seats().map((w) => ({
+    const whos = t.matchLog.seats();
+    const seats = whos.map((w) => ({
       device: w.device ?? null,
       name: w.name,
       bot: w.bot,
       score: finals.get(w.id)?.score ?? null,
     }));
+    const recap = t.recap;
     void this.ledger
       .record({ tableId: t.id, endedAt: new Date(now), how, seats, report })
-      .then(() => this.pushLeaderboards())
+      .then((rated) => {
+        this.pushLeaderboards();
+        // Onto the recap of this match, if the table is still showing it.
+        const still = this.store.getTable(t.id);
+        if (!rated || !recap || still?.recap !== recap) return;
+        recap.ratings = whos
+          .map((w, i) => ({
+            playerId: w.id,
+            name: w.name,
+            bot: w.bot !== null,
+            rating: rated[i].rating,
+            change: w.bot !== null ? null : rated[i].change,
+            score: seats[i].score,
+          }))
+          .sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
+          .map(({ score: _, ...r }) => r);
+        this.store.putTable(still);
+        this.pushTable(t.id, []);
+      })
       .catch((e) => console.error(`ledger: could not record match on ${t.id}: ${e}`));
     t.matchLog = null;
   }

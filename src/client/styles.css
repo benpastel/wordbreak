@@ -865,6 +865,32 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 }
 .misses li button[aria-pressed='true'] { background: var(--ink); color: var(--page); box-shadow: none; }
 
+/* Ratings after a match, under the wall: the leaderboard's rows, with the change. */
+.recap .fold.ratings { margin: 0; padding: var(--pad-frame); border-top: 1px solid var(--hairline); }
+.recap .fold.ratings h2 { font-size: inherit; border-bottom: none; padding-bottom: 0; margin-bottom: 12px; }
+.recap .fold.ratings.folded h2 { margin-bottom: 0; }
+.ratings ol { list-style: none; margin: 0 auto; padding: 0; max-width: 460px; }
+.ratings li {
+  display: grid; grid-template-columns: 1fr auto 4ch; align-items: baseline; gap: 14px;
+  padding: 8px 10px; border-radius: var(--r-ctl);
+}
+.ratings li + li { border-top: 1px solid var(--hairline); }
+.ratings li.you { background: var(--tray); border-top-color: transparent; }
+.ratings li.you + li { border-top-color: transparent; }
+.ratings .name {
+  min-width: 0; display: flex; align-items: center; gap: 8px; color: var(--pc);
+  font-weight: var(--w-label); text-transform: uppercase; letter-spacing: var(--track-label); font-size: 0.9rem;
+}
+.ratings .gone .name { color: var(--ink-mute); }
+.ratings .nametext { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ratings .name .badge { flex: none; }
+.ratings .rating { font-family: var(--font-tile); font-weight: var(--w-tile); font-variant-numeric: tabular-nums; }
+.ratings .change {
+  text-align: right; font-weight: var(--w-label); font-size: 0.85rem; font-variant-numeric: tabular-nums; color: var(--ink-mute);
+}
+.ratings .change.up { color: oklch(0.55 0.13 150); }
+.ratings .change.down { color: oklch(0.55 0.15 25); }
+
 /* Words that were there to be played and nobody played, each on its board. */
 .missed {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 22px;
