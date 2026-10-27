@@ -27,7 +27,8 @@ export const BOT_LEVELS = [
   { name: 'child', persona: 'Edward Lear', difficulty: 0, rating: -482, id: '00000000-0000-4000-8000-0000000000b0' },
   { name: 'beginner', persona: 'Christina Rossetti', difficulty: 0.15, rating: 305, id: '00000000-0000-4000-8000-0000000000b1' },
   { name: 'intermediate', persona: 'Emily Dickinson', difficulty: 0.35, rating: 1500, id: '00000000-0000-4000-8000-0000000000b2' },
-  { name: 'expert', persona: 'Gerard Manley Hopkins', difficulty: 0.62, rating: 2868, id: '00000000-0000-4000-8000-0000000000b3' },
+  { name: 'expert', persona: 'John Keats', difficulty: 0.47, rating: 2162, id: '00000000-0000-4000-8000-0000000000b4' },
+  { name: 'impossible', persona: 'Gerard Manley Hopkins', difficulty: 0.62, rating: 2868, id: '00000000-0000-4000-8000-0000000000b3' },
 ] as const;
 
 export const DEFAULT_GRID = 4;

@@ -5,7 +5,7 @@
 // dial: a base difficulty, with every knob then nudged at random and now and again
 // drawn from anywhere in its range, so the population covers styles the dial never
 // produces (a fast spotter with slow hands, a careful reader who never extends...).
-// The four named levels are members too, at exactly their dial settings.
+// The named levels are members too, at exactly their dial settings.
 //
 // Games vary as much: board size, points or time, target or length, two to four bots.
 // Opponents are chosen near each other's current rating, so most games are close

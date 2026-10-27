@@ -72,7 +72,7 @@ export const ANCHORS = {
    *  has one. Strongest at the bottom, where the wait for a first word was longest. */
   firstBoost: [2.2, 2, 1.5, 1.1, 1.1],
   /** And this many times slower while it already holds a claim. Untouched below
-   *  expert; at expert it trades a little of the second claim's speed for the
+   *  impossible; at impossible it trades a little of the second claim's speed for the
    *  quicker first. */
   busySlow: [1, 1, 1, 1.25, 1.25],
 

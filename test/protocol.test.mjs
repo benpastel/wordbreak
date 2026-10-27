@@ -501,7 +501,7 @@ process.on('exit', stop);
     g.send({ t: 'setReady', ready: true });
     await sleep(COUNTDOWN + 300);
     check('the humans readying is enough to start', h.table.phase === 'playing', h.table.phase);
-    // Six seconds of play: enough for an expert, the strongest a table offers, to find
+    // Six seconds of play: enough for impossible, the strongest a table offers, to find
     // something every time.
     for (let i = 0; i < 90 && h.table.phase === 'playing'; i++) await sleep(100);
     check('the match ended', h.table.phase === 'ended', h.table.phase);

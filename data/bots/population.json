@@ -81,8 +81,8 @@
   }
  },
  {
-  "id": "expert",
-  "level": "expert",
+  "id": "impossible",
+  "level": "impossible",
   "base": 0.62,
   "knobs": {
    "spot3Ms": 5258.9732680606085,
@@ -5305,6 +5305,33 @@
    "reorientMs": 220.8,
    "hesitateMs": 299.8,
    "perTileMs": 117.5
+  }
+ },
+ {
+  "id": "expert",
+  "level": "expert",
+  "base": 0.47,
+  "knobs": {
+   "spot3Ms": 6290.95315929874,
+   "perLetter": 0.4346939450104233,
+   "twoLetter": 3.9364157218644147,
+   "oneLetter": 1000,
+   "shape": 1.2598307288636148,
+   "rarity": 0.15705473330427208,
+   "vocabRank": 22396.86373086187,
+   "oddShort": 0,
+   "focusRadius": 1.460367157654382,
+   "focusFalloff": 0.9735781051029214,
+   "drift": 0.6871703704948727,
+   "freshMs": 1570.547333042721,
+   "memory": 0.47905101992376314,
+   "ownPull": 0.4557255866206805,
+   "ownAversion": 1.8403753012497501,
+   "firstBoost": 1.5526869663763128,
+   "busySlow": 1,
+   "reorientMs": 529.0106341037018,
+   "hesitateMs": 312.36086656789126,
+   "perTileMs": 152.26994067532954
   }
  }
 ]
