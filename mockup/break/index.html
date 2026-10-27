@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Break Effects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ground: oklch(0.94 0.008 85);
+    --tray: oklch(0.902 0.012 85);
+    --tile-face: oklch(0.985 0.004 85);
+    --ink: oklch(0.22 0.01 60);
+    --ink-soft: oklch(0.52 0.008 70);
+    --ink-mute: oklch(0.7 0.008 70);
+    --hairline: oklch(0.86 0.01 85);
+    --shadow-1: 0 1px 1px oklch(0.3 0.02 70 / 0.1);
+    --shadow-2: 0 2px 5px oklch(0.3 0.02 70 / 0.1);
+    --font: 'Archivo', system-ui, sans-serif;
+    --red-f: oklch(0.855 0.105 25); --red-c: oklch(0.55 0.165 25);
+    --blue-f: oklch(0.87 0.085 250); --blue-c: oklch(0.55 0.16 250);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--font); }
+  header.top { padding: 28px 24px 4px; max-width: 1300px; margin: 0 auto; }
+  header.top h1 { margin: 0 0 6px; font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  header.top p { margin: 0 0 10px; color: var(--ink-soft); max-width: 780px; line-height: 1.45; }
+  h2.part { max-width: 1300px; margin: 26px auto 10px; padding: 0 24px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
+
+  .sounds { max-width: 1300px; margin: 0 auto; padding: 0 24px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .snd { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--tile-face); border-radius: 9px; box-shadow: var(--shadow-1), var(--shadow-2); cursor: pointer; max-width: 300px; }
+  .snd input { accent-color: var(--ink); margin: 0; }
+  .snd b { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .snd span { display: block; font-size: 0.75rem; color: var(--ink-soft); margin-top: 2px; line-height: 1.3; }
+  .snd button { margin-left: auto; flex: none; }
+
+  .grid { max-width: 1300px; margin: 0 auto; padding: 0 24px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 20px; }
+  .card { background: var(--tile-face); border-radius: 14px; box-shadow: 0 2px 10px oklch(0.3 0.02 70 / 0.12); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .card h3 { margin: 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.07em; }
+  .card h3 i { font-style: normal; color: var(--ink-mute); margin-right: 8px; }
+  .card p { margin: 0; font-size: 0.82rem; color: var(--ink-soft); line-height: 1.4; min-height: 3.4em; }
+  .card .row { display: flex; gap: 8px; align-items: center; }
+  button { font: inherit; font-size: 0.75rem; font-weight: 650; text-transform: uppercase; letter-spacing: 0.08em; padding: 7px 14px; border: 0; border-radius: 7px; background: var(--ink); color: var(--ground); cursor: pointer; }
+  button.ghost { background: none; color: var(--ink-soft); box-shadow: inset 0 0 0 1px oklch(0.3 0.02 70 / 0.2); }
+  .slow { font-size: 0.75rem; color: var(--ink-soft); display: flex; align-items: center; gap: 5px; margin-left: auto; }
+
+  /* the board */
+  .board { --cell: 58px; position: relative; display: grid; grid-template-columns: repeat(4, var(--cell)); gap: 6px; padding: 8px; background: var(--tray); border-radius: 12px; align-self: center; }
+  .tile {
+    position: relative; width: var(--cell); aspect-ratio: 1; border-radius: 13%; display: grid; place-items: center;
+    font-weight: 800; font-size: calc(var(--cell) * 0.5); background: var(--tile-face); box-shadow: var(--shadow-1), var(--shadow-2);
+  }
+  .tile > span { position: relative; z-index: 2; line-height: 1; }
+  .tile.red { background: linear-gradient(to top, color-mix(in oklab, var(--red-f) 70%, var(--tile-face)) 0 60%, color-mix(in oklab, var(--red-f) 22%, var(--tile-face)) 61.5% 100%), var(--tile-face); }
+  .tile.blue { background: linear-gradient(to top, color-mix(in oklab, var(--blue-f) 70%, var(--tile-face)) 0 4%, color-mix(in oklab, var(--blue-f) 22%, var(--tile-face)) 5.5% 100%), var(--tile-face); }
+  .links { position: absolute; inset: 8px; pointer-events: none; overflow: visible; z-index: 3; }
+  .links line { stroke-width: 2.4; stroke-linecap: round; opacity: 0.5; }
+
+  /* a ghost of the old claim's fill, laid over a tile, that does the breaking */
+  .ghost-fill {
+    position: absolute; inset: 0; border-radius: 13%; z-index: 1; pointer-events: none;
+    background: linear-gradient(to top, color-mix(in oklab, var(--red-f) 70%, var(--tile-face)) 0 60%, color-mix(in oklab, var(--red-f) 22%, var(--tile-face)) 61.5% 100%);
+  }
+  .fxlayer { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: visible; }
+  .crack { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; overflow: visible; }
+  .crack path { fill: none; stroke: color-mix(in oklab, var(--red-c) 80%, black); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .chip { position: absolute; width: 7px; height: 7px; border-radius: 1.5px; background: color-mix(in oklab, var(--red-f) 70%, var(--red-c)); }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>A claim breaking</h1>
+  <p>
+    Red holds DUG; blue's HUGS breaks it. Each card plays one picture of the break, with the sound
+    chosen below. The breaking word takes over most of the same tiles at that same moment, so every
+    effect plays on a short-lived copy of red's claim over the board, while the board underneath is
+    already blue. "Slow" plays the picture at a quarter speed, to see what it is doing.
+  </p>
+</header>
+
+<h2 class="part">Sound, with every break below</h2>
+<div class="sounds" id="sounds"></div>
+
+<h2 class="part">Picture</h2>
+<div class="grid" id="grid"></div>
+
+<header class="top">
+  <h1>A match ending</h1>
+  <p>
+    With the confetti. Each sound has a version for winning and one for everyone else; any of them
+    could also be the same for everyone. Nothing here is a losing sound: a "sad trombone" every time
+    you are not first gets old fast at a table of eight.
+  </p>
+</header>
+<div class="sounds" id="ends"></div>
+
+<script>
+// ------------------------------------------------------------------ sound
+let ac;
+const wake = () => (ac ??= new AudioContext()).state === 'suspended' && ac.resume();
+let noiseBuf;
+function noise() {
+  if (noiseBuf) return noiseBuf;
+  noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return noiseBuf;
+}
+function out(gain = 0.7) { const g = ac.createGain(); g.gain.value = gain; g.connect(ac.destination); return g; }
+// The game's own tone: 3ms attack, exponential fall.
+function tone(o, { freq, at = 0, dur, gain, type = 'sine', slideTo }) {
+  const t = ac.currentTime + at, osc = ac.createOscillator(), env = ac.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, t);
+  if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(gain, t + 0.003); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(env).connect(o); osc.start(t); osc.stop(t + dur + 0.02);
+}
+// A burst of noise through a filter: the raw stuff of cracks and snaps.
+function hiss(o, { at = 0, dur, gain, type = 'bandpass', freq, q = 1, sweepTo }) {
+  const t = ac.currentTime + at, src = ac.createBufferSource(), f = ac.createBiquadFilter(), env = ac.createGain();
+  src.buffer = noise(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+  if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+  env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(gain, t + 0.002); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(env).connect(o); src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
+}
+
+const SOUNDS = [
+  { id: 'none', name: 'None', blurb: 'The picture alone.', play() {} },
+  { id: 'crack', name: 'Crack', blurb: 'A dry crack and a small thud under it, like a tile splitting.', play() {
+    const o = out(); hiss(o, { dur: 0.06, gain: 0.5, freq: 2800, q: 1.4 }); hiss(o, { at: 0.012, dur: 0.035, gain: 0.25, freq: 5200, q: 2 });
+    tone(o, { freq: 190, slideTo: 120, dur: 0.08, gain: 0.25, type: 'triangle' });
+  } },
+  { id: 'snap', name: 'Snap', blurb: 'A short stick snap: one sharp click and a falling knock.', play() {
+    const o = out(); hiss(o, { dur: 0.025, gain: 0.6, type: 'highpass', freq: 1800 });
+    tone(o, { freq: 700, slideTo: 260, dur: 0.06, gain: 0.22, type: 'triangle' });
+  } },
+  { id: 'tinkle', name: 'Tinkle', blurb: 'A few high glassy pings, close together, like a small thing shattering far off.', play() {
+    const o = out(); [3100, 4300, 2600, 3700].forEach((f, i) => tone(o, { freq: f * (0.97 + Math.random() * 0.06), at: i * 0.028 + Math.random() * 0.01, dur: 0.16, gain: 0.07 }));
+  } },
+  { id: 'crack-tinkle', name: 'Crack + tinkle', blurb: 'The crack, then a few quiet pieces landing. Goes with the shatter and chips pictures.', play() {
+    const o = out(); hiss(o, { dur: 0.05, gain: 0.45, freq: 2800, q: 1.4 }); tone(o, { freq: 190, slideTo: 120, dur: 0.07, gain: 0.2, type: 'triangle' });
+    [3400, 2500, 4100].forEach((f, i) => tone(o, { freq: f, at: 0.07 + i * 0.045, dur: 0.1, gain: 0.04 }));
+  } },
+  { id: 'ceramic', name: 'Ceramic', blurb: 'A clink with no clear pitch, three uneven ringing partials over a click: a cup chipping.', play() {
+    const o = out(); hiss(o, { dur: 0.02, gain: 0.35, type: 'highpass', freq: 2500 });
+    [[1150, 0.18], [2730, 0.1], [4090, 0.06]].forEach(([f, g]) => tone(o, { freq: f, dur: 0.09, gain: g }));
+  } },
+  { id: 'crumble', name: 'Crumble', blurb: 'A brief grainy fall, bright to dull, like a little plaster coming away.', play() {
+    const o = out(); for (let i = 0; i < 7; i++) hiss(o, { at: i * 0.028 + Math.random() * 0.012, dur: 0.04, gain: 0.3 * (1 - i / 9), freq: 3200 * 0.75 ** i, q: 1.2 });
+  } },
+];
+let chosen = 'crack';
+const sounds = document.getElementById('sounds');
+for (const s of SOUNDS) {
+  const l = document.createElement('label'); l.className = 'snd';
+  l.innerHTML = `<input type="radio" name="snd" value="${s.id}"${s.id === chosen ? ' checked' : ''}><div><b>${s.name}</b><span>${s.blurb}</span></div>${s.id === 'none' ? '' : '<button class="ghost">play</button>'}`;
+  l.querySelector('input').onchange = () => { chosen = s.id; };
+  const b = l.querySelector('button'); if (b) b.onclick = (e) => { e.preventDefault(); wake(); s.play(); };
+  sounds.appendChild(l);
+}
+// ------------------------------------------------------------------ match end
+// A bell-ish tone: the sine plus a quiet octave, ringing longer than the effects.
+const bell = (o, freq, at, gain, dur = 0.9) => { tone(o, { freq, at, dur, gain }); tone(o, { freq: freq * 2, at, dur: dur * 0.5, gain: gain * 0.25 }); };
+const C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.5, A4 = 440, D5 = 587.33;
+const ENDS = [
+  { name: 'Arpeggio', blurb: 'Win: four bell notes rising, C E G C. Otherwise: the first three, quieter, stopping short of the top.',
+    win() { const o = out(0.8); [C5, E5, G5, C6].forEach((f, i) => bell(o, f, i * 0.11, 0.16, i === 3 ? 1.4 : 0.6)); },
+    rest() { const o = out(0.6); [C5, E5, G5].forEach((f, i) => bell(o, f, i * 0.12, 0.12, i === 2 ? 1 : 0.5)); } },
+  { name: 'Chord bloom', blurb: 'One soft chord ringing out, like a long version of the bank chime. Win: major, bright on top. Otherwise: the same chord, lower and without the top note.',
+    win() { const o = out(0.7); [C5, E5, G5, C6].forEach((f, i) => bell(o, f, i * 0.025, 0.1, 1.6)); },
+    rest() { const o = out(0.6); [A4, C5, E5].forEach((f, i) => bell(o, f, i * 0.025, 0.1, 1.3)); } },
+  { name: 'Bank, bank, bank', blurb: 'The bank chime you already know, three times, each a step higher: the match as one last bank. Otherwise: once.',
+    win() { const o = out(0.8); [1, 1.26, 1.5].forEach((k, i) => { tone(o, { freq: 660 * k, at: i * 0.16, dur: 0.32, gain: 0.18 }); tone(o, { freq: 990 * k, at: i * 0.16 + 0.07, dur: 0.38, gain: 0.16 }); }); },
+    rest() { const o = out(0.7); tone(o, { freq: 660, dur: 0.32, gain: 0.18 }); tone(o, { freq: 990, at: 0.07, dur: 0.38, gain: 0.16 }); } },
+  { name: 'Pop and sparkle', blurb: 'Win: a soft cork pop, then the confetti as a scatter of tiny high pings for most of a second. Otherwise: the sparkle alone, sparser.',
+    win() { const o = out(0.8); hiss(o, { dur: 0.05, gain: 0.5, type: 'lowpass', freq: 900 }); tone(o, { freq: 420, slideTo: 180, dur: 0.07, gain: 0.25 });
+      for (let i = 0; i < 16; i++) tone(o, { freq: 2400 + Math.random() * 2600, at: 0.08 + Math.random() * 0.8, dur: 0.12, gain: 0.035 }); },
+    rest() { const o = out(0.7); for (let i = 0; i < 8; i++) tone(o, { freq: 2400 + Math.random() * 2600, at: Math.random() * 0.7, dur: 0.12, gain: 0.03 }); } },
+  { name: 'Final bell', blurb: 'One struck bell, the same for everyone: the match is over. The quietest, and fair to every seat.',
+    win() { const o = out(0.8); [[D5, 0.16], [D5 * 2.76, 0.05], [D5 * 5.4, 0.025]].forEach(([f, g]) => tone(o, { freq: f, dur: 1.8, gain: g })); },
+    rest() { this.win(); } },
+];
+const ends = document.getElementById('ends');
+for (const e of ENDS) {
+  const d = document.createElement('div'); d.className = 'snd'; d.style.maxWidth = '420px'; d.style.cursor = 'default';
+  d.innerHTML = `<div><b>${e.name}</b><span>${e.blurb}</span></div><button class="ghost">win</button><button class="ghost" style="margin-left:0">not</button>`;
+  const [w, r] = d.querySelectorAll('button'); w.onclick = () => { wake(); e.win(); }; r.onclick = () => { wake(); e.rest(); };
+  ends.appendChild(d);
+}
+
+const playChosen = () => { wake(); SOUNDS.find((s) => s.id === chosen).play(); };
+
+// ------------------------------------------------------------------ board
+const LETTERS = 'STOPRANELIDEHUGS';
+const DUG = [10, 13, 14];
+const HUGS = [12, 13, 14, 15];
+
+function makeBoard(card) {
+  const b = document.createElement('div'); b.className = 'board';
+  for (let i = 0; i < 16; i++) { const t = document.createElement('div'); t.className = 'tile'; t.innerHTML = `<span>${LETTERS[i]}</span>`; b.appendChild(t); }
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'links'); b.appendChild(svg);
+  const fx = document.createElement('div'); fx.className = 'fxlayer'; b.appendChild(fx);
+  card.appendChild(b);
+  return b;
+}
+const tiles = (b) => [...b.querySelectorAll('.tile')];
+const centre = (b, i) => { const c = b.style.getPropertyValue('--cell') ? 0 : 0; const cell = 58, gap = 6; return [(i % 4) * (cell + gap) + cell / 2, Math.floor(i / 4) * (cell + gap) + cell / 2]; };
+function drawLinks(b, idx, colour, cls = '') {
+  const svg = b.querySelector('.links');
+  for (let k = 1; k < idx.length; k++) {
+    const [x1, y1] = centre(b, idx[k - 1]), [x2, y2] = centre(b, idx[k]);
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    Object.entries({ x1, y1, x2, y2 }).forEach(([a, v]) => l.setAttribute(a, v)); l.setAttribute('stroke', colour); if (cls) l.setAttribute('class', cls);
+    svg.appendChild(l);
+  }
+}
+function reset(b) {
+  tiles(b).forEach((t) => { t.className = 'tile'; t.querySelectorAll('.ghost-fill,.crack').forEach((e) => e.remove()); t.style.transform = ''; });
+  b.querySelector('.links').innerHTML = ''; b.querySelector('.fxlayer').innerHTML = '';
+  DUG.forEach((i) => tiles(b)[i].classList.add('red'));
+  drawLinks(b, DUG, 'var(--red-c)', 'old');
+}
+/** The board after: HUGS blue, D free. Returns red's old links, for effects that use them. */
+function apply(b) {
+  DUG.forEach((i) => tiles(b)[i].classList.remove('red'));
+  HUGS.forEach((i) => tiles(b)[i].classList.add('blue'));
+  drawLinks(b, HUGS, 'var(--blue-c)');
+  return [...b.querySelectorAll('.links line.old')];
+}
+function ghosts(b) {
+  return DUG.map((i) => { const g = document.createElement('div'); g.className = 'ghost-fill'; tiles(b)[i].appendChild(g); return g; });
+}
+const crackPath = () => {
+  // A jagged line across the tile, corner to corner-ish, a little different each time.
+  const pts = [[8 + Math.random() * 20, -2]]; let x = pts[0][0], y = -2;
+  while (y < 100) { y += 14 + Math.random() * 14; x += (Math.random() - 0.35) * 28; pts.push([Math.max(4, Math.min(96, x)), Math.min(102, y)]); }
+  return 'M' + pts.map((p) => p.join(' ')).join('L');
+};
+
+// ------------------------------------------------------------------ pictures
+let speed = 1;
+const ms = (n) => n / speed;
+const anim = (el, frames, opts) => el.animate(frames, { ...opts, duration: ms(opts.duration), delay: ms(opts.delay ?? 0), fill: 'both' });
+const later = (fn, n) => setTimeout(fn, ms(n));
+
+const PICTURES = [
+  {
+    name: 'Today: a shake',
+    blurb: 'What the game does now: red\'s tiles shake and the colour is simply gone.',
+    run(b) {
+      apply(b);
+      DUG.forEach((i) => anim(tiles(b)[i], [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)', offset: 0.18 }, { transform: 'translateX(4px)', offset: 0.38 }, { transform: 'translateX(-3px)', offset: 0.58 }, { transform: 'translateX(2px)', offset: 0.78 }, { transform: 'translateX(0)' }], { duration: 400 }));
+    },
+  },
+  {
+    name: 'Crack',
+    blurb: 'A crack runs across each of red\'s tiles, then red\'s colour drains out behind it and the crack fades. The quietest real "break".',
+    run(b) {
+      const old = apply(b); const gs = ghosts(b);
+      old.forEach((l) => anim(l, [{ opacity: 0.5 }, { opacity: 0 }], { duration: 200, delay: 120 }));
+      DUG.forEach((i, k) => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'crack'); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', crackPath()); p.setAttribute('pathLength', '1'); p.style.strokeDasharray = '1'; svg.appendChild(p); tiles(b)[i].appendChild(svg);
+        anim(p, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 110, delay: k * 35, easing: 'ease-out' });
+        anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 420 });
+        anim(gs[k], [{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0 }], { duration: 450, delay: k * 35 });
+      });
+    },
+  },
+  {
+    name: 'Shatter',
+    blurb: 'Red\'s colour on each tile splits into four shards that drop a few pixels, tip and fade. The letters never move.',
+    run(b) {
+      apply(b);
+      const SHARDS = ['50% 50%, 0 0, 100% 0', '50% 50%, 100% 0, 100% 100%', '50% 50%, 100% 100%, 0 100%', '50% 50%, 0 100%, 0 0'];
+      const DIR = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+      DUG.forEach((i, k) => SHARDS.forEach((poly, s) => {
+        const g = document.createElement('div'); g.className = 'ghost-fill'; g.style.clipPath = `polygon(${poly})`; tiles(b)[i].appendChild(g);
+        const [dx, dy] = DIR[s]; const rot = (Math.random() - 0.5) * 30;
+        anim(g, [{ transform: 'none', opacity: 1 }, { transform: `translate(${dx * 5}px, ${dy * 5 + 12}px) rotate(${rot}deg)`, opacity: 0 }], { duration: 480, delay: k * 30, easing: 'cubic-bezier(.3,.1,.7,1)' });
+      }));
+      b.querySelectorAll('.links line.old').forEach((l) => anim(l, [{ opacity: 0.5 }, { opacity: 0 }], { duration: 200 }));
+    },
+  },
+  {
+    name: 'Chips',
+    blurb: 'A few small chips of red\'s colour pop off each tile and fall away under gravity, while the colour goes. Livelier, still small.',
+    run(b) {
+      apply(b); const gs = ghosts(b); const fx = b.querySelector('.fxlayer');
+      gs.forEach((g, k) => anim(g, [{ opacity: 1 }, { opacity: 0 }], { duration: 250, delay: 60 }));
+      b.querySelectorAll('.links line.old').forEach((l) => anim(l, [{ opacity: 0.5 }, { opacity: 0 }], { duration: 200 }));
+      DUG.forEach((i) => {
+        const [cx, cy] = centre(b, i);
+        for (let c = 0; c < 6; c++) {
+          const chip = document.createElement('div'); chip.className = 'chip'; fx.appendChild(chip);
+          const x0 = cx + 8 + (Math.random() - 0.5) * 30, y0 = cy + 8 + (Math.random() - 0.5) * 30;
+          const vx = (Math.random() - 0.5) * 60, vy = -20 - Math.random() * 35, rot = (Math.random() - 0.5) * 360;
+          const frames = []; for (let f = 0; f <= 10; f++) { const t = f / 10; frames.push({ transform: `translate(${x0 + vx * t}px, ${y0 + vy * t + 90 * t * t}px) rotate(${rot * t}deg)`, opacity: 1 - t * t }); }
+          anim(chip, frames, { duration: 520, delay: Math.random() * 40 });
+        }
+      });
+    },
+  },
+  {
+    name: 'The links snap',
+    blurb: 'The line joining red\'s tiles snaps in the middle of each step: the two halves spring apart and fade, with a one-pixel jolt to the tiles as their colour goes.',
+    run(b) {
+      const old = apply(b); const gs = ghosts(b); const svg = b.querySelector('.links');
+      gs.forEach((g) => anim(g, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 80 }));
+      DUG.forEach((i) => anim(tiles(b)[i], [{ transform: 'none' }, { transform: 'translateY(1.5px)', offset: 0.3 }, { transform: 'none' }], { duration: 160 }));
+      old.forEach((l) => {
+        const [x1, y1, x2, y2] = ['x1', 'y1', 'x2', 'y2'].map((a) => +l.getAttribute(a)); const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        const half = (ax, ay, sign) => {
+          const h = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          Object.entries({ x1: ax, y1: ay, x2: mx, y2: my }).forEach(([a, v]) => h.setAttribute(a, v)); h.setAttribute('stroke', 'var(--red-c)'); h.style.strokeWidth = '3'; h.style.opacity = '0.8';
+          h.style.transformOrigin = `${ax}px ${ay}px`; svg.appendChild(h);
+          anim(h, [{ transform: 'rotate(0deg) scale(1)', opacity: 0.8 }, { transform: `rotate(${sign * 22}deg) scale(0.8)`, opacity: 0 }], { duration: 380, easing: 'cubic-bezier(.2,.8,.4,1)' });
+        };
+        half(x1, y1, 1); half(x2, y2, -1); l.remove();
+      });
+    },
+  },
+  {
+    name: 'Crack, then shatter',
+    blurb: 'The full sequence: a crack across each tile, a beat, then the colour falls away in shards. The most "break", and the longest at about half a second.',
+    run(b) {
+      apply(b);
+      b.querySelectorAll('.links line.old').forEach((l) => anim(l, [{ opacity: 0.5 }, { opacity: 0 }], { duration: 200, delay: 100 }));
+      const SHARDS = ['50% 50%, 0 0, 100% 0', '50% 50%, 100% 0, 100% 100%', '50% 50%, 100% 100%, 0 100%', '50% 50%, 0 100%, 0 0'];
+      const DIR = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+      DUG.forEach((i, k) => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'crack'); svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', crackPath()); p.setAttribute('pathLength', '1'); p.style.strokeDasharray = '1'; svg.appendChild(p); tiles(b)[i].appendChild(svg);
+        anim(p, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 100, delay: k * 30, easing: 'ease-out' });
+        anim(svg, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: 170 + k * 30 });
+        SHARDS.forEach((poly, s) => {
+          const g = document.createElement('div'); g.className = 'ghost-fill'; g.style.clipPath = `polygon(${poly})`; tiles(b)[i].appendChild(g);
+          const [dx, dy] = DIR[s]; const rot = (Math.random() - 0.5) * 30;
+          anim(g, [{ transform: 'none', opacity: 1 }, { transform: 'none', opacity: 1, offset: 0.35 }, { transform: `translate(${dx * 5}px, ${dy * 5 + 12}px) rotate(${rot}deg)`, opacity: 0 }], { duration: 560, delay: k * 30, easing: 'cubic-bezier(.3,.1,.7,1)' });
+        });
+      });
+    },
+  },
+  {
+    name: 'The glaze drops',
+    blurb: 'Red\'s colour slides down out of each tile and is gone, like glaze coming off, with the smallest jolt. Barely there; pairs best with a sound.',
+    run(b) {
+      apply(b); const gs = ghosts(b);
+      b.querySelectorAll('.links line.old').forEach((l) => anim(l, [{ opacity: 0.5 }, { opacity: 0 }], { duration: 160 }));
+      gs.forEach((g, k) => { g.style.overflow = 'hidden'; anim(g, [{ clipPath: 'inset(0 0 0 0 round 13%)', transform: 'none', opacity: 1 }, { clipPath: 'inset(100% 0 0 0 round 13%)', transform: 'translateY(6px)', opacity: 0.4 }], { duration: 320, delay: k * 25, easing: 'ease-in' }); });
+      DUG.forEach((i) => anim(tiles(b)[i], [{ transform: 'none' }, { transform: 'translateY(1px)', offset: 0.25 }, { transform: 'none' }], { duration: 140 }));
+    },
+  },
+];
+
+const grid = document.getElementById('grid');
+PICTURES.forEach((pic, k) => {
+  const card = document.createElement('div'); card.className = 'card';
+  card.innerHTML = `<h3><i>${k}</i>${pic.name}</h3><p>${pic.blurb}</p>`;
+  const b = makeBoard(card); reset(b);
+  const row = document.createElement('div'); row.className = 'row';
+  row.innerHTML = `<button>break</button><button class="ghost">reset</button><label class="slow"><input type="checkbox"> slow</label>`;
+  const [go, again] = row.querySelectorAll('button'); const slow = row.querySelector('input');
+  go.onclick = () => { reset(b); speed = slow.checked ? 0.25 : 1; if (!slow.checked) playChosen(); requestAnimationFrame(() => pic.run(b)); };
+  again.onclick = () => reset(b);
+  card.appendChild(row); grid.appendChild(card);
+});
+</script>
+</body>
+</html>
