@@ -14,6 +14,9 @@ file is the loop followed by its own first --head seconds again: anywhere inside
 the sound repeats exactly every loop length, and the game loops over a span that
 starts after the padding and ends before it, whatever the padding turned out to be.
 
+--first-note is where in the loop playing from silence begins, so the first time
+through can skip a ring the loop carries over from its own end.
+
 The module carries the loop's loudness (LUFS, the measure broadcasters and games
 level by) so the game can set music to a level rather than to whatever the file
 happens to peak at.
@@ -35,6 +38,7 @@ def main():
     p.add_argument("out")
     p.add_argument("--module", required=True)
     p.add_argument("--head", type=float, default=1.0)
+    p.add_argument("--first-note", type=float, default=0.0, help="seconds into the loop")
     p.add_argument("--quality", default="4", help="LAME VBR quality, 0 best to 9 smallest")
     a = p.parse_args()
 
@@ -54,7 +58,7 @@ def main():
         f.write(
             "// Written by scripts/audio/encode.py; change the recipe in scripts/audio/, not this.\n"
             f"export const MENU_MUSIC = {{ url: '{url}', loopSeconds: {len(x) / sr:.6f}, "
-            f"headSeconds: {a.head}, lufs: {lufs:.1f} }} as const;\n"
+            f"headSeconds: {a.head}, firstNoteSeconds: {a.first_note}, lufs: {lufs:.1f} }} as const;\n"
         )
     print(f"{a.out}: {os.path.getsize(a.out) / 1e6:.2f} MB, loop {len(x) / sr:.3f}s, {lufs:.1f} LUFS")
 

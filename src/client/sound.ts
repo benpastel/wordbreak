@@ -231,10 +231,12 @@ function syncMusic(fade: number): void {
     src.loop = true;
     src.loopStart = 0.06;
     src.loopEnd = src.loopStart + MENU_MUSIC.loopSeconds;
+    // From silence, straight into the first note: the ring before it only belongs
+    // when the loop comes round.
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(musicGain(), ctx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(musicGain(), ctx.currentTime + 0.004);
     src.connect(gain).connect(ctx.destination);
-    src.start();
+    src.start(0, MENU_MUSIC.firstNoteSeconds);
     playing = { src, gain };
   });
 }
