@@ -57,6 +57,9 @@ export default function Results({
   onRequestWord,
 }: Props) {
   const ranked = [...table.players].sort((a, b) => b.score - a.score);
+  // Whoever has the top score won, all of them in a tie; nobody, if nobody scored.
+  const top = ranked[0]?.score ?? 0;
+  const won = (score: number) => top > 0 && score === top;
   const popped = useRef(-1);
   const scroller = useRef<HTMLDivElement>(null);
   const plinth = useRef<HTMLDivElement>(null);
@@ -163,9 +166,14 @@ export default function Results({
                   const words = wordsOf(p.id);
                   const longest = Math.max(5, ...words.map((w) => w.word.length));
                   return (
-                    <div key={p.id} className={`stand c${p.color}`}>
+                    <div key={p.id} className={`stand c${p.color}${won(p.score) ? ' winner' : ''}`}>
                       <div className="tower" style={{ '--len': longest } as React.CSSProperties}>
                         {words.map(row)}
+                        {won(p.score) && (
+                          <svg className="crown" viewBox="0 0 40 26" aria-label="winner">
+                            <path d="M3 24 L1 6 L11 14 L20 2 L29 14 L39 6 L37 24 Z" fill="currentColor" />
+                          </svg>
+                        )}
                       </div>
                       <div
                         className={`recapwho plinth${p.ready && !p.bot ? ' setgo' : ''}`}

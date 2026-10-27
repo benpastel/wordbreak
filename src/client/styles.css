@@ -860,6 +860,14 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
   font-size: clamp(0.72rem, 11cqi, 1.6rem); line-height: 1.15; overflow-wrap: anywhere;
 }
 .recapwho.plinth .trophies { margin-top: 4px; flex-wrap: wrap; }
+/* The winner's stand is lit in their colour from the plinth up, with a crown on
+   their tower, and everyone else's score and name sit back a little. */
+.stand.winner {
+  background: linear-gradient(to top, color-mix(in oklab, var(--pf) 50%, transparent), transparent);
+}
+.stand.winner .plinth { padding-bottom: 12px; }
+.tower .crown { flex: none; width: clamp(26px, 30%, 44px); height: auto; margin-bottom: 6px; color: oklch(0.70 0.14 78); }
+.stands:has(.winner) .stand:not(.winner) .plinth :is(.pts, .name) { opacity: 0.75; }
 
 /* Your own words that were not words, last on the page and folded to a count: a
    checklist to ask for any of them to be added. */
@@ -972,7 +980,7 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .recapwho .name { font-size: clamp(1.1rem, 0.9vw + 0.85rem, 1.6rem); }
 .recapwho .pts { font-size: clamp(2.4rem, 2.6vw + 1.4rem, 3.8rem); line-height: 1.05; }
 .recapwho .trophies { margin: 6px 0 0; gap: 6px; justify-content: center; }
-.recapwho .trophy i { width: 24px; height: 24px; }
+.recapwho .trophy svg { height: 32px; }
 .recapwho .trophies .more { font-size: 0.9rem; }
 
 .deftip {
@@ -1015,17 +1023,18 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .chatbox input { flex: 1; width: auto; min-width: 0; font-family: var(--font-prose); font-weight: 400; box-shadow: var(--edge); background: var(--ground); }
 
 /* --------------------------------------------------------------- trophies
-   Playing pieces rather than icons: a domed disc with a lit top edge and a
-   shadow under it, so they read as objects sitting on the table next to a name. */
+   Place medals: a disc with 1, 2 or 3 on it, hung from a ribbon in its own metal's
+   darker tone. */
 .trophies { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; flex-wrap: wrap; }
 .trophy { display: inline-flex; align-items: center; gap: 2px; }
-.trophy i {
-  width: 13px; height: 13px; border-radius: 50%;
-  background: radial-gradient(circle at 34% 28%, var(--t-hi), var(--t-lo) 74%);
-  box-shadow:
-    inset 0 -1px 1px oklch(0.25 0.03 70 / 0.35),
-    inset 0 1px 1px oklch(1 0 0 / 0.55),
-    0 1px 1.5px oklch(0.3 0.02 70 / 0.3);
+.trophy svg { display: block; height: 18px; width: auto; overflow: visible; filter: drop-shadow(0 1px 1px oklch(0.3 0.02 70 / 0.3)); }
+.trophy .ribbon { fill: var(--t-lo); }
+.trophy .ribbon.r2 { fill: color-mix(in oklab, var(--t-lo) 75%, black); }
+.trophy .rim { fill: var(--t-lo); }
+.trophy .face { fill: var(--t-hi); }
+.trophy text {
+  font-family: var(--font-tile); font-weight: var(--w-tile); font-size: 9px;
+  fill: color-mix(in oklab, var(--t-lo) 55%, black);
 }
 .trophies .more {
   font-size: 0.66rem; font-family: var(--font-tile); font-weight: var(--w-tile); color: var(--ink-soft);
