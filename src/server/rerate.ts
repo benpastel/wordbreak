@@ -63,17 +63,25 @@ async function main(): Promise<void> {
   const [players, matches] = await Promise.all([db.loadPlayers(), db.loadMatches()]);
   console.log = log;
 
-  const rebuilt = replay(matches);
+  // A guest merged by linking browsers plays on as the one they joined.
+  const byId = new Map(players.map((p) => [p.id, p]));
+  const alias = new Map<string, string>();
+  for (const p of players) {
+    let to = p;
+    for (let hops = 0; to.mergedInto && hops < 100; hops++) to = byId.get(to.mergedInto) ?? to;
+    if (to !== p) alias.set(p.id, to.id);
+  }
+  const rebuilt = replay(matches, alias);
   const counted = new Map<string, number>();
   for (const m of matches) {
     if (m.how === 'abandoned' || m.playerIds.length < 2) continue;
-    for (const id of m.playerIds) counted.set(id, (counted.get(id) ?? 0) + 1);
+    for (const id of new Set(m.playerIds.map((id) => alias.get(id) ?? id))) counted.set(id, (counted.get(id) ?? 0) + 1);
   }
 
   const next = new Map<string, { rating: number; rd: number; volatility: number; ratedMatches: number }>();
   const changes: { name: string; was: number; now: number }[] = [];
   for (const p of players) {
-    if (p.kind === 'bot') continue;
+    if (p.kind === 'bot' || p.mergedInto) continue;
     const r = rebuilt.get(p.id) ?? INITIAL;
     next.set(p.id, { ...r, ratedMatches: counted.get(p.id) ?? 0 });
     const was = Math.round(shown(p));

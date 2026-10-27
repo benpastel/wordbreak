@@ -262,7 +262,11 @@ export type ClientMsg =
   | { t: 'addBot' }
   | { t: 'removeBot'; botId: string }
   | { t: 'setBotDifficulty'; botId: string; difficulty: number }
-  | { t: 'chat'; text: string };
+  | { t: 'chat'; text: string }
+  /** Show a code that lets another browser play as you, on the leaderboard. */
+  | { t: 'linkCode' }
+  /** Opened at /link/CODE: play as whoever showed the code. */
+  | { t: 'link'; code: string };
 
 export type ServerMsg =
   | { t: 'welcome'; playerId: string; name: string }
@@ -270,4 +274,8 @@ export type ServerMsg =
   | { t: 'table'; table: TableView; serverNow: number; fx: Fx[]; mine?: MyRecap }
   | { t: 'left' }
   | { t: 'leaderboard'; board: Leaderboard }
+  /** A code to open on another browser at /link/CODE, good until `expiresAt`. */
+  | { t: 'linkCode'; code: string; expiresAt: number }
+  /** A link went through: sent to both browsers, with the name now played under. */
+  | { t: 'linked'; name: string }
   | { t: 'error'; message: string };

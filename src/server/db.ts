@@ -79,6 +79,15 @@ export interface PlayerRow {
   volatility: number;
   ratedMatches: number;
   lastSeen: Date;
+  /** The guest this one was merged into, by linking browsers; null for most. */
+  mergedInto: string | null;
+}
+
+/** Another browser playing as a guest (migrations/004). */
+export interface GuestLink {
+  deviceHash: string;
+  nameKey: string;
+  playerId: string;
 }
 
 export interface FinishedMatch {
@@ -227,11 +236,13 @@ export class Db {
     let last = Promise.resolve();
     for (const p of players) {
       last = this.write(
-        `insert into players (id, kind, name, device_hash, name_key, rating, rd, volatility, rated_matches, last_seen)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `insert into players (id, kind, name, device_hash, name_key, rating, rd, volatility, rated_matches, last_seen,
+           merged_into)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          on conflict (id) do update set name = $3, rating = $6, rd = $7, volatility = $8,
-           rated_matches = $9, last_seen = $10`,
-        [p.id, p.kind, p.name, p.deviceHash, p.nameKey, p.rating, p.rd, p.volatility, p.ratedMatches, p.lastSeen],
+           rated_matches = $9, last_seen = $10, merged_into = $11`,
+        [p.id, p.kind, p.name, p.deviceHash, p.nameKey, p.rating, p.rd, p.volatility, p.ratedMatches, p.lastSeen,
+          p.mergedInto],
         `saving player ${p.id}`,
       );
     }
@@ -242,16 +253,38 @@ export class Db {
   async loadPlayers(): Promise<PlayerRow[]> {
     await this.ready;
     const { rows } = await this.sql.query(
-      `select id, kind, name, device_hash, name_key, rating, rd, volatility, rated_matches, last_seen
+      `select id, kind, name, device_hash, name_key, rating, rd, volatility, rated_matches, last_seen, merged_into
        from players`,
     );
     return rows.map(toPlayer);
   }
 
-  /** Every match, oldest first, for rebuilding ratings (rerate.ts). */
-  async loadMatches(): Promise<{ playerIds: string[]; how: string; report: string }[]> {
+  /** Let another browser play as a guest. */
+  linkGuest(l: GuestLink): Promise<void> {
+    return this.write(
+      `insert into guest_links (device_hash, name_key, player_id) values ($1, $2, $3)
+       on conflict (device_hash, name_key) do update set player_id = $3, linked_at = now()`,
+      [l.deviceHash, l.nameKey, l.playerId],
+      `linking a browser to ${l.playerId}`,
+    );
+  }
+
+  async loadLinks(): Promise<GuestLink[]> {
     await this.ready;
-    const { rows } = await this.sql.query('select player_ids, how, report from matches order by ended_at, id');
+    const { rows } = await this.sql.query('select device_hash, name_key, player_id from guest_links');
+    return rows.map((r) => ({ deviceHash: String(r.device_hash), nameKey: String(r.name_key), playerId: String(r.player_id) }));
+  }
+
+  /** Every match, oldest first, for rebuilding ratings (rerate.ts); or only those
+   *  any of `ids` played in. */
+  async loadMatches(ids?: string[]): Promise<{ playerIds: string[]; how: string; report: string }[]> {
+    await this.ready;
+    const { rows } = ids
+      ? await this.sql.query(
+          'select player_ids, how, report from matches where player_ids && $1::text[] order by ended_at, id',
+          [ids],
+        )
+      : await this.sql.query('select player_ids, how, report from matches order by ended_at, id');
     return rows.map((r) => ({
       playerIds: r.player_ids as string[],
       how: String(r.how),
@@ -287,6 +320,7 @@ function toPlayer(r: Record<string, unknown>): PlayerRow {
     volatility: Number(r.volatility),
     ratedMatches: Number(r.rated_matches),
     lastSeen: new Date(r.last_seen as string),
+    mergedInto: (r.merged_into as string | null) ?? null,
   };
 }
 

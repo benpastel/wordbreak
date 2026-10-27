@@ -35,6 +35,8 @@ class Client {
         if (m.t === 'table') { this.table = m.table; this.mine = m.mine ?? null; if (m.fx.length) this.fx.push(...m.fx); }
         if (m.t === 'left') this.table = null;
         if (m.t === 'leaderboard') this.board = m.board;
+        if (m.t === 'linkCode') this.linkCode = m;
+        if (m.t === 'linked') this.linked = m.name;
         if (m.t === 'error') this.errors.push(m.message);
       });
     });
@@ -432,7 +434,7 @@ process.on('exit', stop);
     check('back in the lobby, the leaderboard arrives, with you on it', !!you && you.name === 'benji', JSON.stringify(b.board?.you));
     check('rated after the matches you played', you?.matches >= 2, JSON.stringify(you));
     check('the bot levels are on it too, as their poets',
-      ['Edward Lear', 'Christina Rossetti', 'Emily Dickinson', 'Gerard Manley Hopkins'].every((n) => b.board.rows.some((r) => r.bot && r.name === n)));
+      ['Edward Lear', 'Christina Rossetti', 'Emily Dickinson', 'John Keats', 'Gerard Manley Hopkins'].every((n) => b.board.rows.some((r) => r.bot && r.name === n)));
     check('best first', b.board.rows.every((r, i, rs) => i === 0 || rs[i - 1].rating >= r.rating));
     b.send({ t: 'setName', name: 'benji2' });
     await sleep(150);
@@ -440,6 +442,22 @@ process.on('exit', stop);
     b.send({ t: 'setName', name: 'Benji' });
     await sleep(150);
     check('and back again, the name is matched without regard to case', b.board.you === you?.id);
+
+    section('linking another device');
+    const phone = new Client('');
+    await phone.connect();
+    b.send({ t: 'linkCode' });
+    await sleep(150);
+    check('your row gives you a code to open elsewhere', /^[A-Z2-9]{8}$/.test(b.linkCode?.code ?? ''), JSON.stringify(b.linkCode));
+    phone.send({ t: 'link', code: b.linkCode.code.toLowerCase() });
+    await sleep(300);
+    equal('opened on the phone, it plays under your name', phone.linked, 'Benji');
+    equal('and the browser showing the code hears so', b.linked, 'Benji');
+    equal('the phone is you on the leaderboard', phone.board?.you, you?.id);
+    phone.send({ t: 'link', code: b.linkCode.code });
+    await sleep(150);
+    check('a code works once', phone.errors.includes('That link has expired.'), JSON.stringify(phone.errors));
+    phone.close();
   }
   a2.send({ t: 'leaveTable' });
   await sleep(250);

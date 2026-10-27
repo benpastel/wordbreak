@@ -63,5 +63,27 @@ check('every rating comes back exactly from the stored matches',
 const one = (await pg.query("select report->'ratings' as r from matches order by id limit 1")).rows[0].r;
 check("each match keeps everyone's rating before and after", one.length === 2 && one.every((x) => x.before && x.after));
 
+section('another browser');
+await ledger.record(match([seat('ANN', 'dev7', 40), seat('cal', 'dev2', 10)]));
+await db.drained();
+const phone = ledger.guestId('dev7', 'ann');
+check('ann on her phone starts as someone else', phone && phone !== ann);
+const annBefore = { ...(await pg.query('select rated_matches from players where id = $1', [ann])).rows[0] };
+const linked = await ledger.link('dev7', ann);
+await db.drained();
+equal('linking the phone makes it ann', ledger.guestId('dev7', 'Ann'), ann);
+equal('and returns who it now plays as', linked?.id, ann);
+const merged = ledger.leaderboard(ann);
+equal('the phone guest leaves the board', merged.rows.find((r) => r.id === phone), undefined);
+equal("ann's matches are both browsers'", merged.rows.find((r) => r.id === ann).matches, annBefore.rated_matches + 1);
+await ledger.record(match([seat('ann', 'dev7', 30), seat('cal', 'dev2', 20)]));
+await db.drained();
+equal('a match played on the phone counts for ann', ledger.leaderboard(ann).rows.find((r) => r.id === ann).matches, annBefore.rated_matches + 2);
+const reloaded = new Ledger(db);
+await reloaded.ready;
+equal('a restart remembers the link', reloaded.guestId('dev7', 'ann'), ann);
+equal('and the merged board', reloaded.leaderboard(ann), ledger.leaderboard(ann));
+equal('nobody links to a bot', await ledger.link('dev8', BOT_LEVELS[0].id), null);
+
 await pg.close();
 done();

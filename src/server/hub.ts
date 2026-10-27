@@ -2,7 +2,7 @@
 // timer. Clients send intents; the hub validates against current state and pushes
 // a fresh snapshot plus a few animation hints.
 
-import { randomUUID } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import {
   BOT_LEVELS, COLOR_COUNT, countdownFor, DEFAULT_END_MODE, DEFAULT_GAME_MS, DEFAULT_GRID,
   DEFAULT_TARGET, MAX_CHAT, MAX_CHAT_LEN, MAX_PLAYERS,
@@ -30,6 +30,12 @@ const DISCONNECT_GRACE_MS = 120_000;
 const BOT_TICK_MS = 100;
 const DEFAULT_BOT_DIFFICULTY = 0.35;
 /** Numerals for a second, third... bot of one level at a table. */
+/** How long a code for linking another browser stays good, and what it is made of:
+ *  no 0/O or 1/I/L to misread when typed rather than scanned. */
+const LINK_MS = 10 * 60_000;
+const LINK_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const LINK_LENGTH = 8;
+
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // no look-alikes, these end up in URLs
 
@@ -165,6 +171,56 @@ export class Hub {
     this.pushLobby();
     // A different name on the same browser is a different guest.
     this.pushLeaderboard(p.id, { onlyIfYouChanged: true });
+  }
+
+  // ----------------------------------------------------------------- linking
+
+  /** Codes shown on one browser for another to play as the same guest. Only in
+   *  memory: a code lasts minutes, and a restart costs no more than showing another. */
+  private links = new Map<string, { guest: string; shownTo: string; expiresAt: number }>();
+
+  /** A code for your own leaderboard row, replacing any you were shown before. */
+  linkCode(playerId: string): void {
+    const p = this.store.getPlayer(playerId);
+    const guest = p && this.ledger.guestId(p.device, p.name);
+    if (!guest) return;
+    const now = Date.now();
+    for (const [c, l] of this.links) if (l.shownTo === playerId || l.expiresAt < now) this.links.delete(c);
+    let code: string;
+    do {
+      code = Array.from({ length: LINK_LENGTH }, () => LINK_ALPHABET[randomInt(LINK_ALPHABET.length)]).join('');
+    } while (this.links.has(code));
+    const expiresAt = now + LINK_MS;
+    this.links.set(code, { guest, shownTo: playerId, expiresAt });
+    this.send(playerId, { t: 'linkCode', code, expiresAt });
+  }
+
+  /** A code opened on another browser: from now on it plays as that guest. */
+  async link(playerId: string, code: string): Promise<void> {
+    const p = this.store.getPlayer(playerId);
+    if (!p?.device) return;
+    const key = String(code).toUpperCase();
+    const l = this.links.get(key);
+    if (!l || l.expiresAt < Date.now()) {
+      this.send(playerId, { t: 'error', message: 'That link has expired.' });
+      return;
+    }
+    this.links.delete(key);
+    const guest = await this.ledger.link(p.device, l.guest);
+    if (!guest) return;
+    // The name as the browser showing the code has it now, if that is still them;
+    // otherwise as they last played it.
+    const shower = this.store.getPlayer(l.shownTo);
+    this.setName(
+      playerId,
+      shower && this.ledger.guestId(shower.device, shower.name) === guest.id ? shower.name : guest.name,
+    );
+    const name = this.store.getPlayer(playerId)?.name ?? guest.name;
+    this.send(playerId, { t: 'linked', name });
+    this.send(l.shownTo, { t: 'linked', name });
+    // A merge can move a rating, and so the board, for everyone.
+    this.toldYou.delete(playerId);
+    this.pushLeaderboards();
   }
 
   // ------------------------------------------------------------------ tables

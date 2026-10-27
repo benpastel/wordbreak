@@ -83,6 +83,12 @@ wss.on('connection', (ws: WebSocket) => {
       case 'setName':
         hub.setName(playerId, msg.name);
         break;
+      case 'linkCode':
+        hub.linkCode(playerId);
+        break;
+      case 'link':
+        void hub.link(playerId, msg.code).catch((e) => console.error(`link: ${e}`));
+        break;
       case 'createTable':
         hub.createTable(playerId, msg.name);
         break;

@@ -4,7 +4,9 @@
 //
 // A guest is a browser and a name together (the browser known only by the hash of
 // its secret), so people sharing one browser are rated apart by the names they play
-// under. Each bot level is a single fixed player with a measured rating.
+// under. Each bot level is a single fixed player with a measured rating. One guest
+// can play from several browsers, once linked by a code (link()); a guest the new
+// browser already had under that name is merged in, its history with it.
 //
 // Every match is kept with its players' ids and the full report, rating changes
 // included, which is enough to recompute every rating from the first match on under
@@ -52,9 +54,13 @@ export class Ledger {
   readonly ready: Promise<void>;
 
   constructor(private db: Db | null) {
-    this.ready = (db ? db.loadPlayers() : Promise.resolve([])).then(
-      (rows) => {
+    this.ready = (db ? Promise.all([db.loadPlayers(), db.loadLinks()]) : Promise.resolve([[], []] as const)).then(
+      ([rows, links]) => {
         for (const r of rows) this.index(r);
+        for (const l of links) {
+          const r = this.byId.get(l.playerId);
+          if (r) this.byGuest.set(`${l.deviceHash}\n${l.nameKey}`, r);
+        }
         this.seatBots();
       },
       (e) => {
@@ -68,7 +74,7 @@ export class Ledger {
 
   private index(r: PlayerRow): void {
     this.byId.set(r.id, r);
-    if (r.kind === 'guest' && r.deviceHash && r.nameKey) this.byGuest.set(`${r.deviceHash}\n${r.nameKey}`, r);
+    if (r.kind === 'guest' && !r.mergedInto && r.deviceHash && r.nameKey) this.byGuest.set(`${r.deviceHash}\n${r.nameKey}`, r);
   }
 
   /** The bot levels, at their measured ratings, with no uncertainty. */
@@ -88,6 +94,7 @@ export class Ledger {
         volatility: INITIAL.volatility,
         ratedMatches: had?.ratedMatches ?? 0,
         lastSeen: had?.lastSeen ?? new Date(),
+        mergedInto: null,
       };
       this.index(row);
       changed.push(row);
@@ -95,16 +102,66 @@ export class Ledger {
     if (changed.length) void this.db?.savePlayers(changed);
   }
 
+  /** Who a guest is now: themselves, or whoever they were merged into. */
+  private resolve(r: PlayerRow | undefined): PlayerRow | undefined {
+    for (let hops = 0; r?.mergedInto && hops < 100; hops++) r = this.byId.get(r.mergedInto);
+    return r;
+  }
+
   /** The guest playing as `name` on this browser, if they have played before. */
   guestId(device: string | null | undefined, name: string): string | null {
     if (!device || !name.trim()) return null;
-    return this.byGuest.get(`${device}\n${nameKey(name)}`)?.id ?? null;
+    return this.resolve(this.byGuest.get(`${device}\n${nameKey(name)}`))?.id ?? null;
+  }
+
+  /** A guest's name as they last played it. */
+  nameOf(id: string): string | null {
+    return this.byId.get(id)?.name ?? null;
+  }
+
+  /** Let this browser play as the guest `id`, under their name. Whoever this browser
+   *  already was under that name is merged into them, and their rating rebuilt from
+   *  both histories. Returns the guest, or null if there is no such guest. */
+  async link(device: string, id: string): Promise<PlayerRow | null> {
+    await this.ready;
+    const into = this.resolve(this.byId.get(id));
+    if (!into || into.kind !== 'guest' || !into.nameKey) return null;
+    const key = `${device}\n${into.nameKey}`;
+    const had = this.resolve(this.byGuest.get(key));
+    this.byGuest.set(key, into);
+    void this.db?.linkGuest({ deviceHash: device, nameKey: into.nameKey, playerId: into.id });
+    if (had && had !== into) {
+      had.mergedInto = into.id;
+      await this.rebuild(into);
+      void this.db?.savePlayers([had, into]);
+    }
+    return into;
+  }
+
+  /** A merged guest's rating, as if they had always been one player: their matches
+   *  replayed in order, each against the opponents' ratings as they stood then
+   *  (kept in every report), so nobody else's rating moves. Without a database,
+   *  there is no history to replay and the guest merged into keeps their own. */
+  private async rebuild(into: PlayerRow): Promise<void> {
+    if (!this.db) return;
+    for (;;) {
+      const seen = into.ratedMatches;
+      await this.db.drained();
+      const ids = [...this.byId.values()].filter((r) => this.resolve(r) === into).map((r) => r.id);
+      const matches = await this.db.loadMatches(ids);
+      // A match finished meanwhile is not in what was loaded: go again.
+      if (into.ratedMatches !== seen) continue;
+      const { rating, matches: n } = rateAlone(matches, new Set(ids));
+      Object.assign(into, rating);
+      into.ratedMatches = n;
+      return;
+    }
   }
 
   private seatRow(seat: Seat, at: Date): PlayerRow {
     if (seat.bot !== null) return this.byId.get(levelOf(seat.bot).id)!;
     const key = seat.device ? `${seat.device}\n${nameKey(seat.name)}` : null;
-    const had = key ? this.byGuest.get(key) : undefined;
+    const had = key ? this.resolve(this.byGuest.get(key)) : undefined;
     if (had) return had;
     const row: PlayerRow = {
       id: randomUUID(),
@@ -115,6 +172,7 @@ export class Ledger {
       ...INITIAL,
       ratedMatches: 0,
       lastSeen: at,
+      mergedInto: null,
     };
     this.index(row);
     return row;
@@ -170,7 +228,7 @@ export class Ledger {
    *  bottom if you are further down. */
   leaderboard(you: string | null): Leaderboard {
     const all = [...this.byId.values()]
-      .filter((r) => r.kind === 'bot' || r.ratedMatches > 0)
+      .filter((r) => r.kind === 'bot' || (r.ratedMatches > 0 && !r.mergedInto))
       .map((r) => ({ r, shown: shown(r) }))
       .sort((a, b) => b.shown - a.shown);
     const row = ({ r, shown: s }: (typeof all)[number], i: number): LeaderRow => ({
@@ -188,23 +246,69 @@ export class Ledger {
   }
 }
 
+type StoredMatch = { playerIds: string[]; how: string; report: string };
+
+/** One guest's rating and rated matches, from the matches any of `ids` played in,
+ *  every opponent as the report says they stood going in. */
+function rateAlone(matches: StoredMatch[], ids: Set<string>): { rating: Rating; matches: number } {
+  let me = INITIAL;
+  let n = 0;
+  for (const m of matches) {
+    if (m.how === 'abandoned' || m.playerIds.length < 2) continue;
+    const report = JSON.parse(m.report);
+    const players: { bot: number | null; score?: number }[] = report.players;
+    const before: ({ before?: Rating } | undefined)[] = report.ratings ?? [];
+    const at = m.playerIds.findIndex((id) => ids.has(id));
+    const entrants: Entrant[] = [];
+    m.playerIds.forEach((id, i) => {
+      // Both browsers at one table: only the first seat counts.
+      if (i !== at && ids.has(id)) return;
+      const bot = players[i].bot;
+      entrants.push({
+        id: i === at ? '' : id,
+        rating:
+          i === at
+            ? me
+            : bot !== null
+              ? { rating: levelOf(bot).rating, rd: 0, volatility: INITIAL.volatility }
+              : (before[i]?.before ?? INITIAL),
+        fixed: i !== at,
+        score: players[i].score ?? null,
+      });
+    });
+    if (entrants.length < 2) continue;
+    me = rateMatch(entrants).get('')!;
+    n++;
+  }
+  return { rating: me, matches: n };
+}
+
 /** Every rating, recomputed from stored matches alone, oldest first: proof that the
  *  history is enough, and the way to re-rate everyone after changing the rules or a
- *  bot's rating. Each match's report lists its players in the same order as its ids. */
-export function replay(matches: { playerIds: string[]; how: string; report: string }[]): Map<string, Rating> {
+ *  bot's rating. Each match's report lists its players in the same order as its ids.
+ *  `alias` maps a merged guest to the one they joined. */
+export function replay(matches: StoredMatch[], alias: Map<string, string> = new Map()): Map<string, Rating> {
   const ratings = new Map<string, Rating>();
   for (const m of matches) {
     if (m.how === 'abandoned' || m.playerIds.length < 2) continue;
     const players: { bot: number | null; score?: number }[] = JSON.parse(m.report).players;
-    const entrants: Entrant[] = m.playerIds.map((id, i) => {
+    const seen = new Set<string>();
+    const entrants: Entrant[] = [];
+    m.playerIds.forEach((raw, i) => {
+      const id = alias.get(raw) ?? raw;
       const bot = players[i].bot;
-      return {
+      // Both browsers of one guest at one table: only the first seat counts. (Two
+      // bots of a level share an id, and are fixed, so both stay.)
+      if (bot === null && seen.has(id)) return;
+      seen.add(id);
+      entrants.push({
         id,
         rating: bot !== null ? { rating: levelOf(bot).rating, rd: 0, volatility: INITIAL.volatility } : (ratings.get(id) ?? INITIAL),
         fixed: bot !== null,
         score: players[i].score ?? null,
-      };
+      });
     });
+    if (entrants.length < 2) continue;
     for (const [id, r] of rateMatch(entrants)) if (!entrants.find((e) => e.id === id)!.fixed) ratings.set(id, r);
   }
   return ratings;
