@@ -168,7 +168,7 @@ export default function Results({
                         {words.map(row)}
                       </div>
                       <div
-                        className={`recapwho plinth${p.ready ? ' setgo' : ''}`}
+                        className={`recapwho plinth${p.ready && !p.bot ? ' setgo' : ''}`}
                         data-player={p.id}
                         ref={k === 0 ? plinth : undefined}
                       >

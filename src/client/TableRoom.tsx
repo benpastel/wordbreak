@@ -260,7 +260,7 @@ export default function TableRoom({
             <div
               key={p.id}
               className={`setupwho c${p.color}${p.connected ? '' : ' gone'}${
-                p.ready ? ' setgo' : ''
+                p.ready && !p.bot ? ' setgo' : ''
               }${p.bot ? ' isbot' : ''}`}
             >
               <span className="who">

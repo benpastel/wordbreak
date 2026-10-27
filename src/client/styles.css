@@ -765,7 +765,8 @@ input:focus { box-shadow: inset 0 0 0 2px var(--ink-mute), var(--shadow-1), var(
 .recapwho .pts {
   font-family: var(--font-tile); font-weight: var(--w-tile); font-size: 1.2rem; color: var(--pc); font-variant-numeric: tabular-nums;
 }
-/* Ready, wherever a list of players is shown between matches. */
+/* Ready, wherever a list of players is shown between matches. Never on a bot,
+   which is always ready, so the mark would say nothing. */
 .setgo > .name::after, .setgo > .who > .name::after {
   content: '✓'; margin-left: 6px; font-size: 0.8em; color: var(--go);
 }
