@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["numpy", "soundfile"]
+# dependencies = ["numpy", "scipy", "soundfile"]
 # ///
 """Cut a seamless loop out of a recording of the music played through more than once.
 
@@ -18,6 +18,9 @@ nothing more to do. When it's the first, nothing rings under it in the recording
 --ring-from names a later downbeat where the playing stopped (the last time through
 comes back round to it) and the ring-out after it is laid over the head instead.
 
+--highpass takes out what sits below the instrument (rumble, handling, any DC offset)
+before anything is cut, filtered forwards and back so nothing shifts in time.
+
 The loop is scaled so its loudest sample sits at --peak dBFS; levels against the
 game's other sounds are for the game's own volume to settle. --preview also writes
 the loop played N times over, for hearing the seam.
@@ -27,6 +30,7 @@ import argparse
 
 import numpy as np
 import soundfile as sf
+from scipy.signal import butter, sosfiltfilt
 
 
 def main():
@@ -38,12 +42,15 @@ def main():
     p.add_argument("--ring-length", type=float, default=3.0, help="seconds of ring-out to lay over the head")
     p.add_argument("--pre", type=float, default=0.05, help="seconds before each downbeat to cut")
     p.add_argument("--xfade", type=float, default=0.04, help="seconds of crossfade at the seam")
+    p.add_argument("--highpass", type=float, default=40.0, help="Hz; 0 for none")
     p.add_argument("--peak", type=float, default=-1.0)
     p.add_argument("--out", required=True)
     p.add_argument("--preview", type=int, default=0)
     a = p.parse_args()
 
     x, sr = sf.read(a.file, always_2d=True)
+    if a.highpass:
+        x = sosfiltfilt(butter(2, a.highpass, "highpass", fs=sr, output="sos"), x, axis=0)
     s = lambda t: int(round(t * sr))
     begin, end, fade = s(a.start - a.pre), s(a.end - a.pre), s(a.xfade)
     if fade > s(a.pre):

@@ -103,7 +103,7 @@ export default function Prefs() {
 
   return (
     <div className="prefs" ref={ref}>
-      {/* Everything audible at once: spoken words and effects, each also with its
+      {/* Everything audible at once: spoken words, effects and music, each also with its
           own checkbox and volume in the menu. Switching on happens inside the tap,
           which is what browsers need before they will make any sound. */}
       <button
@@ -222,6 +222,23 @@ export default function Prefs() {
               value={sound.sfxVolume}
               disabled={!sound.sfx}
               onChange={(e) => change({ sfxVolume: Number(e.target.value) })}
+            />
+          </div>
+          <div className="setting sound">
+            <label className="check">
+              <input type="checkbox" checked={sound.music} onChange={(e) => change({ music: e.target.checked })} />
+              music
+            </label>
+            <input
+              aria-label="music volume"
+              className="volume"
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={sound.musicVolume}
+              disabled={!sound.music}
+              onChange={(e) => change({ musicVolume: Number(e.target.value) })}
             />
           </div>
         </div>

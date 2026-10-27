@@ -9,7 +9,7 @@ import type {
   TableSummary,
   TableView,
 } from '../shared/types';
-import { Net } from './net';
+import { Net, serverTime } from './net';
 import type { NetStatus } from './net';
 import { loadWords, wordsReady } from './dict';
 import Lobby from './Lobby';
@@ -17,6 +17,7 @@ import TableRoom from './TableRoom';
 import Game from './Game';
 import Results from './Results';
 import Prefs from './Prefs';
+import { music } from './sound';
 
 const ID_KEY = 'wordbreak.playerId';
 /** This browser's secret: never shown, and shared by everyone who plays on it. With
@@ -164,6 +165,17 @@ export default function App() {
       history.replaceState(null, '', `${target}${location.search}`);
     }
   }, [table?.id, wantTable]);
+
+  // Music through the menu and a table's setup, carrying on between them, and
+  // fading out over the countdown so the board arrives in quiet. A countdown called
+  // off brings it back; one too short to fade over still gets a moment.
+  const atSetup = !!meId && (!table || table.phase === 'lobby');
+  const startsAt = table?.startsAt ?? null;
+  useEffect(() => {
+    if (!atSetup) music(false, 0.4);
+    else if (startsAt !== null) music(false, Math.max(0.4, (startsAt - serverTime()) / 1000));
+    else music(true);
+  }, [atSetup, startsAt]);
 
   const actions = useMemo(
     () => ({
