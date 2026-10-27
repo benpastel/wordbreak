@@ -172,7 +172,11 @@ export interface LeaderRow {
   id: string;
   name: string;
   bot: boolean;
+  /** The rating shown: the low end of what it plausibly is, estimate - 2 × rd. */
   rating: number;
+  /** Glicko-2's best guess, and how sure it is of it (0 for a bot). */
+  estimate: number;
+  rd: number;
   matches: number;
 }
 
@@ -180,6 +184,8 @@ export interface Leaderboard {
   rows: LeaderRow[];
   /** Your own id on it, as the name you are using now, if you have played. */
   you: string | null;
+  /** How many browsers play as you, once you are on it. */
+  devices?: number;
 }
 
 /** The part of the last match only its own player is sent: the words they tried

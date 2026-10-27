@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import qrcode from 'qrcode-generator';
-import type { Leaderboard } from '../shared/types';
+import type { Leaderboard, LeaderRow } from '../shared/types';
 import Fold from './Fold';
 
 interface Props {
@@ -16,44 +16,112 @@ interface Props {
  * shown is the cautious one, so a newcomer starts low and climbs as they play. Your
  * own row is marked, and added at the bottom if you are further down than the list.
  *
- * Your row is also where you link another browser, a phone say, to play as you: a
- * QR code to scan there, with its address to type if there is no camera.
+ * Any row opens that player's card: the estimate behind the rating and how sure it
+ * is. Yours is also where you link another browser, a phone say, to play as you.
  */
 export default function LeaderboardView({ board, linkOffer, onLink, onCloseLink }: Props) {
+  const [open, setOpen] = useState<string | null>(null);
+  const row = board.rows.find((r) => r.id === open);
+  const close = () => {
+    setOpen(null);
+    onCloseLink();
+  };
   return (
     <Fold title="leaderboard" storageKey="wordbreak.leaderboard" className="leaders">
       <ol>
         {board.rows.map((r, i) => (
           <li key={r.id} className={r.id === board.you ? 'you' : undefined}>
             {i > 0 && r.rank !== board.rows[i - 1].rank + 1 && <span className="gap" aria-hidden="true" />}
-            <span className="rank">{r.rank}</span>
-            <span className="name">
-              <span className="nametext">{r.name}</span>
-              {r.bot && <span className="badge">bot</span>}
-              {r.id === board.you && (
-                <button className="linkbtn" aria-label="play as you on another device" onClick={onLink}>
-                  <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-                    <path
-                      d="M8.5 11.5a3 3 0 0 0 4.2 0l2.6-2.6a3 3 0 0 0-4.2-4.2l-1 1M11.5 8.5a3 3 0 0 0-4.2 0L4.7 11.1a3 3 0 0 0 4.2 4.2l1-1"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              )}
-            </span>
-            <span className="rating">{r.rating}</span>
+            <button className="leaderrow" onClick={() => setOpen(r.id)}>
+              <span className="rank">{r.rank}</span>
+              <span className="name">
+                <span className="nametext">{r.name}</span>
+                {r.bot && <span className="badge">bot</span>}
+              </span>
+              <span className="rating">{r.rating}</span>
+            </button>
           </li>
         ))}
       </ol>
-      {linkOffer && <LinkDialog {...linkOffer} onClose={onCloseLink} />}
+      {row && (
+        <PlayerCard
+          row={row}
+          you={row.id === board.you}
+          devices={board.devices ?? 1}
+          linkOffer={linkOffer}
+          onLink={onLink}
+          onCloseLink={onCloseLink}
+          onClose={close}
+        />
+      )}
     </Fold>
   );
 }
 
-function LinkDialog({ code, expiresAt, onClose }: { code: string; expiresAt: number; onClose: () => void }) {
+function PlayerCard({
+  row,
+  you,
+  devices,
+  linkOffer,
+  onLink,
+  onCloseLink,
+  onClose,
+}: {
+  row: LeaderRow;
+  you: boolean;
+  devices: number;
+  linkOffer: { code: string; expiresAt: number } | null;
+  onLink: () => void;
+  onCloseLink: () => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div className="modalback" onClick={onClose}>
+      <div className="modalcard playercard" role="dialog" aria-label={row.name} onClick={(e) => e.stopPropagation()}>
+        <h3 className="pcname">
+          {row.name}
+          {row.bot && <span className="badge">bot</span>}
+        </h3>
+        <div className="pcrating">{row.rating}</div>
+        <dl className="pcstats">
+          <dt>estimate</dt>
+          {/* Two RDs either side, so the rating above is exactly its low end. */}
+          <dd>{row.bot ? `${row.estimate}, fixed` : `${row.estimate} ± ${2 * row.rd}`}</dd>
+          {!row.bot && (
+            <>
+              <dt>matches</dt>
+              <dd>{row.matches}</dd>
+            </>
+          )}
+          {you && devices > 1 && (
+            <>
+              <dt>devices</dt>
+              <dd>{devices}</dd>
+            </>
+          )}
+        </dl>
+        {you &&
+          (linkOffer ? (
+            <LinkCode {...linkOffer} onExpire={onCloseLink} />
+          ) : (
+            <button className="ghost pclink" onClick={onLink}>
+              link another device
+            </button>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+/** A QR code to scan on the other device, with its address to type if there is no
+ *  camera. Gone once it expires. */
+function LinkCode({ code, expiresAt, onExpire }: { code: string; expiresAt: number; onExpire: () => void }) {
   const url = `${location.origin}/link/${code}`;
   const qr = useMemo(() => {
     const q = qrcode(0, 'M');
@@ -66,27 +134,20 @@ function LinkDialog({ code, expiresAt, onClose }: { code: string; expiresAt: num
   }, [url]);
 
   useEffect(() => {
-    const t = setTimeout(onClose, Math.max(0, expiresAt - Date.now()));
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [expiresAt, onClose]);
+    const t = setTimeout(onExpire, Math.max(0, expiresAt - Date.now()));
+    return () => clearTimeout(t);
+  }, [expiresAt, onExpire]);
 
   return (
-    <div className="linkback" onClick={onClose}>
-      <div className="linkcard" role="dialog" aria-label="link another device" onClick={(e) => e.stopPropagation()}>
-        {/* A margin of four modules all round, as scanners expect. */}
-        <svg viewBox={`-4 -4 ${qr.n + 8} ${qr.n + 8}`} className="qr" shapeRendering="crispEdges" aria-hidden="true">
-          <rect x="-4" y="-4" width={qr.n + 8} height={qr.n + 8} fill="#fff" />
-          <path d={qr.d} fill="#000" />
-        </svg>
-        <code className="linkurl">
-          {location.host}/link/{code}
-        </code>
-      </div>
+    <div className="linkcode">
+      {/* A margin of four modules all round, as scanners expect. */}
+      <svg viewBox={`-4 -4 ${qr.n + 8} ${qr.n + 8}`} className="qr" shapeRendering="crispEdges" aria-hidden="true">
+        <rect x="-4" y="-4" width={qr.n + 8} height={qr.n + 8} fill="#fff" />
+        <path d={qr.d} fill="#000" />
+      </svg>
+      <code className="linkurl">
+        {location.host}/link/{code}
+      </code>
     </div>
   );
 }

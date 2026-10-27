@@ -75,6 +75,10 @@ equal('linking the phone makes it ann', ledger.guestId('dev7', 'Ann'), ann);
 equal('and returns who it now plays as', linked?.id, ann);
 const merged = ledger.leaderboard(ann);
 equal('the phone guest leaves the board', merged.rows.find((r) => r.id === phone), undefined);
+equal('ann is on two browsers now', merged.devices, 2);
+const annRow = merged.rows.find((r) => r.id === ann);
+check('the rating shown is the estimate less two RDs, give or take rounding',
+  Math.abs(annRow.rating - (annRow.estimate - 2 * annRow.rd)) <= 2, JSON.stringify(annRow));
 equal("ann's matches are both browsers'", merged.rows.find((r) => r.id === ann).matches, annBefore.rated_matches + 1);
 await ledger.record(match([seat('ann', 'dev7', 30), seat('cal', 'dev2', 20)]));
 await db.drained();

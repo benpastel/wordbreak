@@ -242,12 +242,18 @@ export class Ledger {
       name: r.name,
       bot: r.kind === 'bot',
       rating: Math.round(s),
+      estimate: Math.round(r.rating),
+      rd: Math.round(r.rd),
       matches: r.ratedMatches,
     });
     const rows = all.slice(0, BOARD_SIZE).map(row);
     const at = you ? all.findIndex((e) => e.r.id === you) : -1;
     if (at >= BOARD_SIZE) rows.push(row(all[at], at));
-    return { rows, you: at >= 0 ? you : null };
+    if (at < 0) return { rows, you: null };
+    const me = all[at].r;
+    let devices = 0;
+    for (const r of this.byGuest.values()) if (this.resolve(r) === me) devices++;
+    return { rows, you, devices };
   }
 }
 
