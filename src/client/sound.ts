@@ -75,7 +75,7 @@ export function setSoundPrefs(patch: Partial<SoundPrefs>): void {
 
 // ------------------------------------------------------------------ effects
 
-export type Sfx = 'click' | 'claim' | 'invalid' | 'blocked' | 'bank';
+export type Sfx = 'click' | 'claim' | 'invalid' | 'blocked' | 'bank' | 'break' | 'won' | 'ended';
 
 let ctx: AudioContext | null = null;
 
@@ -120,13 +120,61 @@ function tone(out: AudioNode, { freq, at = 0, dur, gain, type = 'sine', slideTo 
   osc.stop(t + dur + 0.02);
 }
 
+let noiseBuffer: AudioBuffer | null = null;
+
+/** A burst of filtered noise: the stuff of cracks and snaps, which have no pitch. */
+function hiss(
+  out: AudioNode,
+  { at = 0, dur, gain, type = 'bandpass', freq, q = 1 }:
+    { at?: number; dur: number; gain: number; type?: BiquadFilterType; freq: number; q?: number },
+): void {
+  const c = ctx!;
+  if (!noiseBuffer) {
+    noiseBuffer = c.createBuffer(1, c.sampleRate, c.sampleRate);
+    const d = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const t = c.currentTime + at;
+  const src = c.createBufferSource();
+  const filter = c.createBiquadFilter();
+  const env = c.createGain();
+  src.buffer = noiseBuffer;
+  filter.type = type;
+  filter.frequency.value = freq;
+  filter.Q.value = q;
+  env.gain.setValueAtTime(0.0001, t);
+  env.gain.exponentialRampToValueAtTime(gain, t + 0.002);
+  env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(filter).connect(env).connect(out);
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + dur + 0.02);
+}
+
+// Every pitched effect is in D minor, the key of the music (a hang drum in D Kurd:
+// D, E, F, G, A, B flat, C), and tuned to it: the drum sits about 6 cents above
+// A = 440. So an effect over the music lands as a note of it rather than beside it.
+const A4 = 441.5;
+/** A note, in semitones from A4. */
+const note = (n: number) => A4 * 2 ** (n / 12);
+const [A2, F3, C4, D4, E5, F5, A5, Bb5, D6] = [-24, -16, -9, -7, 7, 8, 12, 13, 17].map(note);
+
+/** When a break's pieces start to fall (fx.ts), for the patter to land with them. */
+export const BREAK_FALL_MS = 170;
+
+/** The bank chime, a rising fourth: `lo` then `hi` just after. */
+function chime(out: AudioNode, lo: number, hi: number, at = 0): void {
+  tone(out, { freq: lo, at, dur: 0.32, gain: 0.18 });
+  tone(out, { freq: hi, at: at + 0.07, dur: 0.38, gain: 0.16 });
+  tone(out, { freq: hi * 2, at: at + 0.07, dur: 0.2, gain: 0.03 });
+}
+
 /** Each effect, as tones into the effects' volume. Quiet and short on purpose. */
 const EFFECTS: Record<Sfx, (out: AudioNode) => void> = {
-  // A soft tick: high, tiny, gone in a blink.
+  // A soft tick: high, tiny, gone in a blink. Too short to hear as a note.
   click: (out) => tone(out, { freq: 1900, dur: 0.035, gain: 0.12, type: 'triangle' }),
-  // A wooden tock, falling a little, like a tile set down.
+  // A wooden tock, falling a little, like a tile set down: A to E.
   claim: (out) => {
-    tone(out, { freq: 880, slideTo: 640, dur: 0.11, gain: 0.32 });
+    tone(out, { freq: A5, slideTo: E5, dur: 0.11, gain: 0.32 });
     tone(out, { freq: 2200, dur: 0.02, gain: 0.06, type: 'triangle' });
   },
   // A muted thud, low and short: not a word. Phone and laptop speakers barely play
@@ -134,24 +182,47 @@ const EFFECTS: Record<Sfx, (out: AudioNode) => void> = {
   // hears the low note the speaker cannot make, and on headphones they hardly
   // change the sound.
   invalid: (out) => {
-    tone(out, { freq: 170, slideTo: 110, dur: 0.14, gain: 0.35 });
-    tone(out, { freq: 340, slideTo: 220, dur: 0.12, gain: 0.1 });
-    tone(out, { freq: 510, slideTo: 330, dur: 0.09, gain: 0.05 });
+    tone(out, { freq: F3, slideTo: A2, dur: 0.14, gain: 0.35 });
+    tone(out, { freq: F3 * 2, slideTo: A2 * 2, dur: 0.12, gain: 0.1 });
+    tone(out, { freq: F3 * 3, slideTo: A2 * 3, dur: 0.09, gain: 0.05 });
   },
-  // Two dull taps: a word, but something longer is in the way. Each with a faint
-  // octave above, for the same reason.
+  // Two dull taps, D then C: a word, but something longer is in the way. Each with a
+  // faint octave above, for the same reason.
   blocked: (out) => {
-    tone(out, { freq: 300, dur: 0.06, gain: 0.22, type: 'triangle' });
-    tone(out, { freq: 600, dur: 0.05, gain: 0.06 });
-    tone(out, { freq: 260, at: 0.075, dur: 0.07, gain: 0.22, type: 'triangle' });
-    tone(out, { freq: 520, at: 0.075, dur: 0.06, gain: 0.06 });
+    tone(out, { freq: D4, dur: 0.06, gain: 0.22, type: 'triangle' });
+    tone(out, { freq: D4 * 2, dur: 0.05, gain: 0.06 });
+    tone(out, { freq: C4, at: 0.075, dur: 0.07, gain: 0.22, type: 'triangle' });
+    tone(out, { freq: C4 * 2, at: 0.075, dur: 0.06, gain: 0.06 });
   },
-  // A small rising chime, a fifth apart: your claim banked.
-  bank: (out) => {
-    tone(out, { freq: 660, dur: 0.32, gain: 0.18 });
-    tone(out, { freq: 990, at: 0.07, dur: 0.38, gain: 0.16 });
-    tone(out, { freq: 1980, at: 0.07, dur: 0.2, gain: 0.03 });
+  // A small rising chime, E to A: your claim banked.
+  bank: (out) => chime(out, E5, A5),
+  // Anyone's claim broken, timed to the picture (fx.ts): a stick-snap as the line
+  // between its tiles snaps, a dry crack, then a soft patter of dull knocks as the
+  // pieces land. No pitch to speak of, so no key.
+  break: (out) => {
+    hiss(out, { dur: 0.018, gain: 0.36, type: 'highpass', freq: 1800 });
+    tone(out, { freq: 700, slideTo: 260, dur: 0.05, gain: 0.15, type: 'triangle' });
+    hiss(out, { at: 0.015, dur: 0.06, gain: 0.4, freq: 2800, q: 1.4 });
+    hiss(out, { at: 0.027, dur: 0.035, gain: 0.2, freq: 5200, q: 2 });
+    for (let i = 0; i < 6; i++) {
+      tone(out, {
+        freq: 280 + Math.random() * 240,
+        at: (BREAK_FALL_MS + 120 + Math.random() * 350) / 1000,
+        dur: 0.035,
+        gain: 0.07,
+        type: 'triangle',
+      });
+    }
   },
+  // The match over, and you won: the bank chime three times, climbing, coming home
+  // to D.
+  won: (out) => {
+    chime(out, E5, A5);
+    chime(out, F5, Bb5, 0.16);
+    chime(out, A5, D6, 0.32);
+  },
+  // The match over, for everyone else: the bank chime, once.
+  ended: (out) => chime(out, E5, A5),
 };
 
 export function sfx(name: Sfx): void {

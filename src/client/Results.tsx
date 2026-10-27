@@ -5,6 +5,7 @@ import type { BurstKind } from './burst';
 import MiniBoard from './MiniBoard';
 import Misses from './Misses';
 import Ratings from './Ratings';
+import { sfx } from './sound';
 import TableShell from './TableShell';
 import Trophies from './Trophies';
 
@@ -89,7 +90,7 @@ export default function Results({
     at += size;
   }
 
-  // Confetti over the whole screen and a pop from your own name, in your medal's
+  // Confetti over the whole screen, a pop from your own name and a sound, in your medal's
   // colours if you placed. Fired off the 'ended' event rather than the phase, so
   // reconnecting later does not replay it.
   useEffect(() => {
@@ -97,6 +98,7 @@ export default function Results({
     if (!ended || popped.current === fx.seq) return;
     popped.current = fx.seq;
     const kind: BurstKind = (ended.medals[meId] as BurstKind) ?? 'none';
+    sfx(ended.medals[meId] === 'gold' ? 'won' : 'ended');
     requestAnimationFrame(() => {
       rain(kind);
       burst(kind, document.querySelector<HTMLElement>(`[data-player="${meId}"]`));

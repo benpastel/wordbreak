@@ -3,7 +3,7 @@ import type { Claim, Fx, GameState, Settings, TableView } from '../shared/types'
 import * as R from '../shared/rules';
 import * as S from '../shared/selection';
 import { isWord } from './dict';
-import { playBankFx } from './fx';
+import { playBankFx, playBreakFx } from './fx';
 import { serverTime } from './net';
 import { sfx } from './sound';
 import { say } from './speech';
@@ -43,7 +43,6 @@ export default function Game({ table, meId, fx, onClaim, onMissed, onLeave }: Pr
   /** A slid word that is not one, shown a moment where the trail was. */
   const [rejected, setRejected] = useState<{ word: string; n: number } | null>(null);
   const [reseeding, setReseeding] = useState<Set<number>>(new Set());
-  const [breaking, setBreaking] = useState<Set<number>>(new Set());
   const dragging = useRef(false);
   /** Whether this press has crossed into another tile, making it a slide. */
   const slid = useRef(false);
@@ -152,11 +151,14 @@ export default function Game({ table, meId, fx, onClaim, onMissed, onLeave }: Pr
   // the last match: leave one just after a bank and the next board would fly the
   // old letters off and reseed their tiles.
   const mountSeq = useRef(fx.seq);
+  /** The claims as of the last render: a broken one is gone from the snapshot that
+   *  says so, and its picture needs how far it had filled. */
+  const prevClaims = useRef(game.claims);
   useEffect(() => {
     if (!fx.items.length || fx.seq === mountSeq.current) return;
     const board = boardRef.current;
     const reseed = new Set<number>();
-    const broke = new Set<number>();
+    let broke = false;
     for (const f of fx.items) {
       if (f.k === 'banked') {
         if (board) playBankFx(board, f, colorOf(f.playerId));
@@ -166,19 +168,25 @@ export default function Game({ table, meId, fx, onClaim, onMissed, onLeave }: Pr
         say(f.word);
         if (f.playerId === meId) sfx('claim');
       } else if (f.k === 'broken') {
-        for (const i of f.idx) broke.add(i);
+        // How far it had filled, from the claim as it stood before this snapshot.
+        const was = prevClaims.current.find((c) => c.playerId === f.playerId && c.word === f.word);
+        const fill = was ? (serverTime() - was.claimedAt) / Math.max(1, was.banksAt - was.claimedAt) : 0.5;
+        if (board) playBreakFx(board, f.idx, game.size, colorOf(f.playerId), fill);
+        broke = true;
       }
     }
+    // Once, however many claims one word broke.
+    if (broke) sfx('break');
     if (reseed.size) {
       setReseeding(reseed);
       setTimeout(() => setReseeding(new Set()), 700);
     }
-    if (broke.size) {
-      setBreaking(broke);
-      setTimeout(() => setBreaking(new Set()), 420);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fx.seq]);
+  // After the effect above, so it still sees the claims from before.
+  useEffect(() => {
+    prevClaims.current = game.claims;
+  });
 
   const onTileDown = useCallback(
     (tileId: number) => {
@@ -314,7 +322,6 @@ export default function Game({ table, meId, fx, onClaim, onMissed, onLeave }: Pr
               color={claimByTile.get(tile.id) ? colorOf(claimByTile.get(tile.id)!.playerId) : null}
               selected={selSet.has(tile.id)}
               reseeding={reseeding.has(i)}
-              breaking={breaking.has(i)}
               onDown={() => {
                 dragging.current = true;
                 onTileDown(tile.id);
@@ -366,11 +373,10 @@ interface TileProps {
   color: number | null;
   selected: boolean;
   reseeding: boolean;
-  breaking: boolean;
   onDown: () => void;
 }
 
-function TileView({ idx, letter, claim, color, selected, reseeding, breaking, onDown }: TileProps) {
+function TileView({ idx, letter, claim, color, selected, reseeding, onDown }: TileProps) {
   const ref = useRef<HTMLDivElement>(null);
   const claimId = claim?.id ?? null;
   const claimedAt = claim?.claimedAt ?? 0;
@@ -406,7 +412,6 @@ function TileView({ idx, letter, claim, color, selected, reseeding, breaking, on
     claim ? `claimed c${color}` : '',
     selected ? 'sel' : '',
     reseeding ? 'reseed' : '',
-    breaking ? 'broke' : '',
   ]
     .filter(Boolean)
     .join(' ');
