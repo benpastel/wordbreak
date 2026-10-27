@@ -18,6 +18,10 @@ nothing more to do. When it's the first, nothing rings under it in the recording
 --ring-from names a later downbeat where the playing stopped (the last time through
 comes back round to it) and the ring-out after it is laid over the head instead.
 
+--open moves where the file begins without changing the loop: the music can come
+round on a last note that belongs to the end of a phrase (so --start sits just
+before it), while playing from silence should begin on the downbeat after it.
+
 --highpass takes out what sits below the instrument (rumble, handling, any DC offset)
 before anything is cut, filtered forwards and back so nothing shifts in time.
 
@@ -42,6 +46,7 @@ def main():
     p.add_argument("--ring-length", type=float, default=3.0, help="seconds of ring-out to lay over the head")
     p.add_argument("--pre", type=float, default=0.05, help="seconds before each downbeat to cut")
     p.add_argument("--xfade", type=float, default=0.04, help="seconds of crossfade at the seam")
+    p.add_argument("--open", type=float, help="seconds into the take where the file begins, inside the loop")
     p.add_argument("--highpass", type=float, default=40.0, help="Hz; 0 for none")
     p.add_argument("--peak", type=float, default=-1.0)
     p.add_argument("--out", required=True)
@@ -70,6 +75,9 @@ def main():
     # different sound, not the same sound offset, so the fade keeps their power even.
     t = np.linspace(0, np.pi / 2, fade)[:, None]
     loop[:fade] = loop[:fade] * np.sin(t) + x[end : end + fade] * np.cos(t)
+
+    if a.open is not None:
+        loop = np.roll(loop, -(s(a.open - a.pre) - begin), axis=0)
 
     gain = 10 ** (a.peak / 20) / np.abs(loop).max()
     loop *= gain
