@@ -81,14 +81,16 @@ export type Sfx = 'click' | 'claim' | 'invalid' | 'blocked' | 'bank';
 let ctx: AudioContext | null = null;
 
 /** Browsers start audio suspended until a tap; any tap will do, so the first one
- *  anywhere wakes it, and the sound switch does too. */
+ *  anywhere wakes it, and the sound switch does too. Called before any tap, it sets
+ *  things up to start the moment the browser lets them. */
 export function wakeAudio(): void {
   if (typeof AudioContext === 'undefined') return;
   if (!ctx) {
     ctx = new AudioContext();
     syncMusic(0.3);
   }
-  if (ctx.state === 'suspended') void ctx.resume();
+  // Refused until the page has been touched; the next tap asks again.
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
 }
 
 interface Tone {
