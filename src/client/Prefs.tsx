@@ -135,6 +135,18 @@ export default function Prefs() {
           )}
         </svg>
       </button>
+      <button
+        className="prefsbtn"
+        aria-label="preferences"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+          <path d="M3 6h14M3 14h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <circle cx="7" cy="6" r="2.6" fill="currentColor" />
+          <circle cx="13" cy="14" r="2.6" fill="currentColor" />
+        </svg>
+      </button>
       {canFullscreen && (
         <button
           className="prefsbtn"
@@ -158,18 +170,6 @@ export default function Prefs() {
           </svg>
         </button>
       )}
-      <button
-        className="prefsbtn"
-        aria-label="preferences"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-          <path d="M3 6h14M3 14h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          <circle cx="7" cy="6" r="2.6" fill="currentColor" />
-          <circle cx="13" cy="14" r="2.6" fill="currentColor" />
-        </svg>
-      </button>
       {open && (
         <div className="prefspop">
           {(Object.keys(PREFS) as Pref[]).map((p) => (
