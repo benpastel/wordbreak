@@ -56,7 +56,7 @@ function readVolume(key: string, fallback: number): number {
 let prefs: SoundPrefs = {
   on: (read(KEYS.on) ?? read(LEGACY_SPEECH_KEY)) === 'on',
   spoken: read(KEYS.spoken) !== 'off',
-  spokenVolume: readVolume(KEYS.spokenVolume, 1),
+  spokenVolume: readVolume(KEYS.spokenVolume, 0.7),
   sfx: read(KEYS.sfx) !== 'off',
   sfxVolume: readVolume(KEYS.sfxVolume, 0.7),
   music: read(KEYS.music) !== 'off',
